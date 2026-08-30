@@ -151,7 +151,7 @@ function Agendar() {
           hora,
           duracao: servico?.duracao_minutos ?? 0,
           valor: servico?.preco ?? 0,
-          pagamento: metodo?.name,
+          ...(metodo ? { pagamento: metodo.name } : {}),
           observacao,
         }),
       );
