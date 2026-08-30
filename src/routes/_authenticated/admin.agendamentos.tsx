@@ -244,6 +244,14 @@ function Agendamentos() {
             </option>
           ))}
         </select>
+        <select className={input} value={pagamento} onChange={(e) => setPagamento(e.target.value)}>
+          <option value="">Todos os pagamentos</option>
+          {(base?.pagamentos ?? []).map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="mt-6 space-y-3">
@@ -261,6 +269,9 @@ function Agendamentos() {
               <p className="text-sm text-muted-foreground">
                 {a.services?.nome ?? "Serviço"} · {a.barbers?.nome} · {brl(a.valor)}
               </p>
+              {a.payment_method_nome && (
+                <p className="text-sm text-muted-foreground">Pagamento: {a.payment_method_nome}</p>
+              )}
               {a.observacao && <p className="mt-1 text-xs text-muted-foreground">{a.observacao}</p>}
             </div>
             <div className="flex items-center gap-3">
