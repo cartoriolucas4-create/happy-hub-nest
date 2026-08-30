@@ -186,7 +186,7 @@ function Agendar() {
     ["Valor", brl(servico?.preco ?? 0)],
     ["Cliente", nome.trim()],
     ["WhatsApp", telefone.trim()],
-    ...(metodo ? ([["Pagamento", metodo.name]] as [string, string][]) : []),
+    ...(metodo ? ([["Forma de pagamento", metodo.name]] as [string, string][]) : []),
     ...(observacao.trim() ? ([["Observação", observacao.trim()]] as [string, string][]) : []),
   ];
 

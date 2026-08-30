@@ -182,8 +182,8 @@ export function mensagemAgendamento(p: {
     `Duração: ${p.duracao} minutos`,
     `Valor: ${brl(p.valor)}`,
   ];
-  if (p.pagamento?.trim()) linhas.push(`Método de pagamento: ${p.pagamento.trim()}`);
+  if (p.pagamento?.trim()) linhas.push(`Forma de pagamento: ${p.pagamento.trim()}`);
   if (p.observacao?.trim()) linhas.push("", "Observação:", p.observacao.trim());
-  linhas.push("", "Agendamento realizado pelo site.");
+  linhas.push("", "Agendamento realizado através do Meu Link.");
   return linhas.join("\n");
 }
