@@ -49,7 +49,7 @@ function SuperDashboard() {
   });
 
   return (
-    <SuperShell title="Plataforma" subtitle="Visão geral das contas e licenças">
+    <SuperShell title="Painel da Plataforma" subtitle="Administração geral da plataforma">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card icon={Users} label="Clientes totais" value={stats?.total_clientes ?? 0} />
         <Card icon={Clock} label="Testes ativos" value={stats?.em_teste ?? 0} />
@@ -75,7 +75,8 @@ function SuperDashboard() {
           >
             <div>
               <p className="text-sm">
-                {c.nome || "Sem nome"} · <span className="text-muted-foreground">{c.barbearia ?? "sem barbearia"}</span>
+                {c.nome || "Sem nome"} ·{" "}
+                <span className="text-muted-foreground">{c.barbearia ?? "sem barbearia"}</span>
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {c.email} · vence em {dataHoraBr(c.vencimento)}
@@ -93,7 +94,9 @@ function SuperDashboard() {
       <h2 className="mt-12 text-2xl">Acessos expirando</h2>
       <div className="mt-4 space-y-3">
         {(expirando ?? []).length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhum acesso vencendo nos próximos 7 dias.</p>
+          <p className="text-sm text-muted-foreground">
+            Nenhum acesso vencendo nos próximos 7 dias.
+          </p>
         )}
         {(expirando ?? []).map((c) => (
           <Link
@@ -103,7 +106,9 @@ function SuperDashboard() {
             className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-4 hover:border-primary"
           >
             <div>
-              <p className="text-sm">{c.nome || c.email} · {c.barbearia ?? "sem barbearia"}</p>
+              <p className="text-sm">
+                {c.nome || c.email} · {c.barbearia ?? "sem barbearia"}
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">{c.telefone ?? "sem telefone"}</p>
             </div>
             <span className="text-xs text-muted-foreground">{dataHoraBr(c.vencimento)}</span>
@@ -124,9 +129,9 @@ function Card({
   value: number;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
-      <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-      <p className="mt-3 text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
+    <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-5">
+      <Icon className="h-5 w-5 text-sky-300" aria-hidden="true" />
+      <p className="mt-3 text-xs uppercase tracking-widest text-slate-400">{label}</p>
       <p className="mt-1 font-display text-3xl">{value}</p>
     </div>
   );

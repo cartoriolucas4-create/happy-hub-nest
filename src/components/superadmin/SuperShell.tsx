@@ -1,7 +1,16 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LayoutDashboard, Users, KeyRound, History, LogOut, Menu, X, ShieldAlert } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  KeyRound,
+  History,
+  LogOut,
+  Menu,
+  X,
+  ShieldAlert,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsSuperAdmin } from "@/lib/license";
 
@@ -67,17 +76,20 @@ export function SuperShell({
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-border bg-sidebar p-4 lg:block">
-        <Link to="/super-admin" className="block px-3 font-display text-lg tracking-[0.2em]">
-          SUPER<span className="text-primary">ADMIN</span>
+    <div className="min-h-screen bg-[#14202b] text-slate-100">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-700 bg-[#101923] p-4 lg:block">
+        <Link
+          to="/super-admin"
+          className="block px-3 font-display text-lg tracking-[0.15em] text-slate-100"
+        >
+          PAINEL <span className="text-sky-300">PLATAFORMA</span>
         </Link>
         <div className="mt-8">{nav}</div>
       </aside>
 
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-700 bg-[#101923]/95 px-4 py-3 backdrop-blur lg:hidden">
         <span className="font-display text-lg tracking-[0.2em]">
-          SUPER<span className="text-primary">ADMIN</span>
+          PAINEL <span className="text-sky-300">PLATAFORMA</span>
         </span>
         <button onClick={() => setOpen(true)} aria-label="Abrir menu">
           <Menu className="h-6 w-6" />
@@ -85,7 +97,7 @@ export function SuperShell({
       </header>
 
       {open && (
-        <div className="fixed inset-0 z-50 bg-background/95 p-4 lg:hidden">
+        <div className="fixed inset-0 z-50 bg-[#101923]/95 p-4 lg:hidden">
           <div className="flex items-center justify-between px-3">
             <span className="font-display text-lg tracking-[0.2em]">MENU</span>
             <button onClick={() => setOpen(false)} aria-label="Fechar menu">
@@ -97,7 +109,7 @@ export function SuperShell({
       )}
 
       <main className="lg:pl-64">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-10">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl">{title}</h1>
