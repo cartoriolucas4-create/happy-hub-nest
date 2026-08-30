@@ -27,7 +27,9 @@ type Form = {
   nome: string;
   slug: string;
   responsavel: string;
+  slogan: string;
   descricao: string;
+  sobre_experiencia: string;
   telefone: string;
   whatsapp: string;
   email: string;
