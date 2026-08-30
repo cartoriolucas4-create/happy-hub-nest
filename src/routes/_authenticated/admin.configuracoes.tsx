@@ -222,6 +222,29 @@ function Configuracoes() {
           <div className="grid gap-4">
             <label>
               <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                Slogan (frase de destaque no topo da página)
+              </span>
+              <input
+                className={input}
+                placeholder="Precisão em cada detalhe."
+                value={form.slogan}
+                onChange={(e) => setForm({ ...form, slogan: e.target.value })}
+              />
+            </label>
+            <label>
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                Texto da seção “A experiência”
+              </span>
+              <textarea
+                rows={2}
+                className={input}
+                placeholder="Mais que um corte: ambiente reservado, bebida e cuidado do início ao fim."
+                value={form.sobre_experiencia}
+                onChange={(e) => setForm({ ...form, sobre_experiencia: e.target.value })}
+              />
+            </label>
+            <label>
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">
                 Descrição / sobre a barbearia
               </span>
               <textarea
