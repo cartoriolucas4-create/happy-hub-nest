@@ -225,7 +225,7 @@ function Agendamentos() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <input type="date" className={input} value={de} onChange={(e) => setDe(e.target.value)} />
         <input type="date" className={input} value={ate} onChange={(e) => setAte(e.target.value)} />
         <select className={input} value={status} onChange={(e) => setStatus(e.target.value)}>
