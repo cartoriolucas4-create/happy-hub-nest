@@ -122,7 +122,7 @@ function Agendar() {
 
   const confirmar = useMutation({
     mutationFn: async () => {
-      const erro = validarDados();
+      const erro = validarDados() ?? validarPagamento();
       if (erro) throw new Error(erro);
       // 1) salva o agendamento na barbearia correta (barbershop_id vem do slug)
       const { error } = await supabase.rpc("criar_agendamento_publico", {
@@ -133,7 +133,7 @@ function Agendar() {
         p_hora: hora,
         p_nome: nome.trim(),
         p_telefone: telefone.trim(),
-        ...(email.trim() ? { p_email: email.trim() } : {}),
+        ...(paymentMethodId ? { p_payment_method_id: paymentMethodId } : {}),
         ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}),
       });
       if (error) throw new Error(error.message);
@@ -151,13 +151,14 @@ function Agendar() {
           hora,
           duracao: servico?.duracao_minutos ?? 0,
           valor: servico?.preco ?? 0,
+          pagamento: metodo?.name,
           observacao,
         }),
       );
     },
     onSuccess: (url) => {
       setWhatsUrl(url);
-      setStep(6);
+      setStep(7);
       if (url) window.open(url, "_blank", "noopener,noreferrer");
     },
     onError: (e: Error) => toast.error(e.message),
