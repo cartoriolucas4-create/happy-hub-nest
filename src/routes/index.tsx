@@ -56,26 +56,26 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <span className="font-display text-2xl tracking-[0.2em]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-5">
+          <span className="font-display text-xl tracking-[0.2em] sm:text-2xl">
             BARBER<span className="text-primary">FLOW</span>
           </span>
-          <nav className="flex flex-wrap items-center justify-end gap-x-1 gap-y-2 sm:gap-x-2">
+          <nav className="flex shrink-0 items-center gap-1 sm:gap-2">
             <Link
               to="/login"
-              className="rounded-sm px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-primary sm:px-4"
+              className="rounded-sm px-2 py-2 text-[0.65rem] tracking-wider text-muted-foreground transition-colors hover:text-primary sm:px-3 sm:text-sm"
             >
               ENTRAR
             </Link>
             <Link
               to="/cadastro"
-              className="rounded-sm px-3 py-2 text-sm text-foreground/90 underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary sm:px-4"
+              className="rounded-sm px-2 py-2 text-[0.65rem] tracking-wider text-foreground/90 underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary sm:px-3 sm:text-sm"
             >
               CADASTRE-SE
             </Link>
             <Link
               to="/cadastro"
-              className="rounded-sm bg-primary px-4 py-2 font-display text-sm tracking-widest text-primary-foreground transition-colors hover:bg-primary/90 sm:px-5"
+              className="rounded-sm bg-primary px-3 py-2 font-display text-[0.65rem] tracking-wider text-primary-foreground transition-colors hover:bg-primary/90 sm:px-5 sm:text-sm"
             >
               COMEÇAR
             </Link>
