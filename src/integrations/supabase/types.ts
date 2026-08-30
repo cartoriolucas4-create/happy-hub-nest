@@ -27,6 +27,8 @@ export type Database = {
           hora_inicio: string
           id: string
           observacao: string | null
+          payment_method_id: string | null
+          payment_method_nome: string | null
           service_id: string | null
           status: Database["public"]["Enums"]["appointment_status"]
           valor: number
@@ -43,6 +45,8 @@ export type Database = {
           hora_inicio: string
           id?: string
           observacao?: string | null
+          payment_method_id?: string | null
+          payment_method_nome?: string | null
           service_id?: string | null
           status?: Database["public"]["Enums"]["appointment_status"]
           valor?: number
@@ -59,6 +63,8 @@ export type Database = {
           hora_inicio?: string
           id?: string
           observacao?: string | null
+          payment_method_id?: string | null
+          payment_method_nome?: string | null
           service_id?: string | null
           status?: Database["public"]["Enums"]["appointment_status"]
           valor?: number
@@ -83,6 +89,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
           {
@@ -487,6 +500,62 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          active: boolean
+          barbershop_id: string
+          created_at: string
+          description: string | null
+          display_order: number
+          icon: string | null
+          id: string
+          name: string
+          pix_city: string | null
+          pix_key: string | null
+          pix_key_type: string | null
+          pix_receiver_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          barbershop_id: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon?: string | null
+          id?: string
+          name: string
+          pix_city?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          pix_receiver_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          barbershop_id?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon?: string | null
+          id?: string
+          name?: string
+          pix_city?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          pix_receiver_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -595,20 +664,36 @@ export type Database = {
           valor: number
         }[]
       }
-      criar_agendamento_publico: {
-        Args: {
-          p_barber_id: string
-          p_data: string
-          p_email?: string
-          p_hora: string
-          p_nome: string
-          p_observacao?: string
-          p_service_id: string
-          p_slug: string
-          p_telefone: string
-        }
-        Returns: string
-      }
+      criar_agendamento_publico:
+        | {
+            Args: {
+              p_barber_id: string
+              p_data: string
+              p_email?: string
+              p_hora: string
+              p_nome: string
+              p_observacao?: string
+              p_service_id: string
+              p_slug: string
+              p_telefone: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_barber_id: string
+              p_data: string
+              p_email?: string
+              p_hora: string
+              p_nome: string
+              p_observacao?: string
+              p_payment_method_id?: string
+              p_service_id: string
+              p_slug: string
+              p_telefone: string
+            }
+            Returns: string
+          }
       current_barbershop_id: { Args: never; Returns: string }
       has_role: {
         Args: {
