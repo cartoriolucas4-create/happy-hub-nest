@@ -2,7 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, KeyRound, Mail, MessageCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { SuperShell, sBtn, sBtnGhost, sInput } from "@/components/superadmin/SuperShell";
 import { EditarBarbearia, EditarContato } from "@/components/superadmin/EditarCliente";
@@ -48,6 +55,11 @@ function ClienteDetalhe() {
   const [quantidade, setQuantidade] = useState(30);
   const [unidade, setUnidade] = useState<Unidade>("dias");
   const [observacao, setObservacao] = useState("");
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [confirmarTroca, setConfirmarTroca] = useState(false);
 
   const { data: cliente, isLoading } = useQuery({
     queryKey: ["sa-cliente", id],
@@ -125,6 +137,26 @@ function ClienteDetalhe() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const trocarSenha = useMutation({
+    mutationFn: async () => {
+      if (novaSenha.length < 8) throw new Error("A senha deve ter pelo menos 8 caracteres.");
+      if (novaSenha !== confirmarSenha) throw new Error("As senhas não conferem.");
+      const { error } = await supabase.functions.invoke("admin-change-password", {
+        body: { userId: id, password: novaSenha },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Senha alterada com segurança.");
+      setNovaSenha("");
+      setConfirmarSenha("");
+      setConfirmarTroca(false);
+      setPasswordOpen(false);
+      recarregar();
+    },
+    onError: (e: Error) => toast.error(e.message || "Não foi possível alterar a senha."),
+  });
+
   const carregando = liberar.isPending || bloquear.isPending || desbloquear.isPending;
   const status = cliente?.status as LicenseStatus | undefined;
   const ms = cliente ? restanteMs(cliente.vencimento) : 0;
@@ -141,7 +173,9 @@ function ClienteDetalhe() {
       }
     >
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
-      {!isLoading && !cliente && <p className="text-sm text-muted-foreground">Cliente não encontrado.</p>}
+      {!isLoading && !cliente && (
+        <p className="text-sm text-muted-foreground">Cliente não encontrado.</p>
+      )}
 
       {cliente && (
         <div className="space-y-8">
@@ -171,6 +205,9 @@ function ClienteDetalhe() {
                   <Mail className="mr-1 inline h-4 w-4" /> E-mail
                 </a>
               )}
+              <button onClick={() => setPasswordOpen(true)} className={sBtnGhost}>
+                <KeyRound className="mr-1 inline h-4 w-4" /> Trocar senha
+              </button>
             </div>
           </section>
 
@@ -184,18 +221,22 @@ function ClienteDetalhe() {
 
           <EditarBarbearia userId={id} onSaved={recarregar} />
 
-
           <section className="rounded-lg border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-2xl">Controle de acesso</h2>
               {status && (
-                <span className={`rounded-full border px-3 py-1 text-xs ${statusLicencaClass(status)}`}>
+                <span
+                  className={`rounded-full border px-3 py-1 text-xs ${statusLicencaClass(status)}`}
+                >
                   {STATUS_LICENCA[status]}
                 </span>
               )}
             </div>
             <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Info label="Tipo de acesso" value={cliente.access_type === "trial" ? "Teste" : "Licença"} />
+              <Info
+                label="Tipo de acesso"
+                value={cliente.access_type === "trial" ? "Teste" : "Licença"}
+              />
               <Info
                 label="Data de início"
                 value={dataHoraBr(cliente.access_started_at ?? cliente.trial_started_at)}
@@ -205,7 +246,9 @@ function ClienteDetalhe() {
             </dl>
 
             <div className="mt-6">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Liberar acesso</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Liberar acesso
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {ATALHOS.map((a) => (
                   <button
@@ -221,7 +264,9 @@ function ClienteDetalhe() {
 
               <div className="mt-5 grid gap-3 sm:grid-cols-[120px_160px_1fr_auto] sm:items-end">
                 <label className="block">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">Quantidade</span>
+                  <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Quantidade
+                  </span>
                   <input
                     type="number"
                     min={1}
@@ -231,7 +276,9 @@ function ClienteDetalhe() {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">Unidade</span>
+                  <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Unidade
+                  </span>
                   <select
                     value={unidade}
                     onChange={(e) => setUnidade(e.target.value as Unidade)}
@@ -243,7 +290,9 @@ function ClienteDetalhe() {
                   </select>
                 </label>
                 <label className="block">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">Observação</span>
+                  <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Observação
+                  </span>
                   <input
                     value={observacao}
                     onChange={(e) => setObservacao(e.target.value)}
@@ -261,13 +310,17 @@ function ClienteDetalhe() {
               </div>
 
               <p className="mt-3 text-xs text-muted-foreground">
-                Conta ativa: o prazo é somado ao vencimento atual. Conta expirada ou bloqueada: o prazo
-                começa agora.
+                Conta ativa: o prazo é somado ao vencimento atual. Conta expirada ou bloqueada: o
+                prazo começa agora.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3">
                 {status === "blocked" || status === "suspended" ? (
-                  <button disabled={carregando} onClick={() => desbloquear.mutate()} className={sBtn}>
+                  <button
+                    disabled={carregando}
+                    onClick={() => desbloquear.mutate()}
+                    className={sBtn}
+                  >
                     DESBLOQUEAR
                   </button>
                 ) : (
@@ -293,7 +346,9 @@ function ClienteDetalhe() {
                 <div key={h.id} className="rounded-lg border border-border bg-card p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-display text-sm tracking-widest text-primary">{h.acao}</p>
-                    <span className="text-xs text-muted-foreground">{dataHoraBr(h.created_at)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {dataHoraBr(h.created_at)}
+                    </span>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {h.novo_prazo ? `Prazo: ${h.novo_prazo} · ` : ""}
@@ -307,6 +362,87 @@ function ClienteDetalhe() {
           </section>
         </div>
       )}
+      <Dialog
+        open={passwordOpen}
+        onOpenChange={(open) => {
+          if (!trocarSenha.isPending) setPasswordOpen(open);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Trocar senha do cliente</DialogTitle>
+            <DialogDescription>
+              A senha é enviada somente para a função administrativa segura e não é armazenada no
+              histórico.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-sm">Nova senha</span>
+              <div className="relative">
+                <input
+                  type={mostrarSenha ? "text" : "password"}
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  autoComplete="new-password"
+                  className={`mt-1 ${sInput}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                  className="absolute right-3 top-3 text-muted-foreground"
+                  aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </label>
+            <label className="block">
+              <span className="text-sm">Confirmar nova senha</span>
+              <input
+                type={mostrarSenha ? "text" : "password"}
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
+                autoComplete="new-password"
+                className={`mt-1 ${sInput}`}
+              />
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Use ao menos 8 caracteres. Confirme a alteração antes de continuar.
+            </p>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={confirmarTroca}
+                onChange={(e) => setConfirmarTroca(e.target.checked)}
+                className="mt-1"
+              />
+              Confirmo que desejo alterar a senha deste cliente.
+            </label>
+            <div className="flex justify-end gap-3">
+              <button
+                className={sBtnGhost}
+                onClick={() => setPasswordOpen(false)}
+                disabled={trocarSenha.isPending}
+              >
+                Cancelar
+              </button>
+              <button
+                className={sBtn}
+                disabled={
+                  trocarSenha.isPending ||
+                  novaSenha.length < 8 ||
+                  novaSenha !== confirmarSenha ||
+                  !confirmarTroca
+                }
+                onClick={() => trocarSenha.mutate()}
+              >
+                {trocarSenha.isPending ? "ALTERANDO..." : "CONFIRMAR ALTERAÇÃO"}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SuperShell>
   );
 }

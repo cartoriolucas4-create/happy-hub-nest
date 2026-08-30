@@ -16,12 +16,10 @@ import {
   Link2,
   LogOut,
   Menu,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
-import { useIsSuperAdmin } from "@/lib/license";
 
 export const MENU = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -53,7 +51,6 @@ export function AdminShell({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { data: isSuper } = useIsSuperAdmin();
 
   async function sair() {
     await queryClient.cancelQueries();
@@ -82,15 +79,6 @@ export function AdminShell({
           </Link>
         );
       })}
-      {isSuper && (
-        <Link
-          to="/super-admin"
-          onClick={() => setOpen(false)}
-          className="mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-primary hover:bg-primary/10"
-        >
-          <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Super Admin
-        </Link>
-      )}
       <button
         onClick={sair}
         className="mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-destructive"
