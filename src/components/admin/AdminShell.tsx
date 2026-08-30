@@ -53,6 +53,7 @@ export function AdminShell({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: isSuper } = useIsSuperAdmin();
 
   async function sair() {
     await queryClient.cancelQueries();
