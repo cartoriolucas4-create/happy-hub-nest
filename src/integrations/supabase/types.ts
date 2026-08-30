@@ -14,6 +14,109 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_history: {
+        Row: {
+          acao: string
+          barbershop_id: string | null
+          created_at: string
+          id: string
+          novo_prazo: string | null
+          novo_vencimento: string | null
+          observacao: string | null
+          prazo_anterior: string | null
+          super_admin_id: string | null
+          user_id: string
+          vencimento_anterior: string | null
+        }
+        Insert: {
+          acao: string
+          barbershop_id?: string | null
+          created_at?: string
+          id?: string
+          novo_prazo?: string | null
+          novo_vencimento?: string | null
+          observacao?: string | null
+          prazo_anterior?: string | null
+          super_admin_id?: string | null
+          user_id: string
+          vencimento_anterior?: string | null
+        }
+        Update: {
+          acao?: string
+          barbershop_id?: string | null
+          created_at?: string
+          id?: string
+          novo_prazo?: string | null
+          novo_vencimento?: string | null
+          observacao?: string | null
+          prazo_anterior?: string | null
+          super_admin_id?: string | null
+          user_id?: string
+          vencimento_anterior?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_history_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_licenses: {
+        Row: {
+          access_expires_at: string | null
+          access_started_at: string | null
+          access_type: Database["public"]["Enums"]["access_type"]
+          barbershop_id: string | null
+          created_at: string
+          id: string
+          observacao: string | null
+          status: Database["public"]["Enums"]["license_status"]
+          trial_expires_at: string
+          trial_started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_expires_at?: string | null
+          access_started_at?: string | null
+          access_type?: Database["public"]["Enums"]["access_type"]
+          barbershop_id?: string | null
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          status?: Database["public"]["Enums"]["license_status"]
+          trial_expires_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_expires_at?: string | null
+          access_started_at?: string | null
+          access_type?: Database["public"]["Enums"]["access_type"]
+          barbershop_id?: string | null
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          status?: Database["public"]["Enums"]["license_status"]
+          trial_expires_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_licenses_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           barber_id: string
@@ -683,6 +786,11 @@ export type Database = {
             Returns: string
           }
       current_barbershop_id: { Args: never; Returns: string }
+      effective_license_status: {
+        Args: { p_user_id: string }
+        Returns: Database["public"]["Enums"]["license_status"]
+      }
+      has_active_access: { Args: { p_user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -703,9 +811,122 @@ export type Database = {
           hora: string
         }[]
       }
+      minha_licenca: {
+        Args: never
+        Returns: {
+          access_expires_at: string
+          access_started_at: string
+          access_type: Database["public"]["Enums"]["access_type"]
+          expires_at: string
+          server_now: string
+          status: Database["public"]["Enums"]["license_status"]
+          trial_expires_at: string
+          trial_started_at: string
+        }[]
+      }
+      sa_bloquear_acesso: {
+        Args: { p_observacao?: string; p_user_id: string }
+        Returns: undefined
+      }
+      sa_cliente: {
+        Args: { p_user_id: string }
+        Returns: {
+          access_expires_at: string
+          access_started_at: string
+          access_type: Database["public"]["Enums"]["access_type"]
+          barbearia: string
+          barbershop_id: string
+          criado_em: string
+          email: string
+          nome: string
+          observacao: string
+          server_now: string
+          slug: string
+          status: Database["public"]["Enums"]["license_status"]
+          telefone: string
+          trial_expires_at: string
+          trial_started_at: string
+          user_id: string
+          vencimento: string
+          whatsapp: string
+        }[]
+      }
+      sa_clientes: {
+        Args: { p_busca?: string; p_status?: string }
+        Returns: {
+          access_type: Database["public"]["Enums"]["access_type"]
+          barbearia: string
+          barbershop_id: string
+          criado_em: string
+          email: string
+          inicio: string
+          nome: string
+          slug: string
+          status: Database["public"]["Enums"]["license_status"]
+          telefone: string
+          user_id: string
+          vencimento: string
+        }[]
+      }
+      sa_desbloquear_acesso: {
+        Args: { p_observacao?: string; p_user_id: string }
+        Returns: string
+      }
+      sa_expirando: {
+        Args: { p_dias?: number }
+        Returns: {
+          barbearia: string
+          email: string
+          nome: string
+          status: Database["public"]["Enums"]["license_status"]
+          telefone: string
+          user_id: string
+          vencimento: string
+        }[]
+      }
+      sa_historico: {
+        Args: { p_limit?: number; p_user_id?: string }
+        Returns: {
+          acao: string
+          barbearia: string
+          created_at: string
+          id: string
+          nome: string
+          novo_prazo: string
+          novo_vencimento: string
+          observacao: string
+          prazo_anterior: string
+          user_id: string
+          vencimento_anterior: string
+        }[]
+      }
+      sa_liberar_acesso: {
+        Args: {
+          p_observacao?: string
+          p_quantidade: number
+          p_unidade: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      sa_require: { Args: never; Returns: string }
+      sa_stats: {
+        Args: never
+        Returns: {
+          ativos: number
+          bloqueados: number
+          em_teste: number
+          expirados: number
+          expirando: number
+          suspensos: number
+          total_barbearias: number
+          total_clientes: number
+        }[]
+      }
       slug_disponivel: { Args: { p_slug: string }; Returns: boolean }
     }
     Enums: {
+      access_type: "trial" | "paid_access" | "manual_access"
       app_role: "super_admin" | "barbershop_admin"
       appointment_status:
         | "pendente"
@@ -713,6 +934,7 @@ export type Database = {
         | "concluido"
         | "cancelado"
         | "nao_compareceu"
+      license_status: "trial" | "active" | "expired" | "blocked" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -840,6 +1062,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_type: ["trial", "paid_access", "manual_access"],
       app_role: ["super_admin", "barbershop_admin"],
       appointment_status: [
         "pendente",
@@ -848,6 +1071,7 @@ export const Constants = {
         "cancelado",
         "nao_compareceu",
       ],
+      license_status: ["trial", "active", "expired", "blocked", "suspended"],
     },
   },
 } as const
