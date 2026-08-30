@@ -27,6 +27,7 @@ export const MENU = [
   { to: "/admin/servicos", label: "Serviços", icon: Scissors },
   { to: "/admin/horarios", label: "Horários", icon: Clock },
   { to: "/admin/bloqueios", label: "Bloqueios", icon: Ban },
+  { to: "/admin/galeria", label: "Galeria", icon: Images },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
   { to: "/admin/meu-link", label: "Meu link", icon: Link2 },
 ] as const;
