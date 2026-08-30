@@ -250,7 +250,9 @@ export type Database = {
           plano: string
           responsavel: string | null
           site_url: string | null
+          slogan: string | null
           slug: string
+          sobre_experiencia: string | null
           telefone: string | null
           whatsapp: string | null
         }
@@ -283,7 +285,9 @@ export type Database = {
           plano?: string
           responsavel?: string | null
           site_url?: string | null
+          slogan?: string | null
           slug: string
+          sobre_experiencia?: string | null
           telefone?: string | null
           whatsapp?: string | null
         }
@@ -316,7 +320,9 @@ export type Database = {
           plano?: string
           responsavel?: string | null
           site_url?: string | null
+          slogan?: string | null
           slug?: string
+          sobre_experiencia?: string | null
           telefone?: string | null
           whatsapp?: string | null
         }
@@ -439,6 +445,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "customers_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_images: {
+        Row: {
+          barbershop_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          ordem: number
+          path: string
+        }
+        Insert: {
+          barbershop_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          path: string
+        }
+        Update: {
+          barbershop_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_images_barbershop_id_fkey"
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
