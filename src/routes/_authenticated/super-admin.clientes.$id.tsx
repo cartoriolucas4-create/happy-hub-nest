@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SuperShell, sBtn, sBtnGhost, sInput } from "@/components/superadmin/SuperShell";
+import { EditarBarbearia, EditarContato } from "@/components/superadmin/EditarCliente";
 import {
   STATUS_LICENCA,
   dataBr,
