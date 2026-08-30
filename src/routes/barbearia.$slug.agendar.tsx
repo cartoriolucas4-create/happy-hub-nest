@@ -69,6 +69,23 @@ function Agendar() {
     },
   });
 
+  const { data: metodos = [] } = useQuery({
+    queryKey: ["payment-methods", base?.shop.id],
+    enabled: Boolean(base?.shop.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_methods")
+        .select("id, name, description, pix_key, pix_key_type, pix_receiver_name, pix_city")
+        .eq("barbershop_id", base!.shop.id)
+        .eq("active", true)
+        .order("display_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const metodo = metodos.find((m) => m.id === paymentMethodId);
+
   const servico = base?.services.find((s) => s.id === serviceId);
   const barbeiro = base?.barbers.find((b) => b.id === barberId);
   const barbeirosDoServico = (base?.barbers ?? []).filter((b) => {
