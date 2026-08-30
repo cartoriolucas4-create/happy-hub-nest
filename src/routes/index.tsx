@@ -63,19 +63,19 @@ function Landing() {
           <nav className="flex shrink-0 items-center gap-1 sm:gap-2">
             <Link
               to="/login"
-              className="rounded-sm px-2 py-2 text-xs tracking-widest text-muted-foreground transition-colors hover:text-primary sm:px-3 sm:text-sm"
+              className="rounded-sm px-2 py-2 text-[0.65rem] tracking-wider text-muted-foreground transition-colors hover:text-primary sm:px-3 sm:text-sm"
             >
               ENTRAR
             </Link>
             <Link
               to="/cadastro"
-              className="rounded-sm px-2 py-2 text-xs tracking-widest text-foreground/90 underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary sm:px-3 sm:text-sm"
+              className="rounded-sm px-2 py-2 text-[0.65rem] tracking-wider text-foreground/90 underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary sm:px-3 sm:text-sm"
             >
               CADASTRE-SE
             </Link>
             <Link
               to="/cadastro"
-              className="rounded-sm bg-primary px-3 py-2 font-display text-xs tracking-widest text-primary-foreground transition-colors hover:bg-primary/90 sm:px-5 sm:text-sm"
+              className="rounded-sm bg-primary px-3 py-2 font-display text-[0.65rem] tracking-wider text-primary-foreground transition-colors hover:bg-primary/90 sm:px-5 sm:text-sm"
             >
               COMEÇAR
             </Link>
