@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SuperShell, sBtn, sBtnGhost, sInput } from "@/components/superadmin/SuperShell";
+import { EditarBarbearia, EditarContato } from "@/components/superadmin/EditarCliente";
 import {
   STATUS_LICENCA,
   dataBr,
@@ -172,6 +173,17 @@ function ClienteDetalhe() {
               )}
             </div>
           </section>
+
+          <EditarContato
+            userId={id}
+            nome={cliente.nome ?? ""}
+            email={cliente.email ?? ""}
+            telefone={cliente.telefone ?? ""}
+            onSaved={recarregar}
+          />
+
+          <EditarBarbearia userId={id} onSaved={recarregar} />
+
 
           <section className="rounded-lg border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">

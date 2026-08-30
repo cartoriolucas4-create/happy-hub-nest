@@ -824,6 +824,35 @@ export type Database = {
           trial_started_at: string
         }[]
       }
+      sa_atualizar_barbearia: {
+        Args: {
+          p_bairro?: string
+          p_cep?: string
+          p_cidade?: string
+          p_descricao?: string
+          p_email?: string
+          p_endereco?: string
+          p_estado?: string
+          p_instagram?: string
+          p_nome?: string
+          p_numero?: string
+          p_slogan?: string
+          p_slug?: string
+          p_telefone?: string
+          p_user_id: string
+          p_whatsapp?: string
+        }
+        Returns: undefined
+      }
+      sa_atualizar_cliente: {
+        Args: {
+          p_email?: string
+          p_nome?: string
+          p_telefone?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       sa_bloquear_acesso: {
         Args: { p_observacao?: string; p_user_id: string }
         Returns: undefined
@@ -872,6 +901,7 @@ export type Database = {
         Args: { p_observacao?: string; p_user_id: string }
         Returns: string
       }
+      sa_excluir_cliente: { Args: { p_user_id: string }; Returns: undefined }
       sa_expirando: {
         Args: { p_dias?: number }
         Returns: {
