@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isEmail } from "@/lib/barber";
+import { getAuthenticatedArea, homeForArea } from "@/lib/auth-area";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -26,8 +27,8 @@ function LoginPage() {
   const [recuperando, setRecuperando] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/admin", replace: true });
+    getAuthenticatedArea().then((session) => {
+      if (session) navigate({ to: homeForArea(session.area), replace: true });
     });
   }, [navigate]);
 
@@ -38,13 +39,22 @@ function LoginPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: senha,
+    });
     setLoading(false);
     if (error) {
       toast.error("E-mail ou senha inválidos.");
       return;
     }
-    navigate({ to: "/admin", replace: true });
+    const session = await getAuthenticatedArea();
+    if (!session) {
+      await supabase.auth.signOut();
+      toast.error("Não foi possível determinar as permissões da conta.");
+      return;
+    }
+    navigate({ to: homeForArea(session.area), replace: true });
   }
 
   async function esqueci() {
@@ -71,9 +81,7 @@ function LoginPage() {
           BARBER<span className="text-primary">FLOW</span>
         </Link>
         <h1 className="mt-8 text-3xl">Entrar</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Acesse o painel da sua barbearia.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Acesse o painel da sua barbearia.</p>
 
         <form onSubmit={entrar} className="mt-8 space-y-4">
           <label className="block">

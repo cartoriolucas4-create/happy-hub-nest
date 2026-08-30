@@ -857,6 +857,10 @@ export type Database = {
         Args: { p_observacao?: string; p_user_id: string }
         Returns: undefined
       }
+      sa_bloquear_clientes_massa: {
+        Args: { p_user_ids: string[] }
+        Returns: number
+      }
       sa_cliente: {
         Args: { p_user_id: string }
         Returns: {
@@ -901,6 +905,10 @@ export type Database = {
         Args: { p_observacao?: string; p_user_id: string }
         Returns: string
       }
+      sa_desbloquear_clientes_massa: {
+        Args: { p_user_ids: string[] }
+        Returns: number
+      }
       sa_excluir_cliente: { Args: { p_user_id: string }; Returns: undefined }
       sa_expirando: {
         Args: { p_dias?: number }
@@ -938,6 +946,14 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      sa_liberar_acesso_massa: {
+        Args: { p_observacao?: string; p_quantidade: number; p_unidade: string; p_user_ids: string[] }
+        Returns: number
+      }
+      sa_registrar_alteracao_senha: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       sa_require: { Args: never; Returns: string }
       sa_stats: {
