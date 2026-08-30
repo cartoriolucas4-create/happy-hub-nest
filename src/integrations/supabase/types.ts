@@ -1,0 +1,718 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      appointments: {
+        Row: {
+          barber_id: string
+          barbershop_id: string
+          cliente_nome: string
+          cliente_telefone: string
+          created_at: string
+          customer_id: string | null
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          observacao: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["appointment_status"]
+          valor: number
+        }
+        Insert: {
+          barber_id: string
+          barbershop_id: string
+          cliente_nome: string
+          cliente_telefone: string
+          created_at?: string
+          customer_id?: string | null
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          observacao?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"]
+          valor?: number
+        }
+        Update: {
+          barber_id?: string
+          barbershop_id?: string
+          cliente_nome?: string
+          cliente_telefone?: string
+          created_at?: string
+          customer_id?: string | null
+          data?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          observacao?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"]
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      barber_hours: {
+        Row: {
+          ativo: boolean
+          barber_id: string
+          barbershop_id: string
+          dia_semana: number
+          hora_fim: string
+          hora_inicio: string
+          id: string
+        }
+        Insert: {
+          ativo?: boolean
+          barber_id: string
+          barbershop_id: string
+          dia_semana: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+        }
+        Update: {
+          ativo?: boolean
+          barber_id?: string
+          barbershop_id?: string
+          dia_semana?: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barber_hours_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barber_hours_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      barber_services: {
+        Row: {
+          barber_id: string
+          barbershop_id: string
+          service_id: string
+        }
+        Insert: {
+          barber_id: string
+          barbershop_id: string
+          service_id: string
+        }
+        Update: {
+          barber_id?: string
+          barbershop_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barber_services_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barber_services_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barber_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      barbers: {
+        Row: {
+          ativo: boolean
+          barbershop_id: string
+          created_at: string
+          descricao: string | null
+          foto_url: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          barbershop_id: string
+          created_at?: string
+          descricao?: string | null
+          foto_url?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          barbershop_id?: string
+          created_at?: string
+          descricao?: string | null
+          foto_url?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barbers_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      barbershops: {
+        Row: {
+          assinatura_status: string
+          assinatura_vencimento: string | null
+          cidade: string | null
+          cor_primaria: string
+          cor_secundaria: string
+          cover_url: string | null
+          created_at: string
+          descricao: string | null
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          facebook: string | null
+          id: string
+          instagram: string | null
+          limite_agendamentos_mes: number
+          limite_barbeiros: number
+          logo_url: string | null
+          nome: string
+          onboarding_concluido: boolean
+          owner_id: string
+          plano: string
+          slug: string
+          telefone: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          assinatura_status?: string
+          assinatura_vencimento?: string | null
+          cidade?: string | null
+          cor_primaria?: string
+          cor_secundaria?: string
+          cover_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          limite_agendamentos_mes?: number
+          limite_barbeiros?: number
+          logo_url?: string | null
+          nome: string
+          onboarding_concluido?: boolean
+          owner_id: string
+          plano?: string
+          slug: string
+          telefone?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          assinatura_status?: string
+          assinatura_vencimento?: string | null
+          cidade?: string | null
+          cor_primaria?: string
+          cor_secundaria?: string
+          cover_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          limite_agendamentos_mes?: number
+          limite_barbeiros?: number
+          logo_url?: string | null
+          nome?: string
+          onboarding_concluido?: boolean
+          owner_id?: string
+          plano?: string
+          slug?: string
+          telefone?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      blocked_times: {
+        Row: {
+          barber_id: string | null
+          barbershop_id: string
+          created_at: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          motivo: string | null
+        }
+        Insert: {
+          barber_id?: string | null
+          barbershop_id: string
+          created_at?: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          motivo?: string | null
+        }
+        Update: {
+          barber_id?: string | null
+          barbershop_id?: string
+          created_at?: string
+          data?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          motivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_times_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_times_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_hours: {
+        Row: {
+          aberto: boolean
+          barbershop_id: string
+          dia_semana: number
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          intervalo_fim: string | null
+          intervalo_inicio: string | null
+        }
+        Insert: {
+          aberto?: boolean
+          barbershop_id: string
+          dia_semana: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          intervalo_fim?: string | null
+          intervalo_inicio?: string | null
+        }
+        Update: {
+          aberto?: boolean
+          barbershop_id?: string
+          dia_semana?: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          intervalo_fim?: string | null
+          intervalo_inicio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_hours_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          barbershop_id: string
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          telefone: string
+        }
+        Insert: {
+          barbershop_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          telefone: string
+        }
+        Update: {
+          barbershop_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          nome?: string
+          telefone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          ativo: boolean
+          barbershop_id: string
+          created_at: string
+          descricao: string | null
+          duracao_minutos: number
+          id: string
+          nome: string
+          preco: number
+        }
+        Insert: {
+          ativo?: boolean
+          barbershop_id: string
+          created_at?: string
+          descricao?: string | null
+          duracao_minutos?: number
+          id?: string
+          nome: string
+          preco?: number
+        }
+        Update: {
+          ativo?: boolean
+          barbershop_id?: string
+          created_at?: string
+          descricao?: string | null
+          duracao_minutos?: number
+          id?: string
+          nome?: string
+          preco?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      agendamento_publico: {
+        Args: { p_id: string }
+        Returns: {
+          barbearia: string
+          barbeiro: string
+          cliente_nome: string
+          data: string
+          endereco: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          servico: string
+          slug: string
+          telefone: string
+          valor: number
+        }[]
+      }
+      criar_agendamento_publico: {
+        Args: {
+          p_barber_id: string
+          p_data: string
+          p_email?: string
+          p_hora: string
+          p_nome: string
+          p_observacao?: string
+          p_service_id: string
+          p_slug: string
+          p_telefone: string
+        }
+        Returns: string
+      }
+      current_barbershop_id: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      horarios_disponiveis: {
+        Args: {
+          p_barber_id: string
+          p_data: string
+          p_service_id: string
+          p_slug: string
+        }
+        Returns: {
+          barber_id: string
+          barber_nome: string
+          hora: string
+        }[]
+      }
+      slug_disponivel: { Args: { p_slug: string }; Returns: boolean }
+    }
+    Enums: {
+      app_role: "super_admin" | "barbershop_admin"
+      appointment_status:
+        | "pendente"
+        | "confirmado"
+        | "concluido"
+        | "cancelado"
+        | "nao_compareceu"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: ["super_admin", "barbershop_admin"],
+      appointment_status: [
+        "pendente",
+        "confirmado",
+        "concluido",
+        "cancelado",
+        "nao_compareceu",
+      ],
+    },
+  },
+} as const
