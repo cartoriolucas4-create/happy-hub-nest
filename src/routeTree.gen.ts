@@ -25,6 +25,8 @@ import { Route as AuthenticatedAdminConfigurarRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminHorariosRouteImport } from './routes/_authenticated/admin.horarios'
 import { Route as AuthenticatedAdminMeuLinkRouteImport } from './routes/_authenticated/admin.meu-link'
 import { Route as AuthenticatedAdminServicosRouteImport } from './routes/_authenticated/admin.servicos'
+import { Route as BarbeariaSlugIndexRouteImport } from './routes/barbearia.$slug.index'
+import { Route as BarbeariaSlugAgendarRouteImport } from './routes/barbearia.$slug.agendar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -115,6 +117,16 @@ const AuthenticatedAdminServicosRoute =
     path: '/admin/servicos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const BarbeariaSlugIndexRoute = BarbeariaSlugIndexRouteImport.update({
+  id: '/barbearia/$slug/',
+  path: '/barbearia/$slug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BarbeariaSlugAgendarRoute = BarbeariaSlugAgendarRouteImport.update({
+  id: '/barbearia/$slug/agendar',
+  path: '/barbearia/$slug/agendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,7 +143,9 @@ export interface FileRoutesByFullPath {
   '/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
+  '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/barbearia/$slug/': typeof BarbeariaSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,7 +162,9 @@ export interface FileRoutesByTo {
   '/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
+  '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/barbearia/$slug': typeof BarbeariaSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,7 +183,9 @@ export interface FileRoutesById {
   '/_authenticated/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/_authenticated/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/_authenticated/admin/servicos': typeof AuthenticatedAdminServicosRoute
+  '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/barbearia/$slug/': typeof BarbeariaSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -186,7 +204,9 @@ export interface FileRouteTypes {
     | '/admin/horarios'
     | '/admin/meu-link'
     | '/admin/servicos'
+    | '/barbearia/$slug/agendar'
     | '/admin/'
+    | '/barbearia/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -203,7 +223,9 @@ export interface FileRouteTypes {
     | '/admin/horarios'
     | '/admin/meu-link'
     | '/admin/servicos'
+    | '/barbearia/$slug/agendar'
     | '/admin'
+    | '/barbearia/$slug'
   id:
     | '__root__'
     | '/'
@@ -221,7 +243,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/horarios'
     | '/_authenticated/admin/meu-link'
     | '/_authenticated/admin/servicos'
+    | '/barbearia/$slug/agendar'
     | '/_authenticated/admin/'
+    | '/barbearia/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -230,6 +254,8 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  BarbeariaSlugAgendarRoute: typeof BarbeariaSlugAgendarRoute
+  BarbeariaSlugIndexRoute: typeof BarbeariaSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -346,6 +372,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminServicosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/barbearia/$slug/': {
+      id: '/barbearia/$slug/'
+      path: '/barbearia/$slug'
+      fullPath: '/barbearia/$slug/'
+      preLoaderRoute: typeof BarbeariaSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/barbearia/$slug/agendar': {
+      id: '/barbearia/$slug/agendar'
+      path: '/barbearia/$slug/agendar'
+      fullPath: '/barbearia/$slug/agendar'
+      preLoaderRoute: typeof BarbeariaSlugAgendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -386,6 +426,8 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  BarbeariaSlugAgendarRoute: BarbeariaSlugAgendarRoute,
+  BarbeariaSlugIndexRoute: BarbeariaSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
