@@ -60,20 +60,26 @@ function Landing() {
           <span className="font-display text-2xl tracking-[0.2em]">
             BARBER<span className="text-primary">FLOW</span>
           </span>
-          <div className="flex items-center gap-2">
+          <nav className="flex flex-wrap items-center justify-end gap-x-1 gap-y-2 sm:gap-x-2">
             <Link
               to="/login"
-              className="rounded-sm px-4 py-2 text-sm text-muted-foreground hover:text-primary"
+              className="rounded-sm px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-primary sm:px-4"
             >
-              Entrar
+              ENTRAR
             </Link>
             <Link
               to="/cadastro"
-              className="rounded-sm bg-primary px-5 py-2 font-display text-sm tracking-widest text-primary-foreground hover:bg-primary/90"
+              className="rounded-sm px-3 py-2 text-sm text-foreground/90 underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary sm:px-4"
+            >
+              CADASTRE-SE
+            </Link>
+            <Link
+              to="/cadastro"
+              className="rounded-sm bg-primary px-4 py-2 font-display text-sm tracking-widest text-primary-foreground transition-colors hover:bg-primary/90 sm:px-5"
             >
               COMEÇAR
             </Link>
-          </div>
+          </nav>
         </div>
       </header>
 
