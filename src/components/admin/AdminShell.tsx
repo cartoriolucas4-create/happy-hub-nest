@@ -126,7 +126,10 @@ export function AdminShell({
             </div>
             {actions}
           </div>
-          <div className="mt-8 pb-16">{children}</div>
+          <div className="mt-8 pb-16">
+            <LicenseBanner />
+            <AccessGate>{children}</AccessGate>
+          </div>
         </div>
       </main>
     </div>
