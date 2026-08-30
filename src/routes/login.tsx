@@ -33,22 +33,34 @@ function LoginPage() {
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
-    if (!isEmail(email)) return toast.error("Informe um e-mail válido.");
+    if (!isEmail(email)) {
+      toast.error("Informe um e-mail válido.");
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
     setLoading(false);
-    if (error) return toast.error("E-mail ou senha inválidos.");
+    if (error) {
+      toast.error("E-mail ou senha inválidos.");
+      return;
+    }
     navigate({ to: "/admin", replace: true });
   }
 
   async function esqueci() {
-    if (!isEmail(email)) return toast.error("Informe seu e-mail para recuperar a senha.");
+    if (!isEmail(email)) {
+      toast.error("Informe seu e-mail para recuperar a senha.");
+      return;
+    }
     setRecuperando(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setRecuperando(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Enviamos um link de recuperação para seu e-mail.");
   }
 

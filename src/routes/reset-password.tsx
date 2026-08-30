@@ -27,12 +27,21 @@ function ResetPassword() {
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
-    if (senha.length < 6) return toast.error("A senha deve ter ao menos 6 caracteres.");
-    if (senha !== confirma) return toast.error("As senhas não conferem.");
+    if (senha.length < 6) {
+      toast.error("A senha deve ter ao menos 6 caracteres.");
+      return;
+    }
+    if (senha !== confirma) {
+      toast.error("As senhas não conferem.");
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: senha });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Senha atualizada!");
     navigate({ to: "/admin", replace: true });
   }
