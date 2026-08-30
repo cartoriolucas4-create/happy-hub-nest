@@ -95,3 +95,93 @@ export function isPhone(v: string) {
 export function onlyDigits(v: string) {
   return v.replace(/\D/g, "");
 }
+
+/* ----------  Dados dinâmicos da barbearia (multi-tenant)  ---------- */
+
+export type ShopLike = {
+  nome?: string | null;
+  whatsapp?: string | null;
+  telefone?: string | null;
+  endereco?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  cidade?: string | null;
+  estado?: string | null;
+  cep?: string | null;
+  mensagem_whatsapp?: string | null;
+};
+
+/** Número em formato internacional (55 + DDD + número), vindo sempre do banco. */
+export function waNumber(shop: ShopLike | null | undefined) {
+  const raw = onlyDigits(shop?.whatsapp ?? shop?.telefone ?? "");
+  if (!raw) return "";
+  if (raw.startsWith("55")) return raw;
+  return `55${raw}`;
+}
+
+export function waLink(shop: ShopLike | null | undefined, mensagem?: string) {
+  const num = waNumber(shop);
+  if (!num) return "";
+  const texto =
+    mensagem ??
+    (shop?.mensagem_whatsapp?.trim() ||
+      `Olá! Gostaria de saber mais sobre os serviços da ${shop?.nome ?? "barbearia"}.`);
+  return `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
+}
+
+/** "Rua São José, 100 — Centro" */
+export function enderecoLinha1(shop: ShopLike | null | undefined) {
+  const rua = [shop?.endereco, shop?.numero].filter(Boolean).join(", ");
+  const compl = [shop?.complemento, shop?.bairro].filter(Boolean).join(" — ");
+  return [rua, compl].filter(Boolean).join(" — ");
+}
+
+/** "Salgueiro - PE · 56000-000" */
+export function enderecoLinha2(shop: ShopLike | null | undefined) {
+  const cidade = [shop?.cidade, shop?.estado].filter(Boolean).join(" - ");
+  return [cidade, shop?.cep].filter(Boolean).join(" · ");
+}
+
+export function enderecoCompleto(shop: ShopLike | null | undefined) {
+  return [enderecoLinha1(shop), enderecoLinha2(shop)].filter(Boolean).join(", ");
+}
+
+export function mapsLink(shop: ShopLike | null | undefined) {
+  const end = enderecoCompleto(shop);
+  if (!end) return "";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(end)}`;
+}
+
+/** Mensagem de confirmação enviada para o WhatsApp DA BARBEARIA. */
+export function mensagemAgendamento(p: {
+  barbearia: string;
+  cliente: string;
+  telefoneCliente: string;
+  servico: string;
+  barbeiro: string;
+  data: string;
+  hora: string;
+  duracao: number;
+  valor: number | string;
+  observacao?: string;
+}) {
+  const linhas = [
+    "Olá! Gostaria de confirmar um agendamento.",
+    "",
+    `Barbearia: ${p.barbearia}`,
+    "",
+    `Cliente: ${p.cliente}`,
+    `WhatsApp: ${p.telefoneCliente}`,
+    "",
+    `Serviço: ${p.servico}`,
+    `Barbeiro: ${p.barbeiro}`,
+    `Data: ${brDate(p.data)}`,
+    `Horário: ${p.hora}`,
+    `Duração: ${p.duracao} minutos`,
+    `Valor: ${brl(p.valor)}`,
+  ];
+  if (p.observacao?.trim()) linhas.push("", "Observação:", p.observacao.trim());
+  linhas.push("", "Agendamento realizado pelo site.");
+  return linhas.join("\n");
+}
