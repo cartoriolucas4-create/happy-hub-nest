@@ -16,10 +16,12 @@ import {
   Link2,
   LogOut,
   Menu,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
+import { useIsSuperAdmin } from "@/lib/license";
 
 export const MENU = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
