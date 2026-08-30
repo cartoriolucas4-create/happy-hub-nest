@@ -27,8 +27,13 @@ import { Route as AuthenticatedAdminHorariosRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminMeuLinkRouteImport } from './routes/_authenticated/admin.meu-link'
 import { Route as AuthenticatedAdminPagamentosRouteImport } from './routes/_authenticated/admin.pagamentos'
 import { Route as AuthenticatedAdminServicosRouteImport } from './routes/_authenticated/admin.servicos'
+import { Route as AuthenticatedSuperAdminIndexRouteImport } from './routes/_authenticated/super-admin.index'
+import { Route as AuthenticatedSuperAdminAcessosRouteImport } from './routes/_authenticated/super-admin.acessos'
+import { Route as AuthenticatedSuperAdminHistoricoRouteImport } from './routes/_authenticated/super-admin.historico'
 import { Route as BarbeariaSlugIndexRouteImport } from './routes/barbearia.$slug.index'
 import { Route as BarbeariaSlugAgendarRouteImport } from './routes/barbearia.$slug.agendar'
+import { Route as AuthenticatedSuperAdminClientesIndexRouteImport } from './routes/_authenticated/super-admin.clientes.index'
+import { Route as AuthenticatedSuperAdminClientesIdRouteImport } from './routes/_authenticated/super-admin.clientes.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -131,6 +136,24 @@ const AuthenticatedAdminServicosRoute =
     path: '/admin/servicos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSuperAdminIndexRoute =
+  AuthenticatedSuperAdminIndexRouteImport.update({
+    id: '/super-admin/',
+    path: '/super-admin/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSuperAdminAcessosRoute =
+  AuthenticatedSuperAdminAcessosRouteImport.update({
+    id: '/super-admin/acessos',
+    path: '/super-admin/acessos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSuperAdminHistoricoRoute =
+  AuthenticatedSuperAdminHistoricoRouteImport.update({
+    id: '/super-admin/historico',
+    path: '/super-admin/historico',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const BarbeariaSlugIndexRoute = BarbeariaSlugIndexRouteImport.update({
   id: '/barbearia/$slug/',
   path: '/barbearia/$slug/',
@@ -141,6 +164,18 @@ const BarbeariaSlugAgendarRoute = BarbeariaSlugAgendarRouteImport.update({
   path: '/barbearia/$slug/agendar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSuperAdminClientesIndexRoute =
+  AuthenticatedSuperAdminClientesIndexRouteImport.update({
+    id: '/super-admin/clientes/',
+    path: '/super-admin/clientes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSuperAdminClientesIdRoute =
+  AuthenticatedSuperAdminClientesIdRouteImport.update({
+    id: '/super-admin/clientes/$id',
+    path: '/super-admin/clientes/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,9 +194,14 @@ export interface FileRoutesByFullPath {
   '/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/admin/pagamentos': typeof AuthenticatedAdminPagamentosRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
+  '/super-admin/acessos': typeof AuthenticatedSuperAdminAcessosRoute
+  '/super-admin/historico': typeof AuthenticatedSuperAdminHistoricoRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/super-admin/': typeof AuthenticatedSuperAdminIndexRoute
   '/barbearia/$slug/': typeof BarbeariaSlugIndexRoute
+  '/super-admin/clientes/$id': typeof AuthenticatedSuperAdminClientesIdRoute
+  '/super-admin/clientes/': typeof AuthenticatedSuperAdminClientesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -180,9 +220,14 @@ export interface FileRoutesByTo {
   '/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/admin/pagamentos': typeof AuthenticatedAdminPagamentosRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
+  '/super-admin/acessos': typeof AuthenticatedSuperAdminAcessosRoute
+  '/super-admin/historico': typeof AuthenticatedSuperAdminHistoricoRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/super-admin': typeof AuthenticatedSuperAdminIndexRoute
   '/barbearia/$slug': typeof BarbeariaSlugIndexRoute
+  '/super-admin/clientes/$id': typeof AuthenticatedSuperAdminClientesIdRoute
+  '/super-admin/clientes': typeof AuthenticatedSuperAdminClientesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -203,9 +248,14 @@ export interface FileRoutesById {
   '/_authenticated/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/_authenticated/admin/pagamentos': typeof AuthenticatedAdminPagamentosRoute
   '/_authenticated/admin/servicos': typeof AuthenticatedAdminServicosRoute
+  '/_authenticated/super-admin/acessos': typeof AuthenticatedSuperAdminAcessosRoute
+  '/_authenticated/super-admin/historico': typeof AuthenticatedSuperAdminHistoricoRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/super-admin/': typeof AuthenticatedSuperAdminIndexRoute
   '/barbearia/$slug/': typeof BarbeariaSlugIndexRoute
+  '/_authenticated/super-admin/clientes/$id': typeof AuthenticatedSuperAdminClientesIdRoute
+  '/_authenticated/super-admin/clientes/': typeof AuthenticatedSuperAdminClientesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -226,9 +276,14 @@ export interface FileRouteTypes {
     | '/admin/meu-link'
     | '/admin/pagamentos'
     | '/admin/servicos'
+    | '/super-admin/acessos'
+    | '/super-admin/historico'
     | '/barbearia/$slug/agendar'
     | '/admin/'
+    | '/super-admin/'
     | '/barbearia/$slug/'
+    | '/super-admin/clientes/$id'
+    | '/super-admin/clientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -247,9 +302,14 @@ export interface FileRouteTypes {
     | '/admin/meu-link'
     | '/admin/pagamentos'
     | '/admin/servicos'
+    | '/super-admin/acessos'
+    | '/super-admin/historico'
     | '/barbearia/$slug/agendar'
     | '/admin'
+    | '/super-admin'
     | '/barbearia/$slug'
+    | '/super-admin/clientes/$id'
+    | '/super-admin/clientes'
   id:
     | '__root__'
     | '/'
@@ -269,9 +329,14 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/meu-link'
     | '/_authenticated/admin/pagamentos'
     | '/_authenticated/admin/servicos'
+    | '/_authenticated/super-admin/acessos'
+    | '/_authenticated/super-admin/historico'
     | '/barbearia/$slug/agendar'
     | '/_authenticated/admin/'
+    | '/_authenticated/super-admin/'
     | '/barbearia/$slug/'
+    | '/_authenticated/super-admin/clientes/$id'
+    | '/_authenticated/super-admin/clientes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -412,6 +477,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminServicosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/super-admin/': {
+      id: '/_authenticated/super-admin/'
+      path: '/super-admin'
+      fullPath: '/super-admin/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/super-admin/acessos': {
+      id: '/_authenticated/super-admin/acessos'
+      path: '/super-admin/acessos'
+      fullPath: '/super-admin/acessos'
+      preLoaderRoute: typeof AuthenticatedSuperAdminAcessosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/super-admin/historico': {
+      id: '/_authenticated/super-admin/historico'
+      path: '/super-admin/historico'
+      fullPath: '/super-admin/historico'
+      preLoaderRoute: typeof AuthenticatedSuperAdminHistoricoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/barbearia/$slug/': {
       id: '/barbearia/$slug/'
       path: '/barbearia/$slug'
@@ -425,6 +511,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/barbearia/$slug/agendar'
       preLoaderRoute: typeof BarbeariaSlugAgendarRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/super-admin/clientes/': {
+      id: '/_authenticated/super-admin/clientes/'
+      path: '/super-admin/clientes'
+      fullPath: '/super-admin/clientes/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminClientesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/super-admin/clientes/$id': {
+      id: '/_authenticated/super-admin/clientes/$id'
+      path: '/super-admin/clientes/$id'
+      fullPath: '/super-admin/clientes/$id'
+      preLoaderRoute: typeof AuthenticatedSuperAdminClientesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -442,7 +542,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminMeuLinkRoute: typeof AuthenticatedAdminMeuLinkRoute
   AuthenticatedAdminPagamentosRoute: typeof AuthenticatedAdminPagamentosRoute
   AuthenticatedAdminServicosRoute: typeof AuthenticatedAdminServicosRoute
+  AuthenticatedSuperAdminAcessosRoute: typeof AuthenticatedSuperAdminAcessosRoute
+  AuthenticatedSuperAdminHistoricoRoute: typeof AuthenticatedSuperAdminHistoricoRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedSuperAdminIndexRoute: typeof AuthenticatedSuperAdminIndexRoute
+  AuthenticatedSuperAdminClientesIdRoute: typeof AuthenticatedSuperAdminClientesIdRoute
+  AuthenticatedSuperAdminClientesIndexRoute: typeof AuthenticatedSuperAdminClientesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -458,7 +563,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminMeuLinkRoute: AuthenticatedAdminMeuLinkRoute,
   AuthenticatedAdminPagamentosRoute: AuthenticatedAdminPagamentosRoute,
   AuthenticatedAdminServicosRoute: AuthenticatedAdminServicosRoute,
+  AuthenticatedSuperAdminAcessosRoute: AuthenticatedSuperAdminAcessosRoute,
+  AuthenticatedSuperAdminHistoricoRoute: AuthenticatedSuperAdminHistoricoRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedSuperAdminIndexRoute: AuthenticatedSuperAdminIndexRoute,
+  AuthenticatedSuperAdminClientesIdRoute:
+    AuthenticatedSuperAdminClientesIdRoute,
+  AuthenticatedSuperAdminClientesIndexRoute:
+    AuthenticatedSuperAdminClientesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
