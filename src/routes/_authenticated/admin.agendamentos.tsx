@@ -46,6 +46,7 @@ function Agendamentos() {
   const [ate, setAte] = useState(todayIso());
   const [status, setStatus] = useState("");
   const [barbeiro, setBarbeiro] = useState("");
+  const [pagamento, setPagamento] = useState("");
   const [novo, setNovo] = useState(false);
   const [form, setForm] = useState({
     cliente_nome: "",
