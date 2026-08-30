@@ -102,8 +102,9 @@ function Agendar() {
         p_hora: hora,
         p_nome: nome.trim(),
         p_telefone: telefone.trim(),
-        p_email: email.trim() || undefined,
-        p_observacao: observacao.trim() || undefined,
+        ...(email.trim() ? { p_email: email.trim() } : {}),
+        ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}),
+
       });
       if (error) throw new Error(error.message);
       const recibo = await supabase.rpc("agendamento_publico", { p_id: id as string });
