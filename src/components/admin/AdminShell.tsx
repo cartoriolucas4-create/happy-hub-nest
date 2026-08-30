@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
 
 export const MENU = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
