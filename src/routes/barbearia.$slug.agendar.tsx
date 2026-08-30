@@ -8,7 +8,6 @@ import {
   brDate,
   brl,
   hhmm,
-  isEmail,
   isPhone,
   todayIso,
   addDays,
@@ -46,7 +45,7 @@ function Agendar() {
   const [hora, setHora] = useState("");
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [email, setEmail] = useState("");
+  const [paymentMethodId, setPaymentMethodId] = useState("");
   const [observacao, setObservacao] = useState("");
   const [whatsUrl, setWhatsUrl] = useState("");
 
@@ -69,6 +68,23 @@ function Agendar() {
       };
     },
   });
+
+  const { data: metodos = [] } = useQuery({
+    queryKey: ["payment-methods", base?.shop.id],
+    enabled: Boolean(base?.shop.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_methods")
+        .select("id, name, description, pix_key, pix_key_type, pix_receiver_name, pix_city")
+        .eq("barbershop_id", base!.shop.id)
+        .eq("active", true)
+        .order("display_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const metodo = metodos.find((m) => m.id === paymentMethodId);
 
   const servico = base?.services.find((s) => s.id === serviceId);
   const barbeiro = base?.barbers.find((b) => b.id === barberId);
@@ -95,13 +111,18 @@ function Agendar() {
   function validarDados() {
     if (nome.trim().length < 3) return "Informe seu nome completo.";
     if (!isPhone(telefone)) return "Informe um telefone válido com DDD.";
-    if (email && !isEmail(email)) return "E-mail inválido.";
+    return null;
+  }
+
+  function validarPagamento() {
+    if (metodos.length === 0) return null;
+    if (!paymentMethodId) return "Escolha um método de pagamento.";
     return null;
   }
 
   const confirmar = useMutation({
     mutationFn: async () => {
-      const erro = validarDados();
+      const erro = validarDados() ?? validarPagamento();
       if (erro) throw new Error(erro);
       // 1) salva o agendamento na barbearia correta (barbershop_id vem do slug)
       const { error } = await supabase.rpc("criar_agendamento_publico", {
@@ -112,7 +133,7 @@ function Agendar() {
         p_hora: hora,
         p_nome: nome.trim(),
         p_telefone: telefone.trim(),
-        ...(email.trim() ? { p_email: email.trim() } : {}),
+        ...(paymentMethodId ? { p_payment_method_id: paymentMethodId } : {}),
         ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}),
       });
       if (error) throw new Error(error.message);
@@ -130,13 +151,14 @@ function Agendar() {
           hora,
           duracao: servico?.duracao_minutos ?? 0,
           valor: servico?.preco ?? 0,
+          ...(metodo ? { pagamento: metodo.name } : {}),
           observacao,
         }),
       );
     },
     onSuccess: (url) => {
       setWhatsUrl(url);
-      setStep(6);
+      setStep(7);
       if (url) window.open(url, "_blank", "noopener,noreferrer");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -164,10 +186,11 @@ function Agendar() {
     ["Valor", brl(servico?.preco ?? 0)],
     ["Cliente", nome.trim()],
     ["WhatsApp", telefone.trim()],
+    ...(metodo ? ([["Pagamento", metodo.name]] as [string, string][]) : []),
     ...(observacao.trim() ? ([["Observação", observacao.trim()]] as [string, string][]) : []),
   ];
 
-  if (step === 6) {
+  if (step === 7) {
     return (
       <Centro>
         <Check className="mx-auto h-12 w-12 text-primary" aria-hidden="true" />
@@ -215,7 +238,7 @@ function Agendar() {
         </Link>
 
         <div className="mt-6 flex gap-2">
-          {[1, 2, 3, 4, 5].map((n) => (
+          {[1, 2, 3, 4, 5, 6].map((n) => (
             <div key={n} className={`h-1 flex-1 rounded ${n <= step ? "bg-primary" : "bg-secondary"}`} />
           ))}
         </div>
@@ -354,13 +377,6 @@ function Agendar() {
                 onChange={(e) => setTelefone(e.target.value)}
                 required
               />
-              <input
-                className={inputCls}
-                placeholder="E-mail (opcional)"
-                maxLength={160}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
               <textarea
                 className={inputCls}
                 rows={3}
@@ -370,7 +386,7 @@ function Agendar() {
                 onChange={(e) => setObservacao(e.target.value)}
               />
               <button className="w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90">
-                REVISAR AGENDAMENTO
+                CONTINUAR
               </button>
             </form>
             <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(3)}>
@@ -380,6 +396,57 @@ function Agendar() {
         )}
 
         {step === 5 && (
+          <section className="mt-8">
+            <h1 className="text-3xl">Método de pagamento</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Escolha como pretende pagar. O pagamento é feito diretamente na barbearia.
+            </p>
+            <div className="mt-6 space-y-3">
+              {metodos.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Esta barbearia ainda não cadastrou métodos de pagamento. Combine o pagamento diretamente com ela.
+                </p>
+              )}
+              {metodos.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setPaymentMethodId(m.id)}
+                  className={`w-full rounded-lg border bg-card p-4 text-left ${
+                    paymentMethodId === m.id ? "border-primary" : "border-border hover:border-primary/60"
+                  }`}
+                >
+                  <span className="text-lg">{m.name}</span>
+                  {m.description && <span className="block text-sm text-muted-foreground">{m.description}</span>}
+                  {paymentMethodId === m.id && m.pix_key && (
+                    <span className="mt-2 block text-xs text-muted-foreground">
+                      Chave Pix {m.pix_key_type ? `(${m.pix_key_type})` : ""}: {m.pix_key}
+                      {m.pix_receiver_name ? ` · ${m.pix_receiver_name}` : ""}
+                      {m.pix_city ? ` · ${m.pix_city}` : ""}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                const erro = validarPagamento();
+                if (erro) {
+                  toast.error(erro);
+                  return;
+                }
+                setStep(6);
+              }}
+              className="mt-6 w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90"
+            >
+              REVISAR AGENDAMENTO
+            </button>
+            <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(4)}>
+              Voltar
+            </button>
+          </section>
+        )}
+
+        {step === 6 && (
           <section className="mt-8">
             <h1 className="text-3xl">Confira seu agendamento</h1>
             <div className="mt-6 rounded-lg border border-border bg-card p-6 text-sm">
@@ -400,7 +467,7 @@ function Agendar() {
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Ao confirmar, abriremos o WhatsApp da barbearia com o resumo do seu agendamento.
             </p>
-            <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(4)}>
+            <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(5)}>
               Voltar
             </button>
           </section>
