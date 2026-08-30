@@ -238,7 +238,7 @@ function Agendar() {
         </Link>
 
         <div className="mt-6 flex gap-2">
-          {[1, 2, 3, 4, 5].map((n) => (
+          {[1, 2, 3, 4, 5, 6].map((n) => (
             <div key={n} className={`h-1 flex-1 rounded ${n <= step ? "bg-primary" : "bg-secondary"}`} />
           ))}
         </div>
