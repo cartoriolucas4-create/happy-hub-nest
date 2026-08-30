@@ -11,6 +11,7 @@ import {
   Clock,
   Ban,
   Settings,
+  CreditCard,
   Images,
   Link2,
   LogOut,
