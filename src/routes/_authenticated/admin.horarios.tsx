@@ -33,9 +33,9 @@ type Linha = {
 
 const padrao = (d: number): Linha => ({
   dia_semana: d,
-  aberto: d !== 0,
-  hora_inicio: "09:00",
-  hora_fim: "19:00",
+  aberto: false,
+  hora_inicio: "",
+  hora_fim: "",
   intervalo_inicio: "",
   intervalo_fim: "",
 });
@@ -90,7 +90,7 @@ function Horarios() {
   const salvar = useMutation({
     mutationFn: async () => {
       for (const l of linhas) {
-        if (l.aberto && l.hora_fim <= l.hora_inicio) {
+        if (l.aberto && (!l.hora_inicio || !l.hora_fim || l.hora_fim <= l.hora_inicio)) {
           throw new Error(`${DIAS[l.dia_semana]}: o horário final deve ser depois do inicial.`);
         }
         if (l.intervalo_inicio && l.intervalo_fim && l.intervalo_fim <= l.intervalo_inicio) {
@@ -115,6 +115,7 @@ function Horarios() {
     onSuccess: () => {
       toast.success("Horários salvos!");
       qc.invalidateQueries({ queryKey: ["horarios"] });
+      qc.invalidateQueries({ queryKey: ["barbershop-setup-status"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });

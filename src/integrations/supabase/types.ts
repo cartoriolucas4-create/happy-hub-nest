@@ -786,6 +786,21 @@ export type Database = {
             Returns: string
           }
       current_barbershop_id: { Args: never; Returns: string }
+      barbershop_public_status: {
+        Args: { p_slug: string }
+        Returns: { found: boolean; pronta: boolean }[]
+      }
+      barbershop_setup_status: {
+        Args: never
+        Returns: {
+          barbeiros: boolean
+          concluida: boolean
+          dias_atendimento: boolean
+          horarios: boolean
+          meios_pagamento: boolean
+          servicos: boolean
+        }[]
+      }
       effective_license_status: {
         Args: { p_user_id: string }
         Returns: Database["public"]["Enums"]["license_status"]

@@ -49,6 +49,15 @@ function Agendar() {
   const [observacao, setObservacao] = useState("");
   const [whatsUrl, setWhatsUrl] = useState("");
 
+  const { data: publicStatus, isLoading: loadingStatus } = useQuery({
+    queryKey: ["barbershop-public-status", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("barbershop_public_status", { p_slug: slug });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+
   const { data: base, isLoading } = useQuery({
     queryKey: ["agendar-base", slug],
     queryFn: async () => {
@@ -164,7 +173,20 @@ function Agendar() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (isLoading) return <Centro>Carregando...</Centro>;
+  if (isLoading || loadingStatus) return <Centro>Carregando...</Centro>;
+  if (publicStatus && !publicStatus.pronta) {
+    return (
+      <Centro>
+        <h1 className="text-3xl">Agendamento em breve</h1>
+        <p className="mt-3 text-muted-foreground">
+          Esta barbearia ainda está concluindo a configuração inicial.
+        </p>
+        <Link to="/barbearia/$slug" params={{ slug }} className="mt-6 inline-block text-primary underline">
+          Voltar para a barbearia
+        </Link>
+      </Centro>
+    );
+  }
   if (!base) {
     return (
       <Centro>

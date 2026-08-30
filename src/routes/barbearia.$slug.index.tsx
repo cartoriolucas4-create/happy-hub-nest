@@ -78,6 +78,15 @@ function Regua() {
 function PaginaPublica() {
   const { slug } = Route.useParams();
 
+  const { data: publicStatus } = useQuery({
+    queryKey: ["barbershop-public-status", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("barbershop_public_status", { p_slug: slug });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["public-shop", slug],
     queryFn: async () => {
@@ -136,11 +145,14 @@ function PaginaPublica() {
   const experiencia =
     shop.sobre_experiencia?.trim() || "Precisão, estilo e cuidado em cada atendimento.";
 
-  const cta = (rotulo: string, className: string) => (
-    <Link to="/barbearia/$slug/agendar" params={{ slug }} className={className}>
-      {rotulo}
-    </Link>
-  );
+  const cta = (rotulo: string, className: string) =>
+    publicStatus?.pronta ? (
+      <Link to="/barbearia/$slug/agendar" params={{ slug }} className={className}>
+        {rotulo}
+      </Link>
+    ) : (
+      <span className={`${className} cursor-not-allowed opacity-60`}>Agendamento em configuração</span>
+    );
 
   const btnPrimario =
     "group inline-flex items-center justify-center gap-2 border border-primary bg-primary px-9 py-4 text-[0.72rem] uppercase tracking-[0.32em] text-primary-foreground transition-all hover:bg-transparent hover:text-primary";
@@ -209,6 +221,11 @@ function PaginaPublica() {
                 </a>
               )}
             </div>
+            {publicStatus && !publicStatus.pronta && (
+              <p className="mt-4 text-sm text-muted-foreground">
+                Esta barbearia ainda está concluindo a configuração inicial para receber agendamentos.
+              </p>
+            )}
           </div>
 
           {/* INDICADORES */}

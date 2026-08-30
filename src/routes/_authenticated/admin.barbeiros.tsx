@@ -89,6 +89,7 @@ function Barbeiros() {
       toast.success("Barbeiro salvo!");
       setForm(null);
       qc.invalidateQueries({ queryKey: ["barbeiros"] });
+      qc.invalidateQueries({ queryKey: ["barbershop-setup-status"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -101,6 +102,7 @@ function Barbeiros() {
     onSuccess: () => {
       toast.success("Barbeiro excluído.");
       qc.invalidateQueries({ queryKey: ["barbeiros"] });
+      qc.invalidateQueries({ queryKey: ["barbershop-setup-status"] });
     },
     onError: () => toast.error("Não foi possível excluir. Desative o barbeiro se ele já possui agendamentos."),
   });

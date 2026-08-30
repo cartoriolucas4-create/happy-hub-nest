@@ -21,7 +21,7 @@ import {
   BriefcaseBusiness,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
+import { AccessGate } from "@/components/admin/AccessGate";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const NAV_GROUPS = [
@@ -233,7 +233,6 @@ export function AdminShell({
             {actions}
           </div>
           <div className="mt-8 pb-16">
-            <LicenseBanner />
             <AccessGate>{children}</AccessGate>
           </div>
         </div>

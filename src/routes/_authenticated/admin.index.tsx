@@ -1,9 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Users, DollarSign, Clock, AlertTriangle } from "lucide-react";
+import {
+  CalendarDays,
+  Users,
+  DollarSign,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  CircleAlert,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, Empty } from "@/components/admin/AdminShell";
+import { LicenseBanner } from "@/components/admin/AccessGate";
 import { useShop } from "@/lib/shop";
+import { useSetupStatus } from "@/lib/setup";
 import { brl, hhmm, statusClass, STATUS_LABEL, todayIso, addDays } from "@/lib/barber";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
@@ -23,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 function Dashboard() {
   const { data: shop, isLoading } = useShop();
+  const { data: setup } = useSetupStatus(Boolean(shop));
   const hoje = todayIso();
 
   const { data } = useQuery({
@@ -76,15 +87,8 @@ function Dashboard() {
         ) : null
       }
     >
-      {shop && !shop.onboarding_concluido && (
-        <Link
-          to="/admin/configurar"
-          className="mb-8 flex items-center gap-3 rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm"
-        >
-          <AlertTriangle className="h-5 w-5 text-primary" aria-hidden="true" />
-          Configuração inicial pendente — clique para configurar serviços, barbeiros e horários.
-        </Link>
-      )}
+      <LicenseBanner />
+      {shop && setup && !setup.concluida && <SetupChecklist setup={setup} />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card icon={CalendarDays} label="Agendamentos hoje" value={String(ativosHoje.length)} />
@@ -117,6 +121,57 @@ function Dashboard() {
         ))}
       </div>
     </AdminShell>
+  );
+}
+
+const SETUP_ITEMS = [
+  { key: "dias_atendimento", label: "Dias de atendimento", to: "/admin/horarios" },
+  { key: "barbeiros", label: "Barbeiros", to: "/admin/barbeiros" },
+  { key: "servicos", label: "Serviços", to: "/admin/servicos" },
+  { key: "horarios", label: "Horários", to: "/admin/horarios" },
+  { key: "meios_pagamento", label: "Meios de pagamento", to: "/admin/pagamentos" },
+] as const;
+
+function SetupChecklist({ setup }: { setup: ReturnType<typeof useSetupStatus>["data"] }) {
+  const firstPending = SETUP_ITEMS.find((item) => !setup?.[item.key]);
+  return (
+    <section className="mb-8 rounded-lg border border-primary/40 bg-primary/10 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="font-display text-sm tracking-widest">CONFIGURAÇÃO INICIAL PENDENTE</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Complete as configurações necessárias para começar a utilizar sua barbearia.
+          </p>
+        </div>
+        {firstPending && (
+          <Link
+            to={firstPending.to}
+            className="rounded-md bg-primary px-4 py-2 text-xs font-medium tracking-wider text-primary-foreground"
+          >
+            COMEÇAR CONFIGURAÇÃO
+          </Link>
+        )}
+      </div>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        {SETUP_ITEMS.map((item) => {
+          const complete = Boolean(setup?.[item.key]);
+          return (
+            <Link
+              key={item.key}
+              to={item.to}
+              className="flex items-center gap-2 rounded-md border border-border/70 bg-background/40 px-3 py-2 text-sm hover:border-primary"
+            >
+              {complete ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              ) : (
+                <CircleAlert className="h-4 w-4 text-primary" />
+              )}
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

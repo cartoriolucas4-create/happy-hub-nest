@@ -32,7 +32,7 @@ type Form = {
   ativo: boolean;
 };
 
-const vazio: Form = { nome: "", descricao: "", preco: "", duracao_minutos: "30", ativo: true };
+const vazio: Form = { nome: "", descricao: "", preco: "", duracao_minutos: "", ativo: true };
 
 function Servicos() {
   const { data: shop } = useShop();
@@ -68,6 +68,7 @@ function Servicos() {
       toast.success("Serviço salvo!");
       setForm(null);
       qc.invalidateQueries({ queryKey: ["servicos"] });
+      qc.invalidateQueries({ queryKey: ["barbershop-setup-status"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -80,6 +81,7 @@ function Servicos() {
     onSuccess: () => {
       toast.success("Serviço excluído.");
       qc.invalidateQueries({ queryKey: ["servicos"] });
+      qc.invalidateQueries({ queryKey: ["barbershop-setup-status"] });
     },
     onError: () => toast.error("Não foi possível excluir. Desative o serviço se ele já possui agendamentos."),
   });

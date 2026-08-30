@@ -1,195 +1,91 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { AdminShell, btn, input } from "@/components/admin/AdminShell";
-import { useShop } from "@/lib/shop";
-import { DIAS } from "@/lib/barber";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { CheckCircle2, CircleAlert } from "lucide-react";
+import { AdminShell, btn } from "@/components/admin/AdminShell";
+import { useSetupStatus } from "@/lib/setup";
 
-export const Route = createFileRoute("/_authenticated/admin/configurar")({
-  head: () => ({
-    meta: [
-      { title: "Configuração inicial | BarberFlow" },
-      { name: "description", content: "Configure serviços, equipe e horários da sua barbearia." },
-      { property: "og:title", content: "Configuração inicial | BarberFlow" },
-      { property: "og:description", content: "Onboarding da barbearia." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
-  component: Configurar,
-});
+export const Route = createFileRoute("/_authenticated/admin/configurar")({ component: Configurar });
 
-const servicosPadrao = [
-  { nome: "Corte", preco: "45", duracao_minutos: "30" },
-  { nome: "Barba", preco: "35", duracao_minutos: "30" },
-  { nome: "Corte + Barba", preco: "70", duracao_minutos: "60" },
-];
+const ITEMS = [
+  {
+    key: "dias_atendimento",
+    title: "Dias de atendimento",
+    text: "Escolha os dias em que sua barbearia atende.",
+    to: "/admin/horarios",
+  },
+  {
+    key: "barbeiros",
+    title: "Barbeiros",
+    text: "Cadastre pelo menos um profissional ativo.",
+    to: "/admin/barbeiros",
+  },
+  {
+    key: "servicos",
+    title: "Serviços",
+    text: "Cadastre pelo menos um serviço ativo.",
+    to: "/admin/servicos",
+  },
+  {
+    key: "horarios",
+    title: "Horários",
+    text: "Defina abertura e fechamento para os dias selecionados.",
+    to: "/admin/horarios",
+  },
+  {
+    key: "meios_pagamento",
+    title: "Meios de pagamento",
+    text: "Cadastre ao menos um meio de pagamento ativo.",
+    to: "/admin/pagamentos",
+  },
+] as const;
 
 function Configurar() {
-  const { data: shop } = useShop();
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const [servicos, setServicos] = useState(servicosPadrao);
-  const [barbeiro, setBarbeiro] = useState("");
-  const [abre, setAbre] = useState("09:00");
-  const [fecha, setFecha] = useState("19:00");
-  const [dias, setDias] = useState<number[]>([1, 2, 3, 4, 5, 6]);
-
-  const concluir = useMutation({
-    mutationFn: async () => {
-      if (!shop) throw new Error("Barbearia não encontrada.");
-      if (barbeiro.trim().length < 2) throw new Error("Informe o nome de pelo menos um barbeiro.");
-      if (fecha <= abre) throw new Error("O horário de fechamento deve ser depois da abertura.");
-      if (dias.length === 0) throw new Error("Selecione ao menos um dia de funcionamento.");
-
-      const validos = servicos.filter((s) => s.nome.trim() && Number(s.preco.replace(",", ".")) >= 0);
-      if (validos.length === 0) throw new Error("Cadastre ao menos um serviço.");
-
-      const insServ = await supabase
-        .from("services")
-        .insert(
-          validos.map((s) => ({
-            barbershop_id: shop.id,
-            nome: s.nome.trim(),
-            preco: Number(s.preco.replace(",", ".")),
-            duracao_minutos: Number(s.duracao_minutos),
-          })),
-        )
-        .select("id");
-      if (insServ.error) throw insServ.error;
-
-      const insBarb = await supabase
-        .from("barbers")
-        .insert({ barbershop_id: shop.id, nome: barbeiro.trim() })
-        .select("id")
-        .single();
-      if (insBarb.error) throw insBarb.error;
-
-      const links = await supabase.from("barber_services").insert(
-        insServ.data.map((s) => ({
-          barbershop_id: shop.id,
-          barber_id: insBarb.data.id,
-          service_id: s.id,
-        })),
-      );
-      if (links.error) throw links.error;
-
-      const delHoras = await supabase.from("business_hours").delete().eq("barbershop_id", shop.id);
-      if (delHoras.error) throw delHoras.error;
-      const insHoras = await supabase.from("business_hours").insert(
-        DIAS.map((_, i) => ({
-          barbershop_id: shop.id,
-          dia_semana: i,
-          aberto: dias.includes(i),
-          hora_inicio: abre,
-          hora_fim: fecha,
-        })),
-      );
-      if (insHoras.error) throw insHoras.error;
-
-      const upd = await supabase
-        .from("barbershops")
-        .update({ onboarding_concluido: true })
-        .eq("id", shop.id);
-      if (upd.error) throw upd.error;
-    },
-    onSuccess: () => {
-      toast.success("Barbearia configurada! Seu link já está no ar.");
-      qc.invalidateQueries();
-      navigate({ to: "/admin/meu-link" });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
+  const { data: setup, isLoading } = useSetupStatus();
+  const firstPending = ITEMS.find((item) => !setup?.[item.key]);
   return (
-    <AdminShell title="Configuração inicial" subtitle="Três passos rápidos para começar a receber agendamentos">
-      <div className="max-w-3xl space-y-10">
-        <section>
-          <h2 className="text-2xl">1. Serviços</h2>
-          <div className="mt-4 space-y-3">
-            {servicos.map((s, i) => (
-              <div key={i} className="grid gap-3 sm:grid-cols-3">
-                <input
-                  className={input}
-                  placeholder="Serviço"
-                  value={s.nome}
-                  onChange={(e) => {
-                    const c = [...servicos];
-                    c[i] = { ...s, nome: e.target.value };
-                    setServicos(c);
-                  }}
-                />
-                <input
-                  className={input}
-                  placeholder="Preço"
-                  value={s.preco}
-                  onChange={(e) => {
-                    const c = [...servicos];
-                    c[i] = { ...s, preco: e.target.value };
-                    setServicos(c);
-                  }}
-                />
-                <input
-                  type="number"
-                  min={5}
-                  step={5}
-                  className={input}
-                  value={s.duracao_minutos}
-                  onChange={(e) => {
-                    const c = [...servicos];
-                    c[i] = { ...s, duracao_minutos: e.target.value };
-                    setServicos(c);
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-2xl">2. Primeiro barbeiro</h2>
-          <input
-            className={`${input} mt-4 max-w-sm`}
-            placeholder="Nome do barbeiro"
-            value={barbeiro}
-            onChange={(e) => setBarbeiro(e.target.value)}
-          />
-        </section>
-
-        <section>
-          <h2 className="text-2xl">3. Funcionamento</h2>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {DIAS.map((d, i) => {
-              const on = dias.includes(i);
-              return (
-                <button
-                  key={d}
-                  onClick={() => setDias(on ? dias.filter((x) => x !== i) : [...dias, i])}
-                  className={`rounded-full border px-3 py-1.5 text-sm ${
-                    on ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"
-                  }`}
-                >
-                  {d.slice(0, 3)}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-4 grid max-w-sm gap-3 sm:grid-cols-2">
-            <input type="time" className={input} value={abre} onChange={(e) => setAbre(e.target.value)} />
-            <input type="time" className={input} value={fecha} onChange={(e) => setFecha(e.target.value)} />
-          </div>
-        </section>
-
-        <button className={btn} disabled={concluir.isPending} onClick={() => concluir.mutate()}>
-          <span className="flex items-center gap-2">
-            <Check className="h-4 w-4" /> {concluir.isPending ? "SALVANDO..." : "CONCLUIR CONFIGURAÇÃO"}
-          </span>
-        </button>
-      </div>
+    <AdminShell
+      title="Configuração inicial"
+      subtitle="Complete os itens abaixo para liberar o agendamento online."
+    >
+      {isLoading && <p className="text-sm text-muted-foreground">Verificando configuração...</p>}
+      {setup?.concluida && (
+        <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm">
+          Sua barbearia está pronta para operar.
+        </p>
+      )}
+      {setup && !setup.concluida && (
+        <div className="max-w-3xl space-y-3">
+          {ITEMS.map((item) => {
+            const complete = setup[item.key];
+            return (
+              <Link
+                key={item.key}
+                to={item.to}
+                className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-4 hover:border-primary"
+              >
+                <div className="flex items-start gap-3">
+                  {complete ? (
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-400" />
+                  ) : (
+                    <CircleAlert className="mt-0.5 h-5 w-5 text-primary" />
+                  )}
+                  <div>
+                    <p className="font-medium">{item.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{item.text}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-primary">
+                  {complete ? "CONCLUÍDO" : "CONFIGURAR"}
+                </span>
+              </Link>
+            );
+          })}
+          {firstPending && (
+            <Link to={firstPending.to} className={`inline-block ${btn}`}>
+              COMEÇAR CONFIGURAÇÃO
+            </Link>
+          )}
+        </div>
+      )}
     </AdminShell>
   );
 }

@@ -68,6 +68,7 @@ function Pagamentos() {
     qc.invalidateQueries({ queryKey: ["payment-methods-admin"] });
     qc.invalidateQueries({ queryKey: ["payment-methods"] });
     qc.invalidateQueries({ queryKey: ["base-agendamentos"] });
+    qc.invalidateQueries({ queryKey: ["barbershop-setup-status"] });
   };
 
   const salvar = useMutation({
