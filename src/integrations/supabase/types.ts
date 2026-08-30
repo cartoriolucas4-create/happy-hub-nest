@@ -510,10 +510,6 @@ export type Database = {
           icon: string | null
           id: string
           name: string
-          pix_city: string | null
-          pix_key: string | null
-          pix_key_type: string | null
-          pix_receiver_name: string | null
           updated_at: string
         }
         Insert: {
@@ -525,10 +521,6 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
-          pix_city?: string | null
-          pix_key?: string | null
-          pix_key_type?: string | null
-          pix_receiver_name?: string | null
           updated_at?: string
         }
         Update: {
@@ -540,10 +532,6 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
-          pix_city?: string | null
-          pix_key?: string | null
-          pix_key_type?: string | null
-          pix_receiver_name?: string | null
           updated_at?: string
         }
         Relationships: [

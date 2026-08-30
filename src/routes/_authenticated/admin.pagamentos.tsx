@@ -10,13 +10,13 @@ import { useShop } from "@/lib/shop";
 export const Route = createFileRoute("/_authenticated/admin/pagamentos")({
   head: () => ({
     meta: [
-      { title: "Métodos de pagamento | BarberFlow" },
+      { title: "Meios de pagamento | BarberFlow" },
       {
         name: "description",
-        content: "Cadastre as formas de pagamento que sua barbearia aceita no agendamento.",
+        content: "Cadastre livremente os meios de pagamento que sua barbearia aceita.",
       },
-      { property: "og:title", content: "Métodos de pagamento | BarberFlow" },
-      { property: "og:description", content: "Formas de pagamento da barbearia." },
+      { property: "og:title", content: "Meios de pagamento | BarberFlow" },
+      { property: "og:description", content: "Meios de pagamento definidos pela barbearia." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
@@ -32,10 +32,6 @@ type Metodo = {
   icon: string | null;
   active: boolean;
   display_order: number;
-  pix_key: string | null;
-  pix_key_type: string | null;
-  pix_receiver_name: string | null;
-  pix_city: string | null;
 };
 
 type Form = {
@@ -44,26 +40,9 @@ type Form = {
   description: string;
   icon: string;
   active: boolean;
-  pix_key: string;
-  pix_key_type: string;
-  pix_receiver_name: string;
-  pix_city: string;
 };
 
-const vazio: Form = {
-  id: null,
-  name: "",
-  description: "",
-  icon: "",
-  active: true,
-  pix_key: "",
-  pix_key_type: "",
-  pix_receiver_name: "",
-  pix_city: "",
-};
-
-const SUGESTOES = ["Pix", "Dinheiro", "Cartão de crédito", "Cartão de débito", "Transferência", "Pagamento na barbearia"];
-const TIPOS_PIX = ["CPF", "CNPJ", "Telefone", "E-mail", "Chave aleatória"];
+const vazio: Form = { id: null, name: "", description: "", icon: "", active: true };
 
 function Pagamentos() {
   const { data: shop } = useShop();
@@ -76,7 +55,7 @@ function Pagamentos() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payment_methods")
-        .select("id, name, description, icon, active, display_order, pix_key, pix_key_type, pix_receiver_name, pix_city")
+        .select("id, name, description, icon, active, display_order")
         .eq("barbershop_id", shop!.id)
         .order("display_order")
         .order("created_at");
@@ -88,23 +67,17 @@ function Pagamentos() {
   const invalidar = () => {
     qc.invalidateQueries({ queryKey: ["payment-methods-admin"] });
     qc.invalidateQueries({ queryKey: ["payment-methods"] });
+    qc.invalidateQueries({ queryKey: ["base-agendamentos"] });
   };
-
-  const isPix = (nome: string) => nome.trim().toLowerCase().startsWith("pix");
 
   const salvar = useMutation({
     mutationFn: async (f: Form) => {
-      if (f.name.trim().length < 2) throw new Error("Informe o nome do método.");
-      const t = (v: string) => v.trim() || null;
+      if (f.name.trim().length < 2) throw new Error("Informe o nome do meio de pagamento.");
       const campos = {
         name: f.name.trim(),
-        description: t(f.description),
-        icon: t(f.icon),
+        description: f.description.trim() || null,
+        icon: f.icon.trim() || null,
         active: f.active,
-        pix_key: isPix(f.name) ? t(f.pix_key) : null,
-        pix_key_type: isPix(f.name) ? t(f.pix_key_type) : null,
-        pix_receiver_name: isPix(f.name) ? t(f.pix_receiver_name) : null,
-        pix_city: isPix(f.name) ? t(f.pix_city) : null,
       };
       if (f.id) {
         const { error } = await supabase.from("payment_methods").update(campos).eq("id", f.id);
@@ -118,7 +91,7 @@ function Pagamentos() {
       }
     },
     onSuccess: () => {
-      toast.success("Método salvo!");
+      toast.success("Meio de pagamento salvo!");
       setForm(null);
       invalidar();
     },
@@ -141,7 +114,7 @@ function Pagamentos() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Método excluído.");
+      toast.success("Meio de pagamento excluído.");
       invalidar();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -157,12 +130,12 @@ function Pagamentos() {
 
   return (
     <AdminShell
-      title="Métodos de pagamento"
-      subtitle="Escolha quais formas de pagamento seus clientes poderão selecionar durante o agendamento."
+      title="Meios de pagamento"
+      subtitle="Você decide quais meios de pagamento sua barbearia aceita. Somente os ativos aparecem para o cliente."
       actions={
         <button className={btn} onClick={() => setForm(vazio)}>
           <span className="flex items-center gap-2">
-            <Plus className="h-4 w-4" /> ADICIONAR MÉTODO
+            <Plus className="h-4 w-4" /> ADICIONAR MEIO DE PAGAMENTO
           </span>
         </button>
       }
@@ -176,25 +149,23 @@ function Pagamentos() {
           }}
         >
           <label className="sm:col-span-2">
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">Nome do método</span>
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">
+              Nome do meio de pagamento *
+            </span>
             <input
               className={input}
-              list="sugestoes-pagamento"
-              placeholder="Pix, Dinheiro, Cartão de crédito..."
+              placeholder="Escreva o nome que quiser (ex.: Pix, Vale, Link de pagamento...)"
+              maxLength={60}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
             />
-            <datalist id="sugestoes-pagamento">
-              {SUGESTOES.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
           </label>
           <label className="sm:col-span-2">
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Descrição (opcional)</span>
             <input
               className={input}
+              maxLength={160}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
@@ -203,7 +174,8 @@ function Pagamentos() {
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Ícone (opcional)</span>
             <input
               className={input}
-              placeholder="pix, dinheiro, cartao..."
+              placeholder="Ex.: 💳 ou pix"
+              maxLength={40}
               value={form.icon}
               onChange={(e) => setForm({ ...form, icon: e.target.value })}
             />
@@ -214,52 +186,8 @@ function Pagamentos() {
               checked={form.active}
               onChange={(e) => setForm({ ...form, active: e.target.checked })}
             />
-            Método ativo (aparece para o cliente)
+            Ativo (aparece para o cliente)
           </label>
-
-          {isPix(form.name) && (
-            <>
-              <label>
-                <span className="text-xs uppercase tracking-widest text-muted-foreground">Chave Pix (opcional)</span>
-                <input
-                  className={input}
-                  value={form.pix_key}
-                  onChange={(e) => setForm({ ...form, pix_key: e.target.value })}
-                />
-              </label>
-              <label>
-                <span className="text-xs uppercase tracking-widest text-muted-foreground">Tipo da chave</span>
-                <select
-                  className={input}
-                  value={form.pix_key_type}
-                  onChange={(e) => setForm({ ...form, pix_key_type: e.target.value })}
-                >
-                  <option value="">Selecione</option>
-                  {TIPOS_PIX.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span className="text-xs uppercase tracking-widest text-muted-foreground">Nome do recebedor</span>
-                <input
-                  className={input}
-                  value={form.pix_receiver_name}
-                  onChange={(e) => setForm({ ...form, pix_receiver_name: e.target.value })}
-                />
-              </label>
-              <label>
-                <span className="text-xs uppercase tracking-widest text-muted-foreground">Cidade</span>
-                <input
-                  className={input}
-                  value={form.pix_city}
-                  onChange={(e) => setForm({ ...form, pix_city: e.target.value })}
-                />
-              </label>
-            </>
-          )}
 
           <div className="flex gap-2 sm:col-span-2">
             <button className={btn} disabled={salvar.isPending}>
@@ -276,10 +204,10 @@ function Pagamentos() {
         <Empty>Carregando...</Empty>
       ) : metodos.length === 0 ? (
         <Empty>
-          Nenhum método de pagamento cadastrado.
+          Nenhum meio de pagamento cadastrado.
           <div className="mt-4">
             <button className={btn} onClick={() => setForm(vazio)}>
-              + ADICIONAR MÉTODO
+              + ADICIONAR MEIO DE PAGAMENTO
             </button>
           </div>
         </Empty>
@@ -292,6 +220,7 @@ function Pagamentos() {
             >
               <div>
                 <p className="font-display text-lg">
+                  {m.icon ? `${m.icon} ` : ""}
                   {m.name}{" "}
                   <span
                     className={`ml-2 rounded-full border px-2 py-0.5 text-[0.6rem] uppercase tracking-widest ${
@@ -302,13 +231,6 @@ function Pagamentos() {
                   </span>
                 </p>
                 {m.description && <p className="text-sm text-muted-foreground">{m.description}</p>}
-                {m.pix_key && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Pix {m.pix_key_type ? `(${m.pix_key_type})` : ""}: {m.pix_key}
-                    {m.pix_receiver_name ? ` · ${m.pix_receiver_name}` : ""}
-                    {m.pix_city ? ` · ${m.pix_city}` : ""}
-                  </p>
-                )}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button className={btnGhost} onClick={() => mover(i, -1)} aria-label="Subir">
@@ -317,10 +239,7 @@ function Pagamentos() {
                 <button className={btnGhost} onClick={() => mover(i, 1)} aria-label="Descer">
                   <ArrowDown className="h-4 w-4" />
                 </button>
-                <button
-                  className={btnGhost}
-                  onClick={() => atualizar.mutate({ id: m.id, active: !m.active })}
-                >
+                <button className={btnGhost} onClick={() => atualizar.mutate({ id: m.id, active: !m.active })}>
                   {m.active ? "Desativar" : "Ativar"}
                 </button>
                 <button
@@ -333,10 +252,6 @@ function Pagamentos() {
                       description: m.description ?? "",
                       icon: m.icon ?? "",
                       active: m.active,
-                      pix_key: m.pix_key ?? "",
-                      pix_key_type: m.pix_key_type ?? "",
-                      pix_receiver_name: m.pix_receiver_name ?? "",
-                      pix_city: m.pix_city ?? "",
                     })
                   }
                 >
