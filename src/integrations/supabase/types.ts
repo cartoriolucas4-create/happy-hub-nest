@@ -224,7 +224,10 @@ export type Database = {
         Row: {
           assinatura_status: string
           assinatura_vencimento: string | null
+          bairro: string | null
+          cep: string | null
           cidade: string | null
+          complemento: string | null
           cor_primaria: string
           cor_secundaria: string
           cover_url: string | null
@@ -239,10 +242,14 @@ export type Database = {
           limite_agendamentos_mes: number
           limite_barbeiros: number
           logo_url: string | null
+          mensagem_whatsapp: string | null
           nome: string
+          numero: string | null
           onboarding_concluido: boolean
           owner_id: string
           plano: string
+          responsavel: string | null
+          site_url: string | null
           slug: string
           telefone: string | null
           whatsapp: string | null
@@ -250,7 +257,10 @@ export type Database = {
         Insert: {
           assinatura_status?: string
           assinatura_vencimento?: string | null
+          bairro?: string | null
+          cep?: string | null
           cidade?: string | null
+          complemento?: string | null
           cor_primaria?: string
           cor_secundaria?: string
           cover_url?: string | null
@@ -265,10 +275,14 @@ export type Database = {
           limite_agendamentos_mes?: number
           limite_barbeiros?: number
           logo_url?: string | null
+          mensagem_whatsapp?: string | null
           nome: string
+          numero?: string | null
           onboarding_concluido?: boolean
           owner_id: string
           plano?: string
+          responsavel?: string | null
+          site_url?: string | null
           slug: string
           telefone?: string | null
           whatsapp?: string | null
@@ -276,7 +290,10 @@ export type Database = {
         Update: {
           assinatura_status?: string
           assinatura_vencimento?: string | null
+          bairro?: string | null
+          cep?: string | null
           cidade?: string | null
+          complemento?: string | null
           cor_primaria?: string
           cor_secundaria?: string
           cover_url?: string | null
@@ -291,10 +308,14 @@ export type Database = {
           limite_agendamentos_mes?: number
           limite_barbeiros?: number
           logo_url?: string | null
+          mensagem_whatsapp?: string | null
           nome?: string
+          numero?: string | null
           onboarding_concluido?: boolean
           owner_id?: string
           plano?: string
+          responsavel?: string | null
+          site_url?: string | null
           slug?: string
           telefone?: string | null
           whatsapp?: string | null
