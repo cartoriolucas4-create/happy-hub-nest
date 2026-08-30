@@ -27,7 +27,9 @@ type Form = {
   nome: string;
   slug: string;
   responsavel: string;
+  slogan: string;
   descricao: string;
+  sobre_experiencia: string;
   telefone: string;
   whatsapp: string;
   email: string;
@@ -60,7 +62,9 @@ function Configuracoes() {
       nome: shop.nome,
       slug: shop.slug,
       responsavel: shop.responsavel ?? "",
+      slogan: shop.slogan ?? "",
       descricao: shop.descricao ?? "",
+      sobre_experiencia: shop.sobre_experiencia ?? "",
       telefone: shop.telefone ?? "",
       whatsapp: shop.whatsapp ?? "",
       email: shop.email ?? "",
@@ -99,7 +103,9 @@ function Configuracoes() {
           nome: f.nome.trim(),
           slug,
           responsavel: t(f.responsavel),
+          slogan: t(f.slogan),
           descricao: t(f.descricao),
+          sobre_experiencia: t(f.sobre_experiencia),
           telefone: t(f.telefone),
           whatsapp: t(f.whatsapp),
           email: t(f.email),
@@ -214,6 +220,29 @@ function Configuracoes() {
         <section>
           <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-primary">Textos</h2>
           <div className="grid gap-4">
+            <label>
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                Slogan (frase de destaque no topo da página)
+              </span>
+              <input
+                className={input}
+                placeholder="Precisão em cada detalhe."
+                value={form.slogan}
+                onChange={(e) => setForm({ ...form, slogan: e.target.value })}
+              />
+            </label>
+            <label>
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                Texto da seção “A experiência”
+              </span>
+              <textarea
+                rows={2}
+                className={input}
+                placeholder="Mais que um corte: ambiente reservado, bebida e cuidado do início ao fim."
+                value={form.sobre_experiencia}
+                onChange={(e) => setForm({ ...form, sobre_experiencia: e.target.value })}
+              />
+            </label>
             <label>
               <span className="text-xs uppercase tracking-widest text-muted-foreground">
                 Descrição / sobre a barbearia

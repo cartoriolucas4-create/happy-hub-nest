@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminBloqueiosRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
 import { Route as AuthenticatedAdminConfigurarRouteImport } from './routes/_authenticated/admin.configurar'
+import { Route as AuthenticatedAdminGaleriaRouteImport } from './routes/_authenticated/admin.galeria'
 import { Route as AuthenticatedAdminHorariosRouteImport } from './routes/_authenticated/admin.horarios'
 import { Route as AuthenticatedAdminMeuLinkRouteImport } from './routes/_authenticated/admin.meu-link'
 import { Route as AuthenticatedAdminServicosRouteImport } from './routes/_authenticated/admin.servicos'
@@ -99,6 +100,12 @@ const AuthenticatedAdminConfigurarRoute =
     path: '/admin/configurar',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminGaleriaRoute =
+  AuthenticatedAdminGaleriaRouteImport.update({
+    id: '/admin/galeria',
+    path: '/admin/galeria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminHorariosRoute =
   AuthenticatedAdminHorariosRouteImport.update({
     id: '/admin/horarios',
@@ -140,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/configurar': typeof AuthenticatedAdminConfigurarRoute
+  '/admin/galeria': typeof AuthenticatedAdminGaleriaRoute
   '/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
@@ -159,6 +167,7 @@ export interface FileRoutesByTo {
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/configurar': typeof AuthenticatedAdminConfigurarRoute
+  '/admin/galeria': typeof AuthenticatedAdminGaleriaRoute
   '/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
@@ -180,6 +189,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/_authenticated/admin/configurar': typeof AuthenticatedAdminConfigurarRoute
+  '/_authenticated/admin/galeria': typeof AuthenticatedAdminGaleriaRoute
   '/_authenticated/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/_authenticated/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
   '/_authenticated/admin/servicos': typeof AuthenticatedAdminServicosRoute
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/admin/clientes'
     | '/admin/configuracoes'
     | '/admin/configurar'
+    | '/admin/galeria'
     | '/admin/horarios'
     | '/admin/meu-link'
     | '/admin/servicos'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/admin/clientes'
     | '/admin/configuracoes'
     | '/admin/configurar'
+    | '/admin/galeria'
     | '/admin/horarios'
     | '/admin/meu-link'
     | '/admin/servicos'
@@ -240,6 +252,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/clientes'
     | '/_authenticated/admin/configuracoes'
     | '/_authenticated/admin/configurar'
+    | '/_authenticated/admin/galeria'
     | '/_authenticated/admin/horarios'
     | '/_authenticated/admin/meu-link'
     | '/_authenticated/admin/servicos'
@@ -351,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminConfigurarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/galeria': {
+      id: '/_authenticated/admin/galeria'
+      path: '/admin/galeria'
+      fullPath: '/admin/galeria'
+      preLoaderRoute: typeof AuthenticatedAdminGaleriaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/horarios': {
       id: '/_authenticated/admin/horarios'
       path: '/admin/horarios'
@@ -397,6 +417,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
   AuthenticatedAdminConfigurarRoute: typeof AuthenticatedAdminConfigurarRoute
+  AuthenticatedAdminGaleriaRoute: typeof AuthenticatedAdminGaleriaRoute
   AuthenticatedAdminHorariosRoute: typeof AuthenticatedAdminHorariosRoute
   AuthenticatedAdminMeuLinkRoute: typeof AuthenticatedAdminMeuLinkRoute
   AuthenticatedAdminServicosRoute: typeof AuthenticatedAdminServicosRoute
@@ -411,6 +432,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
   AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
   AuthenticatedAdminConfigurarRoute: AuthenticatedAdminConfigurarRoute,
+  AuthenticatedAdminGaleriaRoute: AuthenticatedAdminGaleriaRoute,
   AuthenticatedAdminHorariosRoute: AuthenticatedAdminHorariosRoute,
   AuthenticatedAdminMeuLinkRoute: AuthenticatedAdminMeuLinkRoute,
   AuthenticatedAdminServicosRoute: AuthenticatedAdminServicosRoute,
