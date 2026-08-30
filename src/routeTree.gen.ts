@@ -31,6 +31,7 @@ import { Route as AuthenticatedSuperAdminIndexRouteImport } from './routes/_auth
 import { Route as BarbeariaSlugIndexRouteImport } from './routes/barbearia.$slug.index'
 import { Route as BarbeariaSlugAgendarRouteImport } from './routes/barbearia.$slug.agendar'
 import { Route as AuthenticatedSuperAdminClientesIndexRouteImport } from './routes/_authenticated/super-admin.clientes.index'
+import { Route as AuthenticatedSuperAdminClientesIdRouteImport } from './routes/_authenticated/super-admin.clientes.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -155,6 +156,12 @@ const AuthenticatedSuperAdminClientesIndexRoute =
     path: '/super-admin/clientes/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSuperAdminClientesIdRoute =
+  AuthenticatedSuperAdminClientesIdRouteImport.update({
+    id: '/super-admin/clientes/$id',
+    path: '/super-admin/clientes/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/super-admin/': typeof AuthenticatedSuperAdminIndexRoute
   '/barbearia/$slug/': typeof BarbeariaSlugIndexRoute
+  '/super-admin/clientes/$id': typeof AuthenticatedSuperAdminClientesIdRoute
   '/super-admin/clientes/': typeof AuthenticatedSuperAdminClientesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -200,6 +208,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/super-admin': typeof AuthenticatedSuperAdminIndexRoute
   '/barbearia/$slug': typeof BarbeariaSlugIndexRoute
+  '/super-admin/clientes/$id': typeof AuthenticatedSuperAdminClientesIdRoute
   '/super-admin/clientes': typeof AuthenticatedSuperAdminClientesIndexRoute
 }
 export interface FileRoutesById {
@@ -225,6 +234,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/super-admin/': typeof AuthenticatedSuperAdminIndexRoute
   '/barbearia/$slug/': typeof BarbeariaSlugIndexRoute
+  '/_authenticated/super-admin/clientes/$id': typeof AuthenticatedSuperAdminClientesIdRoute
   '/_authenticated/super-admin/clientes/': typeof AuthenticatedSuperAdminClientesIndexRoute
 }
 export interface FileRouteTypes {
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/super-admin/'
     | '/barbearia/$slug/'
+    | '/super-admin/clientes/$id'
     | '/super-admin/clientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/super-admin'
     | '/barbearia/$slug'
+    | '/super-admin/clientes/$id'
     | '/super-admin/clientes'
   id:
     | '__root__'
@@ -297,6 +309,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/super-admin/'
     | '/barbearia/$slug/'
+    | '/_authenticated/super-admin/clientes/$id'
     | '/_authenticated/super-admin/clientes/'
   fileRoutesById: FileRoutesById
 }
@@ -466,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuperAdminClientesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/super-admin/clientes/$id': {
+      id: '/_authenticated/super-admin/clientes/$id'
+      path: '/super-admin/clientes/$id'
+      fullPath: '/super-admin/clientes/$id'
+      preLoaderRoute: typeof AuthenticatedSuperAdminClientesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -484,6 +504,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminServicosRoute: typeof AuthenticatedAdminServicosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedSuperAdminIndexRoute: typeof AuthenticatedSuperAdminIndexRoute
+  AuthenticatedSuperAdminClientesIdRoute: typeof AuthenticatedSuperAdminClientesIdRoute
   AuthenticatedSuperAdminClientesIndexRoute: typeof AuthenticatedSuperAdminClientesIndexRoute
 }
 
@@ -502,6 +523,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminServicosRoute: AuthenticatedAdminServicosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedSuperAdminIndexRoute: AuthenticatedSuperAdminIndexRoute,
+  AuthenticatedSuperAdminClientesIdRoute:
+    AuthenticatedSuperAdminClientesIdRoute,
   AuthenticatedSuperAdminClientesIndexRoute:
     AuthenticatedSuperAdminClientesIndexRoute,
 }
