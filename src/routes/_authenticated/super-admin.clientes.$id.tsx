@@ -79,7 +79,7 @@ function ClienteDetalhe() {
         p_user_id: id,
         p_quantidade: p.quantidade,
         p_unidade: p.unidade,
-        p_observacao: observacao.trim() || undefined,
+        ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}),
       });
       if (error) throw error;
       return data as string;
@@ -96,7 +96,7 @@ function ClienteDetalhe() {
     mutationFn: async () => {
       const { error } = await supabase.rpc("sa_bloquear_acesso", {
         p_user_id: id,
-        p_observacao: observacao.trim() || undefined,
+        ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}),
       });
       if (error) throw error;
     },
@@ -112,7 +112,7 @@ function ClienteDetalhe() {
     mutationFn: async () => {
       const { error } = await supabase.rpc("sa_desbloquear_acesso", {
         p_user_id: id,
-        p_observacao: observacao.trim() || undefined,
+        ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}),
       });
       if (error) throw error;
     },
