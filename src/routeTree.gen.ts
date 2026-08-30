@@ -16,7 +16,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBarbeirosRouteImport } from './routes/_authenticated/admin.barbeiros'
+import { Route as AuthenticatedAdminBloqueiosRouteImport } from './routes/_authenticated/admin.bloqueios'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
+import { Route as AuthenticatedAdminHorariosRouteImport } from './routes/_authenticated/admin.horarios'
 import { Route as AuthenticatedAdminServicosRouteImport } from './routes/_authenticated/admin.servicos'
 
 const IndexRoute = IndexRouteImport.update({
@@ -54,10 +56,22 @@ const AuthenticatedAdminBarbeirosRoute =
     path: '/admin/barbeiros',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminBloqueiosRoute =
+  AuthenticatedAdminBloqueiosRouteImport.update({
+    id: '/admin/bloqueios',
+    path: '/admin/bloqueios',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminClientesRoute =
   AuthenticatedAdminClientesRouteImport.update({
     id: '/admin/clientes',
     path: '/admin/clientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminHorariosRoute =
+  AuthenticatedAdminHorariosRouteImport.update({
+    id: '/admin/horarios',
+    path: '/admin/horarios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminServicosRoute =
@@ -73,7 +87,9 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/barbeiros': typeof AuthenticatedAdminBarbeirosRoute
+  '/admin/bloqueios': typeof AuthenticatedAdminBloqueiosRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -83,7 +99,9 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/barbeiros': typeof AuthenticatedAdminBarbeirosRoute
+  '/admin/bloqueios': typeof AuthenticatedAdminBloqueiosRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -95,7 +113,9 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin/barbeiros': typeof AuthenticatedAdminBarbeirosRoute
+  '/_authenticated/admin/bloqueios': typeof AuthenticatedAdminBloqueiosRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/_authenticated/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/_authenticated/admin/servicos': typeof AuthenticatedAdminServicosRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -107,7 +127,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/admin/barbeiros'
+    | '/admin/bloqueios'
     | '/admin/clientes'
+    | '/admin/horarios'
     | '/admin/servicos'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -117,7 +139,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/admin/barbeiros'
+    | '/admin/bloqueios'
     | '/admin/clientes'
+    | '/admin/horarios'
     | '/admin/servicos'
     | '/admin'
   id:
@@ -128,7 +152,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_authenticated/admin/barbeiros'
+    | '/_authenticated/admin/bloqueios'
     | '/_authenticated/admin/clientes'
+    | '/_authenticated/admin/horarios'
     | '/_authenticated/admin/servicos'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -192,11 +218,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminBarbeirosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/bloqueios': {
+      id: '/_authenticated/admin/bloqueios'
+      path: '/admin/bloqueios'
+      fullPath: '/admin/bloqueios'
+      preLoaderRoute: typeof AuthenticatedAdminBloqueiosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/clientes': {
       id: '/_authenticated/admin/clientes'
       path: '/admin/clientes'
       fullPath: '/admin/clientes'
       preLoaderRoute: typeof AuthenticatedAdminClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/horarios': {
+      id: '/_authenticated/admin/horarios'
+      path: '/admin/horarios'
+      fullPath: '/admin/horarios'
+      preLoaderRoute: typeof AuthenticatedAdminHorariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/servicos': {
@@ -211,14 +251,18 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminBarbeirosRoute: typeof AuthenticatedAdminBarbeirosRoute
+  AuthenticatedAdminBloqueiosRoute: typeof AuthenticatedAdminBloqueiosRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
+  AuthenticatedAdminHorariosRoute: typeof AuthenticatedAdminHorariosRoute
   AuthenticatedAdminServicosRoute: typeof AuthenticatedAdminServicosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminBarbeirosRoute: AuthenticatedAdminBarbeirosRoute,
+  AuthenticatedAdminBloqueiosRoute: AuthenticatedAdminBloqueiosRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
+  AuthenticatedAdminHorariosRoute: AuthenticatedAdminHorariosRoute,
   AuthenticatedAdminServicosRoute: AuthenticatedAdminServicosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
