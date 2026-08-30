@@ -31,6 +31,7 @@ export function Reveal({
   return (
     <div
       ref={ref}
+      id={id}
       style={{ transitionDelay: `${delay}ms` }}
       className={`transition-all duration-1000 ease-out ${
         visivel ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
