@@ -45,7 +45,7 @@ function Agendar() {
   const [hora, setHora] = useState("");
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [email, setEmail] = useState("");
+  const [paymentMethodId, setPaymentMethodId] = useState("");
   const [observacao, setObservacao] = useState("");
   const [whatsUrl, setWhatsUrl] = useState("");
 
