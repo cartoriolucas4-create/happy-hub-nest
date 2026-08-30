@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminConfigurarRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminGaleriaRouteImport } from './routes/_authenticated/admin.galeria'
 import { Route as AuthenticatedAdminHorariosRouteImport } from './routes/_authenticated/admin.horarios'
 import { Route as AuthenticatedAdminMeuLinkRouteImport } from './routes/_authenticated/admin.meu-link'
+import { Route as AuthenticatedAdminPagamentosRouteImport } from './routes/_authenticated/admin.pagamentos'
 import { Route as AuthenticatedAdminServicosRouteImport } from './routes/_authenticated/admin.servicos'
 import { Route as BarbeariaSlugIndexRouteImport } from './routes/barbearia.$slug.index'
 import { Route as BarbeariaSlugAgendarRouteImport } from './routes/barbearia.$slug.agendar'
@@ -118,6 +119,12 @@ const AuthenticatedAdminMeuLinkRoute =
     path: '/admin/meu-link',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPagamentosRoute =
+  AuthenticatedAdminPagamentosRouteImport.update({
+    id: '/admin/pagamentos',
+    path: '/admin/pagamentos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminServicosRoute =
   AuthenticatedAdminServicosRouteImport.update({
     id: '/admin/servicos',
@@ -150,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/admin/galeria': typeof AuthenticatedAdminGaleriaRoute
   '/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
+  '/admin/pagamentos': typeof AuthenticatedAdminPagamentosRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/admin/galeria': typeof AuthenticatedAdminGaleriaRoute
   '/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
+  '/admin/pagamentos': typeof AuthenticatedAdminPagamentosRoute
   '/admin/servicos': typeof AuthenticatedAdminServicosRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -192,6 +201,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/galeria': typeof AuthenticatedAdminGaleriaRoute
   '/_authenticated/admin/horarios': typeof AuthenticatedAdminHorariosRoute
   '/_authenticated/admin/meu-link': typeof AuthenticatedAdminMeuLinkRoute
+  '/_authenticated/admin/pagamentos': typeof AuthenticatedAdminPagamentosRoute
   '/_authenticated/admin/servicos': typeof AuthenticatedAdminServicosRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/admin/galeria'
     | '/admin/horarios'
     | '/admin/meu-link'
+    | '/admin/pagamentos'
     | '/admin/servicos'
     | '/barbearia/$slug/agendar'
     | '/admin/'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/admin/galeria'
     | '/admin/horarios'
     | '/admin/meu-link'
+    | '/admin/pagamentos'
     | '/admin/servicos'
     | '/barbearia/$slug/agendar'
     | '/admin'
@@ -255,6 +267,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/galeria'
     | '/_authenticated/admin/horarios'
     | '/_authenticated/admin/meu-link'
+    | '/_authenticated/admin/pagamentos'
     | '/_authenticated/admin/servicos'
     | '/barbearia/$slug/agendar'
     | '/_authenticated/admin/'
@@ -385,6 +398,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMeuLinkRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/pagamentos': {
+      id: '/_authenticated/admin/pagamentos'
+      path: '/admin/pagamentos'
+      fullPath: '/admin/pagamentos'
+      preLoaderRoute: typeof AuthenticatedAdminPagamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/servicos': {
       id: '/_authenticated/admin/servicos'
       path: '/admin/servicos'
@@ -420,6 +440,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminGaleriaRoute: typeof AuthenticatedAdminGaleriaRoute
   AuthenticatedAdminHorariosRoute: typeof AuthenticatedAdminHorariosRoute
   AuthenticatedAdminMeuLinkRoute: typeof AuthenticatedAdminMeuLinkRoute
+  AuthenticatedAdminPagamentosRoute: typeof AuthenticatedAdminPagamentosRoute
   AuthenticatedAdminServicosRoute: typeof AuthenticatedAdminServicosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -435,6 +456,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminGaleriaRoute: AuthenticatedAdminGaleriaRoute,
   AuthenticatedAdminHorariosRoute: AuthenticatedAdminHorariosRoute,
   AuthenticatedAdminMeuLinkRoute: AuthenticatedAdminMeuLinkRoute,
+  AuthenticatedAdminPagamentosRoute: AuthenticatedAdminPagamentosRoute,
   AuthenticatedAdminServicosRoute: AuthenticatedAdminServicosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
