@@ -79,6 +79,15 @@ export function AdminShell({
           </Link>
         );
       })}
+      {isSuper && (
+        <Link
+          to="/super-admin"
+          onClick={() => setOpen(false)}
+          className="mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-primary hover:bg-primary/10"
+        >
+          <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Super Admin
+        </Link>
+      )}
       <button
         onClick={sair}
         className="mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-destructive"
