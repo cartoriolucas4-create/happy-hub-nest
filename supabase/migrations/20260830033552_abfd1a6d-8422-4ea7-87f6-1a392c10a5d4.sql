@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.seed_default_payment_methods() FROM PUBLIC, anon, authenticated;
