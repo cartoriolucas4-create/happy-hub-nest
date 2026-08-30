@@ -377,13 +377,6 @@ function Agendar() {
                 onChange={(e) => setTelefone(e.target.value)}
                 required
               />
-              <input
-                className={inputCls}
-                placeholder="E-mail (opcional)"
-                maxLength={160}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
               <textarea
                 className={inputCls}
                 rows={3}
@@ -393,7 +386,7 @@ function Agendar() {
                 onChange={(e) => setObservacao(e.target.value)}
               />
               <button className="w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90">
-                REVISAR AGENDAMENTO
+                CONTINUAR
               </button>
             </form>
             <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(3)}>
@@ -403,6 +396,57 @@ function Agendar() {
         )}
 
         {step === 5 && (
+          <section className="mt-8">
+            <h1 className="text-3xl">Método de pagamento</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Escolha como pretende pagar. O pagamento é feito diretamente na barbearia.
+            </p>
+            <div className="mt-6 space-y-3">
+              {metodos.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Esta barbearia ainda não cadastrou métodos de pagamento. Combine o pagamento diretamente com ela.
+                </p>
+              )}
+              {metodos.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setPaymentMethodId(m.id)}
+                  className={`w-full rounded-lg border bg-card p-4 text-left ${
+                    paymentMethodId === m.id ? "border-primary" : "border-border hover:border-primary/60"
+                  }`}
+                >
+                  <span className="text-lg">{m.name}</span>
+                  {m.description && <span className="block text-sm text-muted-foreground">{m.description}</span>}
+                  {paymentMethodId === m.id && m.pix_key && (
+                    <span className="mt-2 block text-xs text-muted-foreground">
+                      Chave Pix {m.pix_key_type ? `(${m.pix_key_type})` : ""}: {m.pix_key}
+                      {m.pix_receiver_name ? ` · ${m.pix_receiver_name}` : ""}
+                      {m.pix_city ? ` · ${m.pix_city}` : ""}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                const erro = validarPagamento();
+                if (erro) {
+                  toast.error(erro);
+                  return;
+                }
+                setStep(6);
+              }}
+              className="mt-6 w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90"
+            >
+              REVISAR AGENDAMENTO
+            </button>
+            <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(4)}>
+              Voltar
+            </button>
+          </section>
+        )}
+
+        {step === 6 && (
           <section className="mt-8">
             <h1 className="text-3xl">Confira seu agendamento</h1>
             <div className="mt-6 rounded-lg border border-border bg-card p-6 text-sm">
@@ -423,7 +467,7 @@ function Agendar() {
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Ao confirmar, abriremos o WhatsApp da barbearia com o resumo do seu agendamento.
             </p>
-            <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(4)}>
+            <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(5)}>
               Voltar
             </button>
           </section>
