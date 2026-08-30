@@ -186,10 +186,11 @@ function Agendar() {
     ["Valor", brl(servico?.preco ?? 0)],
     ["Cliente", nome.trim()],
     ["WhatsApp", telefone.trim()],
+    ...(metodo ? ([["Pagamento", metodo.name]] as [string, string][]) : []),
     ...(observacao.trim() ? ([["Observação", observacao.trim()]] as [string, string][]) : []),
   ];
 
-  if (step === 6) {
+  if (step === 7) {
     return (
       <Centro>
         <Check className="mx-auto h-12 w-12 text-primary" aria-hidden="true" />
