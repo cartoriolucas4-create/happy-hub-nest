@@ -397,33 +397,36 @@ function Agendar() {
 
         {step === 5 && (
           <section className="mt-8">
-            <h1 className="text-3xl">Método de pagamento</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Escolha como pretende pagar. O pagamento é feito diretamente na barbearia.
-            </p>
+            <h1 className="text-3xl">Como você pretende pagar?</h1>
+            <p className="mt-2 text-sm text-muted-foreground">Selecione uma forma de pagamento.</p>
             <div className="mt-6 space-y-3">
               {metodos.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Esta barbearia ainda não cadastrou métodos de pagamento. Combine o pagamento diretamente com ela.
+                  Esta barbearia ainda não cadastrou meios de pagamento. Combine o pagamento diretamente com ela.
                 </p>
               )}
               {metodos.map((m) => (
                 <button
                   key={m.id}
                   onClick={() => setPaymentMethodId(m.id)}
-                  className={`w-full rounded-lg border bg-card p-4 text-left ${
+                  className={`flex w-full items-center gap-3 rounded-lg border bg-card p-4 text-left ${
                     paymentMethodId === m.id ? "border-primary" : "border-border hover:border-primary/60"
                   }`}
                 >
-                  <span className="text-lg">{m.name}</span>
-                  {m.description && <span className="block text-sm text-muted-foreground">{m.description}</span>}
-                  {paymentMethodId === m.id && m.pix_key && (
-                    <span className="mt-2 block text-xs text-muted-foreground">
-                      Chave Pix {m.pix_key_type ? `(${m.pix_key_type})` : ""}: {m.pix_key}
-                      {m.pix_receiver_name ? ` · ${m.pix_receiver_name}` : ""}
-                      {m.pix_city ? ` · ${m.pix_city}` : ""}
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                      paymentMethodId === m.id ? "border-primary" : "border-muted-foreground"
+                    }`}
+                  >
+                    {paymentMethodId === m.id && <span className="h-2 w-2 rounded-full bg-primary" />}
+                  </span>
+                  <span>
+                    <span className="text-lg">
+                      {m.icon ? `${m.icon} ` : ""}
+                      {m.name}
                     </span>
-                  )}
+                    {m.description && <span className="block text-sm text-muted-foreground">{m.description}</span>}
+                  </span>
                 </button>
               ))}
             </div>
