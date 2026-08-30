@@ -173,6 +173,17 @@ function ClienteDetalhe() {
             </div>
           </section>
 
+          <EditarContato
+            userId={id}
+            nome={cliente.nome ?? ""}
+            email={cliente.email ?? ""}
+            telefone={cliente.telefone ?? ""}
+            onSaved={recarregar}
+          />
+
+          <EditarBarbearia userId={id} onSaved={recarregar} />
+
+
           <section className="rounded-lg border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-2xl">Controle de acesso</h2>
