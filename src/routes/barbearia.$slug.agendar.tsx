@@ -111,7 +111,12 @@ function Agendar() {
   function validarDados() {
     if (nome.trim().length < 3) return "Informe seu nome completo.";
     if (!isPhone(telefone)) return "Informe um telefone válido com DDD.";
-    if (email && !isEmail(email)) return "E-mail inválido.";
+    return null;
+  }
+
+  function validarPagamento() {
+    if (metodos.length === 0) return null;
+    if (!paymentMethodId) return "Escolha um método de pagamento.";
     return null;
   }
 
