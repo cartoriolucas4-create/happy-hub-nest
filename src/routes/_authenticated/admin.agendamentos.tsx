@@ -61,16 +61,21 @@ function Agendamentos() {
     queryKey: ["base-agendamentos", shop?.id],
     enabled: Boolean(shop?.id),
     queryFn: async () => {
-      const [barbers, services] = await Promise.all([
+      const [barbers, services, pagamentos] = await Promise.all([
         supabase.from("barbers").select("id, nome").eq("ativo", true).order("nome"),
         supabase.from("services").select("id, nome, preco, duracao_minutos").eq("ativo", true).order("nome"),
+        supabase.from("payment_methods").select("id, name").order("display_order"),
       ]);
-      return { barbers: barbers.data ?? [], services: services.data ?? [] };
+      return {
+        barbers: barbers.data ?? [],
+        services: services.data ?? [],
+        pagamentos: pagamentos.data ?? [],
+      };
     },
   });
 
   const { data: lista, isLoading } = useQuery({
-    queryKey: ["agendamentos", shop?.id, de, ate, status, barbeiro],
+    queryKey: ["agendamentos", shop?.id, de, ate, status, barbeiro, pagamento],
     enabled: Boolean(shop?.id),
     queryFn: async () => {
       let q = supabase
@@ -82,6 +87,7 @@ function Agendamentos() {
         .order("hora_inicio");
       if (status) q = q.eq("status", status as Status);
       if (barbeiro) q = q.eq("barber_id", barbeiro);
+      if (pagamento) q = q.eq("payment_method_id", pagamento);
       const { data, error } = await q;
       if (error) throw error;
       return data;
