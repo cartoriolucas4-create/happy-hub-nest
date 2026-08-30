@@ -75,7 +75,7 @@ function Agendar() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payment_methods")
-        .select("id, name, description, pix_key, pix_key_type, pix_receiver_name, pix_city")
+        .select("id, name, description, icon")
         .eq("barbershop_id", base!.shop.id)
         .eq("active", true)
         .order("display_order");
