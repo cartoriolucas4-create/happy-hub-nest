@@ -2,9 +2,20 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Check, CalendarDays } from "lucide-react";
+import { ArrowLeft, Check, CalendarDays, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { brDate, brl, hhmm, isEmail, isPhone, todayIso, addDays } from "@/lib/barber";
+import {
+  brDate,
+  brl,
+  hhmm,
+  isEmail,
+  isPhone,
+  todayIso,
+  addDays,
+  waLink,
+  mensagemAgendamento,
+} from "@/lib/barber";
+import { WhatsAppFloat } from "@/components/public/WhatsAppFloat";
 
 export const Route = createFileRoute("/barbearia/$slug/agendar")({
   head: ({ params }) => ({
@@ -37,21 +48,12 @@ function Agendar() {
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
   const [observacao, setObservacao] = useState("");
-  const [comprovante, setComprovante] = useState<{
-    barbearia: string;
-    barbeiro: string;
-    servico: string;
-    data: string;
-    hora_inicio: string;
-    valor: number;
-    cliente_nome: string;
-    endereco: string | null;
-  } | null>(null);
+  const [whatsUrl, setWhatsUrl] = useState("");
 
   const { data: base, isLoading } = useQuery({
     queryKey: ["agendar-base", slug],
     queryFn: async () => {
-      const shop = await supabase.from("barbershops").select("id, nome, slug").eq("slug", slug).maybeSingle();
+      const shop = await supabase.from("barbershops").select("*").eq("slug", slug).maybeSingle();
       if (shop.error) throw shop.error;
       if (!shop.data) return null;
       const [services, barbers, links] = await Promise.all([
@@ -69,6 +71,7 @@ function Agendar() {
   });
 
   const servico = base?.services.find((s) => s.id === serviceId);
+  const barbeiro = base?.barbers.find((b) => b.id === barberId);
   const barbeirosDoServico = (base?.barbers ?? []).filter((b) => {
     const vinculos = (base?.links ?? []).filter((l) => l.service_id === serviceId);
     return vinculos.length === 0 ? true : vinculos.some((l) => l.barber_id === b.id);
@@ -89,12 +92,19 @@ function Agendar() {
     },
   });
 
+  function validarDados() {
+    if (nome.trim().length < 3) return "Informe seu nome completo.";
+    if (!isPhone(telefone)) return "Informe um telefone válido com DDD.";
+    if (email && !isEmail(email)) return "E-mail inválido.";
+    return null;
+  }
+
   const confirmar = useMutation({
     mutationFn: async () => {
-      if (nome.trim().length < 3) throw new Error("Informe seu nome completo.");
-      if (!isPhone(telefone)) throw new Error("Informe um telefone válido com DDD.");
-      if (email && !isEmail(email)) throw new Error("E-mail inválido.");
-      const { data: id, error } = await supabase.rpc("criar_agendamento_publico", {
+      const erro = validarDados();
+      if (erro) throw new Error(erro);
+      // 1) salva o agendamento na barbearia correta (barbershop_id vem do slug)
+      const { error } = await supabase.rpc("criar_agendamento_publico", {
         p_slug: slug,
         p_barber_id: barberId,
         p_service_id: serviceId,
@@ -104,16 +114,30 @@ function Agendar() {
         p_telefone: telefone.trim(),
         ...(email.trim() ? { p_email: email.trim() } : {}),
         ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}),
-
       });
       if (error) throw new Error(error.message);
-      const recibo = await supabase.rpc("agendamento_publico", { p_id: id as string });
-      if (recibo.error) throw recibo.error;
-      return recibo.data?.[0] ?? null;
+
+      // 2) monta o link do WhatsApp DA BARBEARIA com o resumo completo
+      return waLink(
+        base!.shop,
+        mensagemAgendamento({
+          barbearia: base!.shop.nome,
+          cliente: nome.trim(),
+          telefoneCliente: telefone.trim(),
+          servico: servico?.nome ?? "",
+          barbeiro: barbeiro?.nome ?? "",
+          data,
+          hora,
+          duracao: servico?.duracao_minutos ?? 0,
+          valor: servico?.preco ?? 0,
+          observacao,
+        }),
+      );
     },
-    onSuccess: (r) => {
-      if (r) setComprovante(r);
-      setStep(5);
+    onSuccess: (url) => {
+      setWhatsUrl(url);
+      setStep(6);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -130,31 +154,51 @@ function Agendar() {
     );
   }
 
-  if (step === 5) {
+  const resumo: [string, string][] = [
+    ["Barbearia", base.shop.nome],
+    ["Serviço", servico?.nome ?? ""],
+    ["Barbeiro", barbeiro?.nome ?? ""],
+    ["Data", brDate(data)],
+    ["Horário", hora],
+    ["Duração", `${servico?.duracao_minutos ?? 0} minutos`],
+    ["Valor", brl(servico?.preco ?? 0)],
+    ["Cliente", nome.trim()],
+    ["WhatsApp", telefone.trim()],
+    ...(observacao.trim() ? ([["Observação", observacao.trim()]] as [string, string][]) : []),
+  ];
+
+  if (step === 6) {
     return (
       <Centro>
         <Check className="mx-auto h-12 w-12 text-primary" aria-hidden="true" />
         <h1 className="mt-6 text-4xl">Agendamento confirmado!</h1>
-        {comprovante && (
-          <div className="mx-auto mt-8 max-w-md rounded-lg border border-border bg-card p-6 text-left text-sm">
-            <p className="font-display text-2xl text-primary">
-              {brDate(comprovante.data)} às {hhmm(comprovante.hora_inicio)}
+        <div className="mx-auto mt-8 max-w-md rounded-lg border border-border bg-card p-6 text-left text-sm">
+          {resumo.map(([k, v]) => (
+            <p key={k} className="flex justify-between gap-4 border-b border-border/60 py-1.5 last:border-0">
+              <span className="text-muted-foreground">{k}</span>
+              <span className="text-right">{v}</span>
             </p>
-            <p className="mt-4">{comprovante.barbearia}</p>
-            <p className="text-muted-foreground">
-              {comprovante.servico} com {comprovante.barbeiro} · {brl(comprovante.valor)}
-            </p>
-            <p className="mt-2 text-muted-foreground">Cliente: {comprovante.cliente_nome}</p>
-            {comprovante.endereco && <p className="text-muted-foreground">{comprovante.endereco}</p>}
-          </div>
+          ))}
+        </div>
+        {whatsUrl && (
+          <a
+            href={whatsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-2 rounded-sm bg-emerald-500 px-6 py-3 font-display tracking-widest text-white hover:bg-emerald-600"
+          >
+            <MessageCircle className="h-5 w-5" aria-hidden="true" /> ENVIAR NO WHATSAPP
+          </a>
         )}
-        <Link
-          to="/barbearia/$slug"
-          params={{ slug }}
-          className="mt-8 inline-block rounded-sm border border-border px-6 py-3 text-sm hover:border-primary hover:text-primary"
-        >
-          Voltar para a barbearia
-        </Link>
+        <div>
+          <Link
+            to="/barbearia/$slug"
+            params={{ slug }}
+            className="mt-6 inline-block rounded-sm border border-border px-6 py-3 text-sm hover:border-primary hover:text-primary"
+          >
+            Voltar para a barbearia
+          </Link>
+        </div>
       </Centro>
     );
   }
@@ -171,7 +215,7 @@ function Agendar() {
         </Link>
 
         <div className="mt-6 flex gap-2">
-          {[1, 2, 3, 4].map((n) => (
+          {[1, 2, 3, 4, 5].map((n) => (
             <div key={n} className={`h-1 flex-1 rounded ${n <= step ? "bg-primary" : "bg-secondary"}`} />
           ))}
         </div>
@@ -286,12 +330,18 @@ function Agendar() {
               className="mt-6 space-y-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                confirmar.mutate();
+                const erro = validarDados();
+                if (erro) {
+                  toast.error(erro);
+                  return;
+                }
+                setStep(5);
               }}
             >
               <input
                 className={inputCls}
                 placeholder="Nome completo"
+                maxLength={120}
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 required
@@ -299,6 +349,7 @@ function Agendar() {
               <input
                 className={inputCls}
                 placeholder="Telefone / WhatsApp"
+                maxLength={20}
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
                 required
@@ -306,21 +357,20 @@ function Agendar() {
               <input
                 className={inputCls}
                 placeholder="E-mail (opcional)"
+                maxLength={160}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               <textarea
                 className={inputCls}
                 rows={3}
+                maxLength={500}
                 placeholder="Observação (opcional)"
                 value={observacao}
                 onChange={(e) => setObservacao(e.target.value)}
               />
-              <button
-                disabled={confirmar.isPending}
-                className="w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-              >
-                {confirmar.isPending ? "CONFIRMANDO..." : "CONFIRMAR AGENDAMENTO"}
+              <button className="w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90">
+                REVISAR AGENDAMENTO
               </button>
             </form>
             <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(3)}>
@@ -328,7 +378,35 @@ function Agendar() {
             </button>
           </section>
         )}
+
+        {step === 5 && (
+          <section className="mt-8">
+            <h1 className="text-3xl">Confira seu agendamento</h1>
+            <div className="mt-6 rounded-lg border border-border bg-card p-6 text-sm">
+              {resumo.map(([k, v]) => (
+                <p key={k} className="flex justify-between gap-4 border-b border-border/60 py-2 last:border-0">
+                  <span className="text-muted-foreground">{k}</span>
+                  <span className="text-right">{v}</span>
+                </p>
+              ))}
+            </div>
+            <button
+              disabled={confirmar.isPending}
+              onClick={() => confirmar.mutate()}
+              className="mt-6 w-full rounded-md bg-primary py-4 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              {confirmar.isPending ? "CONFIRMANDO..." : "CONFIRMAR AGENDAMENTO"}
+            </button>
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Ao confirmar, abriremos o WhatsApp da barbearia com o resumo do seu agendamento.
+            </p>
+            <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(4)}>
+              Voltar
+            </button>
+          </section>
+        )}
       </div>
+      <WhatsAppFloat shop={base.shop} />
     </div>
   );
 }
