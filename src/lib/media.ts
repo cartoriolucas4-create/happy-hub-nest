@@ -12,7 +12,11 @@ export async function mediaUrl(value: string | null | undefined) {
 }
 
 /** Envia a imagem para a pasta da própria barbearia e devolve o caminho salvo. */
-export async function uploadMedia(shopId: string, kind: "logo" | "capa", file: File) {
+export async function uploadMedia(
+  shopId: string,
+  kind: "logo" | "capa" | "galeria",
+  file: File,
+) {
   if (!file.type.startsWith("image/")) throw new Error("Envie um arquivo de imagem.");
   if (file.size > 5 * 1024 * 1024) throw new Error("A imagem deve ter no máximo 5 MB.");
   const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
