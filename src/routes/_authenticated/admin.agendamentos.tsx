@@ -245,7 +245,7 @@ function Agendamentos() {
           ))}
         </select>
         <select className={input} value={pagamento} onChange={(e) => setPagamento(e.target.value)}>
-          <option value="">Todos os pagamentos</option>
+          <option value="">Todos os meios de pagamento</option>
           {(base?.pagamentos ?? []).map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -270,7 +270,7 @@ function Agendamentos() {
                 {a.services?.nome ?? "Serviço"} · {a.barbers?.nome} · {brl(a.valor)}
               </p>
               {a.payment_method_nome && (
-                <p className="text-sm text-muted-foreground">Pagamento: {a.payment_method_nome}</p>
+                <p className="text-sm text-muted-foreground">Forma de pagamento: {a.payment_method_nome}</p>
               )}
               {a.observacao && <p className="mt-1 text-xs text-muted-foreground">{a.observacao}</p>}
             </div>
