@@ -8,7 +8,6 @@ import {
   brDate,
   brl,
   hhmm,
-  isEmail,
   isPhone,
   todayIso,
   addDays,
