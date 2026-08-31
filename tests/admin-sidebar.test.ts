@@ -9,7 +9,6 @@ const routes = [
   "/admin/clientes",
   "/admin/barbeiros",
   "/admin/servicos",
-  "/admin/horarios",
   "/admin/bloqueios",
   "/admin/pagamentos",
   "/admin/galeria",
@@ -18,8 +17,9 @@ const routes = [
   "/admin/configurar",
 ];
 
-test("sidebar mantém todas as rotas normais do painel", () => {
+test("sidebar mantém todas as rotas normais do painel, exceto a configuração duplicada de horários", () => {
   for (const route of routes) expect(shell).toContain(route);
+  expect(shell).not.toContain('/admin/horarios');
 });
 
 test("sidebar possui os cinco grupos pedidos", () => {
