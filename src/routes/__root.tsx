@@ -14,7 +14,7 @@ function NotFoundComponent() { return <div className="flex min-h-screen items-ce
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error); const router = useRouter();
   useEffect(() => { reportLovableError(error, { boundary: "tanstack_root_error_component" }); }, [error]);
-  return <div className="flex min-h-screen items-center justify-center bg-background px-4"><div className="max-w-md text-center"><h1 className="text-xl font-semibold tracking-tight text-foreground">This page didn't load</h1><p className="mt-2 text-sm text-muted-foreground">Something went wrong on our end. You can try refreshing or head back home.</p><div className="mt-6 flex flex-wrap justify-center gap-2"><button onClick={() => { router.invalidate(); reset(); }} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Try again</button><a href="/" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground">Go home</a></div></div></div>;
+  return <div className="flex min-h-screen items-center justify-center bg-background px-4"><div className="max-w-md text-center"><h1 className="text-xl font-semibold tracking-tight text-foreground">This page didn't load</h1><p className="mt-2 text-sm text-muted-foreground">Something went wrong on our end. You can try refreshing or head back home.</p><div className="mt-6 flex flex-wrap justify-center gap-2"><button onClick={() => { router.invalidate(); reset(); }} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Try again</button><a href="/" className="inline-flex items-center justify-center rounded-md border border-input bg-background text-foreground px-4 py-2 text-sm font-medium">Go home</a></div></div></div>;
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -74,13 +74,7 @@ function PublicAccentController() {
 
 function isCurrencyInput(input: HTMLInputElement) {
   if (input.inputMode !== "decimal") return false;
-  const text = [
-    input.name,
-    input.id,
-    input.placeholder,
-    input.getAttribute("aria-label"),
-    input.getAttribute("data-field"),
-  ]
+  const text = [input.name, input.id, input.placeholder, input.getAttribute("aria-label"), input.getAttribute("data-field")]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -104,9 +98,11 @@ function formattedCaretPosition(formatted: string, digitIndex: number) {
 function BrlInputController() {
   useEffect(() => {
     const bound = new WeakSet<HTMLInputElement>();
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
 
     const emitValue = (input: HTMLInputElement, value: string, caretDigits: number) => {
-      input.value = value;
+      if (nativeValueSetter) nativeValueSetter.call(input, value);
+      else input.value = value;
       const caret = formattedCaretPosition(value, caretDigits);
       try {
         input.setSelectionRange(caret, caret);
@@ -138,8 +134,7 @@ function BrlInputController() {
             }
             event.preventDefault();
             const nextDigits = currentDigits.slice(0, startDigits) + inserted + currentDigits.slice(endDigits);
-            const formatted = formatBrlInput(nextDigits);
-            emitValue(input, formatted, startDigits + inserted.length);
+            emitValue(input, formatBrlInput(nextDigits), startDigits + inserted.length);
             return;
           }
 
@@ -157,8 +152,7 @@ function BrlInputController() {
               }
             }
             const nextDigits = currentDigits.slice(0, removeStart) + currentDigits.slice(removeEnd);
-            const formatted = formatBrlInput(nextDigits);
-            emitValue(input, formatted, removeStart);
+            emitValue(input, formatBrlInput(nextDigits), removeStart);
           }
         };
 
