@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import type { CSSProperties } from "react";
 import {
   MapPin,
   Phone,
@@ -139,6 +140,10 @@ function PaginaPublica() {
   const mapaUrl = enderecoCompleto
     ? `https://www.google.com/maps?q=${encodeURIComponent(enderecoCompleto)}&output=embed`
     : null;
+  const pageColor = shop.cor_secundaria?.trim() || "#1b1714";
+  const pageStyle = {
+    "--background": pageColor,
+  } as CSSProperties;
 
   const cta = (rotulo: string, className: string) => (
     <Link to="/barbearia/$slug/agendar" params={{ slug }} className={className}>
@@ -152,7 +157,7 @@ function PaginaPublica() {
     "inline-flex items-center justify-center gap-2 border border-border px-9 py-4 text-[0.72rem] uppercase tracking-[0.32em] text-foreground/80 transition-all hover:border-primary hover:text-primary";
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground" style={pageStyle}>
       <header className="fixed inset-x-0 top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 py-3 lg:px-10">
           <div className="flex items-center gap-3">
