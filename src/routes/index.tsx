@@ -1,182 +1,106 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  CalendarClock,
-  Clock,
-  Users,
-  Scissors,
-  Sparkles,
-  LayoutDashboard,
-  Link2,
-  UserCog,
-  ArrowRight,
-} from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, Clock3, CreditCard, DollarSign, Link2, Menu, Scissors, UserCog, Users, X } from "lucide-react";
 import heroImg from "@/assets/hero-barbearia.jpg";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "BarberFlow | Sistema de agendamento para barbearias" },
-      {
-        name: "description",
-        content:
-          "Plataforma completa para barbearias gerenciarem agenda, barbeiros, serviços e clientes, com link exclusivo de agendamento online 24h.",
-      },
-      { property: "og:title", content: "BarberFlow | Agendamento online para barbearias" },
-      {
-        property: "og:description",
-        content:
-          "Crie sua barbearia, configure serviços e horários e receba agendamentos pelo seu link exclusivo.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "BARBERCONTROL — Gestão completa para sua barbearia" },
+    { name: "description", content: "BARBERCONTROL: agenda, clientes, profissionais, serviços, horários, pagamentos e gestão completa para sua barbearia." },
+    { property: "og:title", content: "BARBERCONTROL — Gestão completa para sua barbearia" },
+    { property: "og:description", content: "Controle sua agenda, clientes, profissionais, serviços e pagamentos em um só lugar." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ]}),
   component: Landing,
 });
 
-const beneficios = [
-  { icon: CalendarClock, t: "Agenda online", d: "Visualize o dia, a semana e cada barbeiro." },
-  { icon: Clock, t: "Agendamento 24 horas", d: "Seus clientes marcam a qualquer hora." },
-  { icon: Users, t: "Gestão de clientes", d: "Histórico completo de cada cliente." },
-  { icon: UserCog, t: "Gestão de barbeiros", d: "Jornada individual por profissional." },
-  { icon: Scissors, t: "Cadastro de serviços", d: "Preço e duração usados no agendamento." },
-  { icon: Clock, t: "Controle de horários", d: "Funcionamento, intervalos e bloqueios." },
-  { icon: LayoutDashboard, t: "Painel administrativo", d: "Indicadores e faturamento do dia." },
-  { icon: Link2, t: "Link exclusivo", d: "Divulgue no Instagram, WhatsApp e QR Code." },
-];
+const recursos = [
+  [CalendarClock, "Agenda e agendamentos", "Organize seus horários e acompanhe seus atendimentos."],
+  [Users, "Clientes", "Tenha seus clientes organizados e acessíveis."],
+  [UserCog, "Profissionais", "Gerencie sua equipe e seus profissionais."],
+  [Scissors, "Serviços", "Cadastre serviços, preços e duração dos atendimentos."],
+  [Clock3, "Horários", "Defina dias, horários e intervalos de atendimento."],
+  [DollarSign, "Controle financeiro", "Acompanhe as informações financeiras da sua operação."],
+  [CreditCard, "Meios de pagamento", "Configure as formas de pagamento utilizadas pela barbearia."],
+  [Link2, "Link de agendamento", "Compartilhe seu link e facilite o acesso aos horários disponíveis."],
+] as const;
 
 const passos = [
-  "Cadastre sua barbearia.",
-  "Configure seus serviços e horários.",
-  "Compartilhe seu link.",
-  "Receba agendamentos.",
+  ["01", "Crie sua conta", "Comece pelo fluxo de cadastro existente."],
+  ["02", "Configure sua barbearia", "Cadastre serviços, profissionais, dias, horários e meios de pagamento."],
+  ["03", "Compartilhe seu link", "Leve seu link de agendamento para seus clientes."],
+  ["04", "Gerencie sua operação", "Tenha uma visão mais organizada da rotina da barbearia."],
 ];
 
+const problemas = ["Agenda espalhada pelo WhatsApp", "Informações de clientes difíceis de encontrar", "Horários desorganizados", "Serviços sem padrão", "Dificuldade para acompanhar pagamentos", "Falta de visão da operação"];
+const configuracao = ["Seus serviços", "Seus profissionais", "Seus dias de atendimento", "Seus horários", "Seus intervalos", "Seus meios de pagamento"];
+const beneficios = ["Organização", "Praticidade", "Visão da agenda", "Gestão dos profissionais", "Controle dos serviços", "Facilidade para clientes", "Gestão centralizada"];
+const publico = [
+  [Scissors, "Barbeiro autônomo", "Organize seus próprios atendimentos."],
+  [CalendarDays, "Pequenas barbearias", "Tenha tudo organizado em um só lugar."],
+  [Users, "Equipes", "Gerencie vários profissionais."],
+  [ArrowRight, "Barbearias em crescimento", "Tenha mais controle conforme sua operação cresce."],
+] as const;
+
 function Landing() {
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-5">
-          <span className="font-display text-xl tracking-[0.2em] sm:text-2xl">
-            BARBER<span className="text-primary">FLOW</span>
-          </span>
-          <nav className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Link
-              to="/login"
-              className="rounded-sm px-2 py-2 text-[0.65rem] tracking-wider text-muted-foreground transition-colors hover:text-primary sm:px-3 sm:text-sm"
-            >
-              ENTRAR
-            </Link>
-            <Link
-              to="/cadastro"
-              className="rounded-sm px-2 py-2 text-[0.65rem] tracking-wider text-foreground/90 underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary sm:px-3 sm:text-sm"
-            >
-              CADASTRE-SE
-            </Link>
-            <Link
-              to="/cadastro"
-              className="rounded-sm bg-primary px-3 py-2 font-display text-[0.65rem] tracking-wider text-primary-foreground transition-colors hover:bg-primary/90 sm:px-5 sm:text-sm"
-            >
-              COMEÇAR
-            </Link>
-          </nav>
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const close = () => setMobileOpen(false);
+  return <div className="min-h-screen bg-background text-foreground">
+    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 lg:h-[72px] lg:px-8">
+        <a href="#inicio" className="shrink-0" aria-label="BARBERCONTROL — início"><span className="font-display text-lg font-semibold tracking-[0.16em] sm:text-xl">BARBER<span className="text-primary">CONTROL</span></span></a>
+        <nav className="hidden items-center gap-7 lg:flex" aria-label="Navegação principal">
+          <a href="#inicio" className="text-sm text-muted-foreground hover:text-foreground">Início</a><a href="#recursos" className="text-sm text-muted-foreground hover:text-foreground">Recursos</a><a href="#como-funciona" className="text-sm text-muted-foreground hover:text-foreground">Como funciona</a><a href="#beneficios" className="text-sm text-muted-foreground hover:text-foreground">Benefícios</a><a href="#contato" className="text-sm text-muted-foreground hover:text-foreground">Contato</a>
+        </nav>
+        <div className="hidden items-center gap-2 sm:flex"><Link to="/login" className="rounded-md px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground">Entrar</Link><Link to="/cadastro" className="rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90">Começar agora</Link></div>
+        <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border sm:hidden" aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={mobileOpen} onClick={() => setMobileOpen(v => !v)}>{mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
+      </div>
+      {mobileOpen && <div className="border-t border-border bg-background px-5 py-4 sm:hidden"><nav className="mx-auto flex max-w-7xl flex-col gap-1" aria-label="Navegação mobile">{[["inicio","Início"],["recursos","Recursos"],["como-funciona","Como funciona"],["beneficios","Benefícios"],["contato","Contato"]].map(([id,label]) => <a key={id} href={`#${id}`} onClick={close} className="rounded-md px-3 py-3 text-sm text-muted-foreground hover:bg-card hover:text-foreground">{label}</a>)}<div className="mt-2 grid grid-cols-2 gap-2 border-t border-border pt-3"><Link to="/login" onClick={close} className="rounded-md border border-border px-4 py-3 text-center text-sm font-medium">Entrar</Link><Link to="/cadastro" onClick={close} className="rounded-md bg-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground">Começar agora</Link></div></nav></div>}
+    </header>
+
+    <main>
+      <section id="inicio" className="relative isolate overflow-hidden border-b border-border">
+        <img src={heroImg} alt="Ambiente de barbearia" width={1600} height={1008} className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background via-background/95 to-background/65" /><div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/20 via-transparent to-background" />
+        <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 py-20 sm:py-24 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-28">
+          <div><div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-background/60 px-3 py-1.5 text-xs font-medium text-primary backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Gestão para barbearias</div>
+            <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.03] tracking-tight sm:text-6xl lg:text-7xl">Gestão completa para sua <span className="text-primary">barbearia.</span></h1>
+            <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">Organize sua agenda, profissionais, clientes, serviços e pagamentos em um só lugar.</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link to="/cadastro" className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg hover:bg-primary/90">Começar agora <ArrowRight className="h-4 w-4" /></Link><Link to="/login" className="inline-flex items-center justify-center rounded-md border border-border bg-background/60 px-6 py-3.5 text-sm font-semibold backdrop-blur hover:border-primary/50 hover:text-primary">Entrar na minha conta</Link></div>
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground"><span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-primary" />Configure do seu jeito</span><span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-primary" />Uma operação mais organizada</span></div>
+          </div>
+          <div className="relative hidden lg:block"><div className="rounded-2xl border border-white/10 bg-background/90 p-3 shadow-2xl backdrop-blur-xl"><div className="rounded-xl border border-border bg-card p-4"><div className="flex items-center justify-between border-b border-border pb-4"><div><p className="text-xs text-muted-foreground">Visão da operação</p><p className="mt-1 font-display text-xl">Hoje</p></div><span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs text-primary">BARBERCONTROL</span></div><div className="mt-4 grid grid-cols-2 gap-3"><MiniStat icon={CalendarDays} label="Agendamentos" /><MiniStat icon={DollarSign} label="Faturamento" /><MiniStat icon={Users} label="Clientes" /><MiniStat icon={Clock3} label="Horários" /></div><div className="mt-3 rounded-lg border border-border bg-background p-4"><div className="flex items-center justify-between"><span className="text-sm font-medium">Agenda de hoje</span><CalendarClock className="h-4 w-4 text-primary" /></div>{["09:00  •  Corte","10:30  •  Barba","14:00  •  Corte + Barba"].map(item => <div key={item} className="mt-2 flex items-center justify-between rounded-md border border-border px-3 py-2 text-xs"><span>{item}</span><ChevronRight className="h-3.5 w-3.5 text-muted-foreground" /></div>)}</div></div></div></div>
         </div>
-      </header>
+      </section>
 
-      <main>
-        <section className="relative isolate">
-          <img
-            src={heroImg}
-            alt="Barbearia clássica com iluminação âmbar"
-            width={1600}
-            height={1008}
-            className="absolute inset-0 -z-10 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background via-background/90 to-background/40" />
-          <div className="mx-auto max-w-6xl px-5 py-24 md:py-32">
-            <p className="font-display text-xs tracking-[0.4em] text-primary">
-              PLATAFORMA PARA BARBEARIAS
-            </p>
-            <h1 className="mt-5 max-w-3xl text-4xl leading-[1] sm:text-6xl md:text-7xl">
-              Agende seu corte de forma simples.
-            </h1>
-            <p className="mt-6 max-w-xl text-base text-muted-foreground sm:text-lg">
-              Uma plataforma completa para barbearias gerenciarem sua agenda e permitirem que seus
-              clientes agendem online.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link
-                to="/cadastro"
-                className="rounded-sm bg-primary px-7 py-4 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90"
-              >
-                COMEÇAR AGORA
-              </Link>
-              <Link
-                to="/login"
-                className="rounded-sm border border-border px-7 py-4 font-display text-lg tracking-widest hover:border-primary hover:text-primary"
-              >
-                ENTRAR
-              </Link>
-            </div>
-          </div>
-        </section>
+      <section id="recursos" className="scroll-mt-20 border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Recursos</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Tudo o que sua barbearia precisa, em um só lugar.</h2><p className="mt-4 text-muted-foreground">Uma visão centralizada para cuidar da rotina da sua operação sem transformar gestão em complicação.</p></div><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{recursos.map(([Icon,title,text]) => <article key={title} className="rounded-xl border border-border bg-card/60 p-6 transition-all hover:-translate-y-1 hover:border-primary/30 hover:bg-card"><div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-5 w-5" /></div><h3 className="mt-5 font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p></article>)}</div></div></section>
 
-        <section className="border-t border-border py-20">
-          <div className="mx-auto max-w-6xl px-5">
-            <p className="font-display text-xs tracking-[0.35em] text-primary">BENEFÍCIOS</p>
-            <h2 className="mt-2 text-3xl md:text-4xl">Tudo que sua barbearia precisa</h2>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {beneficios.map((b) => (
-                <div
-                  key={b.t}
-                  className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40"
-                >
-                  <b.icon className="h-6 w-6 text-primary" aria-hidden="true" />
-                  <h3 className="mt-4 text-xl">{b.t}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{b.d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+      <section className="border-b border-border bg-card/30 py-20 sm:py-24"><div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-[.85fr_1.15fr] lg:px-8"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">O desafio</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Chega de controlar sua barbearia de qualquer jeito.</h2><p className="mt-4 text-muted-foreground">Quando a operação cresce, centralizar informações pode fazer toda a diferença para manter a rotina organizada.</p></div><div className="grid gap-3 sm:grid-cols-2">{problemas.map(item => <div key={item} className="flex items-start gap-3 rounded-lg border border-border bg-background p-4"><span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"><X className="h-3.5 w-3.5" /></span><span className="text-sm leading-6">{item}</span></div>)}<div className="sm:col-span-2 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-5"><Check className="h-5 w-5 shrink-0 text-primary" /><p className="text-sm font-medium">Com o BARBERCONTROL, tudo fica organizado em um só lugar.</p></div></div></div></section>
 
-        <section className="border-t border-border bg-card/40 py-20">
-          <div className="mx-auto max-w-6xl px-5">
-            <p className="font-display text-xs tracking-[0.35em] text-primary">COMO FUNCIONA</p>
-            <h2 className="mt-2 text-3xl md:text-4xl">Em quatro passos</h2>
-            <ol className="mt-10 grid gap-4 md:grid-cols-4">
-              {passos.map((p, i) => (
-                <li key={p} className="rounded-lg border border-border bg-background p-6">
-                  <span className="font-display text-4xl text-primary/40">0{i + 1}</span>
-                  <p className="mt-3 text-sm">{p}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
+      <section id="como-funciona" className="scroll-mt-20 border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="text-center"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Como funciona</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Comece em poucos passos.</h2></div><div className="mt-12 grid gap-4 md:grid-cols-4">{passos.map(([num,title,text]) => <div key={num} className="rounded-xl border border-border bg-card p-6"><span className="font-display text-3xl text-primary/60">{num}</span><h3 className="mt-5 font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p></div>)}</div></div></section>
 
-        <section className="border-t border-border py-24">
-          <div className="mx-auto max-w-3xl px-5 text-center">
-            <Sparkles className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
-            <h2 className="mt-5 text-3xl md:text-5xl">Crie sua barbearia agora</h2>
-            <p className="mt-4 text-muted-foreground">
-              Configure em minutos e comece a receber agendamentos pelo seu link exclusivo.
-            </p>
-            <Link
-              to="/cadastro"
-              className="mt-9 inline-flex items-center gap-2 rounded-sm bg-primary px-8 py-4 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90"
-            >
-              CRIAR MINHA BARBEARIA <ArrowRight className="h-5 w-5" aria-hidden="true" />
-            </Link>
-          </div>
-        </section>
-      </main>
+      <section className="border-b border-border bg-card/30 py-20 sm:py-24"><div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:px-8"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Configuração inicial</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Configure sua barbearia do seu jeito.</h2><p className="mt-4 max-w-xl leading-7 text-muted-foreground">Ao criar uma nova barbearia, você cadastra os dados reais da sua operação e define como seus atendimentos funcionam.</p></div><div className="grid gap-3 sm:grid-cols-2">{configuracao.map(item => <div key={item} className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-4 text-sm"><Check className="h-4 w-4 text-primary" />{item}</div>)}</div></div></section>
 
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto max-w-6xl px-5 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          © {new Date().getFullYear()} BarberFlow
-        </div>
-      </footer>
-    </div>
-  );
+      <section className="border-b border-border py-20 sm:py-24"><div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:px-8"><div className="order-2 rounded-2xl border border-border bg-card p-4 shadow-xl lg:order-1"><div className="rounded-xl border border-border bg-background p-5"><div className="flex items-center gap-3 border-b border-border pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><Link2 className="h-5 w-5" /></div><div><p className="text-xs text-muted-foreground">Seu link de agendamento</p><p className="mt-1 text-sm font-semibold">Página pública da sua barbearia</p></div></div><div className="mt-5 rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">Compartilhe seu link com seus clientes</div></div></div><div className="order-1 lg:order-2"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Meu link</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Seu próprio link de agendamento.</h2><p className="mt-4 leading-7 text-muted-foreground">Compartilhe seu link com seus clientes e facilite o acesso aos seus serviços e horários disponíveis.</p><Link to="/cadastro" className="mt-7 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Começar agora <ArrowRight className="h-4 w-4" /></Link></div></div></section>
+
+      <section className="border-b border-border bg-card/30 py-20 sm:py-24"><div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:px-8"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Agenda</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Tenha sua agenda sob controle.</h2><p className="mt-4 max-w-xl leading-7 text-muted-foreground">Organize seus atendimentos e tenha uma visão clara da sua rotina, considerando dias, horários, profissionais, serviços e agendamentos.</p><div className="mt-7 grid gap-3 sm:grid-cols-2">{["Dias","Horários","Agendamentos","Profissionais","Serviços"].map(item => <div key={item} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-primary" />{item}</div>)}</div></div><div className="rounded-2xl border border-border bg-background p-4 shadow-xl"><div className="rounded-xl border border-border bg-card p-4"><div className="flex items-center justify-between"><div><p className="text-xs text-muted-foreground">Agenda</p><p className="font-display text-xl">Atendimentos</p></div><CalendarDays className="h-5 w-5 text-primary" /></div>{["09:00  ·  Corte","10:30  ·  Barba","14:00  ·  Corte + Barba"].map(item => <div key={item} className="mt-3 flex items-center justify-between rounded-md border border-border px-3 py-3 text-sm"><span>{item}</span><span className="text-xs text-primary">Agendado</span></div>)}</div></div></div></section>
+
+      <section className="border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Equipe e serviços</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Organize sua equipe e seus serviços.</h2><p className="mt-4 text-muted-foreground">Mantenha profissionais e serviços cadastrados de forma clara para facilitar a operação e os agendamentos.</p></div><div className="mt-10 grid gap-5 md:grid-cols-2"><div className="rounded-xl border border-border bg-card p-6"><div className="flex items-center gap-3"><UserCog className="h-5 w-5 text-primary" /><h3 className="font-semibold">Profissionais</h3></div><div className="mt-5 space-y-3 text-sm text-muted-foreground"><p>• Cadastro dos profissionais</p><p>• Organização da equipe</p></div></div><div className="rounded-xl border border-border bg-card p-6"><div className="flex items-center gap-3"><Scissors className="h-5 w-5 text-primary" /><h3 className="font-semibold">Serviços</h3></div><div className="mt-5 space-y-3 text-sm text-muted-foreground"><p>• Nome do serviço</p><p>• Valor = preço cobrado</p><p>• Duração = tempo do atendimento</p></div></div></div></div></section>
+
+      <section className="border-b border-border bg-card/30 py-20 sm:py-24"><div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-[1.1fr_.9fr] lg:px-8"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Controle financeiro</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Tenha mais controle sobre seu negócio.</h2><p className="mt-4 max-w-xl leading-7 text-muted-foreground">Acompanhe informações de faturamento relacionadas aos seus atendimentos, de acordo com os dados registrados no sistema.</p></div><div className="rounded-xl border border-border bg-background p-6"><div className="flex items-center gap-3"><DollarSign className="h-5 w-5 text-primary" /><span className="font-semibold">Visão financeira da operação</span></div><p className="mt-4 text-sm leading-6 text-muted-foreground">Uma apresentação objetiva dos dados financeiros que já fazem parte da operação, sem prometer recursos além do sistema.</p></div></div></section>
+
+      <section className="border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="text-center"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Para quem é</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Feito para quem vive de barbearia.</h2></div><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{publico.map(([Icon,title,text]) => <article key={title} className="rounded-xl border border-border bg-card p-6"><Icon className="h-5 w-5 text-primary" /><h3 className="mt-5 font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p></article>)}</div></div></section>
+
+      <section id="beneficios" className="scroll-mt-20 border-b border-border bg-card/30 py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Benefícios</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Mais organização. Mais controle. Menos complicação.</h2></div><div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{beneficios.map(item => <div key={item} className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-4 text-sm"><Check className="h-4 w-4 text-primary" />{item}</div>)}</div></div></section>
+
+      <section id="contato" className="scroll-mt-20 py-24 sm:py-28"><div className="mx-auto max-w-4xl px-5 text-center lg:px-8"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"><Scissors className="h-5 w-5" /></div><h2 className="mt-6 text-3xl font-semibold tracking-tight sm:text-5xl">Pronto para ter sua barbearia sob controle?</h2><p className="mx-auto mt-5 max-w-2xl leading-7 text-muted-foreground">Comece a organizar sua operação com o BARBERCONTROL.</p><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Link to="/cadastro" className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg hover:bg-primary/90">Começar agora <ArrowRight className="h-4 w-4" /></Link><Link to="/login" className="inline-flex items-center justify-center rounded-md border border-border px-7 py-3.5 text-sm font-semibold hover:border-primary/50 hover:text-primary">Já tenho uma conta</Link></div></div></section>
+    </main>
+
+    <footer className="border-t border-border bg-card/20"><div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 lg:flex-row lg:items-end lg:justify-between lg:px-8"><div><a href="#inicio" className="font-display text-lg font-semibold tracking-[0.16em]">BARBER<span className="text-primary">CONTROL</span></a><p className="mt-2 text-sm text-muted-foreground">Gestão completa para sua barbearia</p></div><div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground"><a href="#inicio" className="hover:text-foreground">Início</a><a href="#recursos" className="hover:text-foreground">Recursos</a><a href="#como-funciona" className="hover:text-foreground">Como funciona</a><Link to="/login" className="hover:text-foreground">Entrar</Link><Link to="/cadastro" className="hover:text-foreground">Criar conta</Link></div><p className="text-xs text-muted-foreground">© {new Date().getFullYear()} BARBERCONTROL. Todos os direitos reservados.</p></div></footer>
+  </div>;
+}
+
+function MiniStat({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return <div className="rounded-lg border border-border bg-background p-4"><Icon className="h-4 w-4 text-primary" /><p className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-sm font-medium">Visão do dia</p></div>;
 }
