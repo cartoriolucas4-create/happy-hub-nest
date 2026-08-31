@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Check, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, btn, input } from "@/components/admin/AdminShell";
 import { useShop } from "@/lib/shop";
+import { ACCENT_OPTIONS, DEFAULT_ACCENT_DB_VALUE, DEFAULT_ACCENT_COLOR, accentForeground } from "@/lib/theme";
 import { isEmail, slugify } from "@/lib/barber";
 import { mediaUrl, uploadMedia } from "@/lib/media";
 
@@ -46,6 +48,7 @@ type Form = {
   mensagem_whatsapp: string;
   logo_url: string;
   cover_url: string;
+  cor_primaria: string;
 };
 
 function Configuracoes() {
@@ -81,6 +84,7 @@ function Configuracoes() {
       mensagem_whatsapp: shop.mensagem_whatsapp ?? "",
       logo_url: shop.logo_url ?? "",
       cover_url: shop.cover_url ?? "",
+      cor_primaria: shop.cor_primaria || DEFAULT_ACCENT_DB_VALUE,
     });
     void mediaUrl(shop.logo_url).then(setLogoPreview);
     void mediaUrl(shop.cover_url).then(setCoverPreview);
@@ -122,6 +126,7 @@ function Configuracoes() {
           mensagem_whatsapp: t(f.mensagem_whatsapp),
           logo_url: t(f.logo_url),
           cover_url: t(f.cover_url),
+          cor_primaria: f.cor_primaria,
         })
         .eq("id", shop!.id);
       if (error) throw error;
@@ -190,6 +195,11 @@ function Configuracoes() {
     },
   ];
 
+  const selectedColor = form.cor_primaria || DEFAULT_ACCENT_DB_VALUE;
+  const selectedOption = ACCENT_OPTIONS.find((option) => option.value === selectedColor) ?? ACCENT_OPTIONS[0]!;
+  const previewColor = selectedColor === DEFAULT_ACCENT_DB_VALUE ? DEFAULT_ACCENT_COLOR : selectedColor;
+  const previewForeground = accentForeground(previewColor);
+
   return (
     <AdminShell title="Configurações" subtitle="Dados exibidos na sua página pública">
       <form
@@ -216,6 +226,97 @@ function Configuracoes() {
             </div>
           </section>
         ))}
+
+        <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xs uppercase tracking-[0.2em] text-primary">Personalização</h2>
+              <h3 className="mt-2 text-2xl">Cor do Meu Link</h3>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Escolha a cor principal de destaque do seu Meu Link. O tema, conteúdo, horários, serviços e barbeiros permanecem preservados.
+              </p>
+            </div>
+            <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+              Selecionado: <strong className="text-foreground">{selectedOption.name}</strong>
+            </span>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            {ACCENT_OPTIONS.map((option) => {
+              const isSelected = option.value === selectedColor;
+              const displayColor = option.id === "default" ? DEFAULT_ACCENT_COLOR : option.value;
+              const foreground = accentForeground(displayColor);
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setForm({ ...form, cor_primaria: option.value })}
+                  className={`group rounded-lg border p-3 text-left transition-all ${
+                    isSelected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <span
+                    className="relative flex h-12 w-full items-center justify-center rounded-md border border-black/10 shadow-sm"
+                    style={{ backgroundColor: displayColor, color: foreground }}
+                  >
+                    {isSelected && <Check className="h-5 w-5" strokeWidth={3} aria-hidden="true" />}
+                  </span>
+                  <span className="mt-2 flex items-center justify-between gap-2 text-sm font-medium">
+                    {option.name}
+                    {isSelected && <span className="text-xs text-primary">Selecionada</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 rounded-lg border border-border bg-background p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Prévia do Meu Link</p>
+                <p className="mt-1 text-sm text-muted-foreground">Veja como a cor será aplicada nos principais destaques.</p>
+              </div>
+              <span className="text-xs text-muted-foreground">{selectedOption.name}</span>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-md border border-border p-4">
+                <p style={{ color: previewColor }} className="font-serif-display text-xl">Agende seu horário</p>
+                <p className="mt-1 text-xs text-muted-foreground">Título de destaque</p>
+              </div>
+              <div className="rounded-md border border-border p-4">
+                <button
+                  type="button"
+                  style={{ backgroundColor: previewColor, color: previewForeground, borderColor: previewColor }}
+                  className="w-full rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-widest"
+                >
+                  Agendar agora
+                </button>
+                <p className="mt-2 text-xs text-muted-foreground">Chamada para agendamento</p>
+              </div>
+              <div className="rounded-md border border-border p-4">
+                <div style={{ borderColor: previewColor, color: previewColor }} className="rounded-md border p-3 text-xs">
+                  <span className="font-semibold">Horário selecionado</span>
+                  <span className="mt-1 block text-muted-foreground">09:00 · 09:30 · 10:00</span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">Seleção e indicadores</p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary"
+            onClick={() => {
+              if (!window.confirm("Deseja restaurar a cor padrão?")) return;
+              setForm({ ...form, cor_primaria: DEFAULT_ACCENT_DB_VALUE });
+              toast.success("Cor padrão selecionada. Clique em salvar para publicar.");
+            }}
+          >
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+            REDEFINIR PARA PADRÃO
+          </button>
+        </section>
 
         <section>
           <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-primary">Textos</h2>
