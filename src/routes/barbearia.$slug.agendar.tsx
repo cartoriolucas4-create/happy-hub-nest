@@ -101,7 +101,7 @@ function Agendar() {
     queryKey: ["horarios-publicos", slug, barberId, serviceId, data],
     enabled: step === 3 && Boolean(barberId && serviceId && data),
     queryFn: async () => {
-      const { data: res, error } = await supabase.rpc("horarios_disponiveis_publico", {
+      const { data: res, error } = await supabase.rpc("horarios_disponiveis", {
         p_slug: slug,
         p_barber_id: barberId,
         p_service_id: serviceId,
