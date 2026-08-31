@@ -755,6 +755,10 @@ export type Database = {
           valor: number
         }[]
       }
+      barbearia_operacional: {
+        Args: { p_barbershop_id: string }
+        Returns: boolean
+      }
       criar_agendamento_publico:
         | {
             Args: {
@@ -948,7 +952,12 @@ export type Database = {
         Returns: string
       }
       sa_liberar_acesso_massa: {
-        Args: { p_observacao?: string; p_quantidade: number; p_unidade: string; p_user_ids: string[] }
+        Args: {
+          p_observacao?: string
+          p_quantidade: number
+          p_unidade: string
+          p_user_ids: string[]
+        }
         Returns: number
       }
       sa_registrar_alteracao_senha: {

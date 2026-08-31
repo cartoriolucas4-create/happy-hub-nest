@@ -128,7 +128,8 @@ export function AdminShell({
             {actions}
           </div>
           <div className="mt-8 pb-16">
-            <LicenseBanner />
+            {/* O aviso de prazo de acesso aparece somente no Dashboard. */}
+            {pathname === "/admin" && <LicenseBanner />}
             <AccessGate>{children}</AccessGate>
           </div>
         </div>
