@@ -10,7 +10,14 @@ import { btn, btnGhost, input } from "./AdminShell";
 type ServiceForm = { nome: string; descricao: string; preco: string; duracao_minutos: string };
 type BarberForm = { nome: string; telefone: string; descricao: string; foto_url: string };
 type PaymentForm = { name: string; description: string; icon: string };
-type HourRow = { dia_semana: number; hora_inicio: string; hora_fim: string; intervalo_inicio: string; intervalo_fim: string };
+type HourRow = {
+  dia_semana: number;
+  hora_inicio: string;
+  hora_fim: string;
+  possui_intervalo: boolean;
+  intervalo_inicio: string;
+  intervalo_fim: string;
+};
 
 const emptyService: ServiceForm = { nome: "", descricao: "", preco: "", duracao_minutos: "" };
 const emptyBarber: BarberForm = { nome: "", telefone: "", descricao: "", foto_url: "" };
@@ -24,13 +31,10 @@ function parseMoney(value: string) {
 
 function validHourRow(row: HourRow) {
   if (!row.hora_inicio || !row.hora_fim || row.hora_fim <= row.hora_inicio) return false;
-  const hasStart = Boolean(row.intervalo_inicio);
-  const hasEnd = Boolean(row.intervalo_fim);
-  if (hasStart !== hasEnd) return false;
-  if (hasStart && hasEnd) {
-    if (row.intervalo_fim <= row.intervalo_inicio) return false;
-    if (row.intervalo_inicio < row.hora_inicio || row.intervalo_fim > row.hora_fim) return false;
-  }
+  if (!row.possui_intervalo) return !row.intervalo_inicio && !row.intervalo_fim;
+  if (!row.intervalo_inicio || !row.intervalo_fim) return false;
+  if (row.intervalo_fim <= row.intervalo_inicio) return false;
+  if (row.intervalo_inicio < row.hora_inicio || row.intervalo_fim > row.hora_fim) return false;
   return true;
 }
 
@@ -71,12 +75,26 @@ export function SetupWizard({ shopId }: { shopId: string }) {
   useEffect(() => {
     if (!current) return;
     setDays(current.bh.filter((row) => row.aberto).map((row) => row.dia_semana));
-    setHours(current.bh.filter((row) => row.aberto).map((row) => ({ dia_semana: row.dia_semana, hora_inicio: hhmm(row.hora_inicio), hora_fim: hhmm(row.hora_fim), intervalo_inicio: hhmm(row.intervalo_inicio), intervalo_fim: hhmm(row.intervalo_fim) })));
+    setHours(current.bh.filter((row) => row.aberto).map((row) => ({
+      dia_semana: row.dia_semana,
+      hora_inicio: hhmm(row.hora_inicio),
+      hora_fim: hhmm(row.hora_fim),
+      possui_intervalo: Boolean(row.possui_intervalo ?? (row.intervalo_inicio && row.intervalo_fim)),
+      intervalo_inicio: hhmm(row.intervalo_inicio),
+      intervalo_fim: hhmm(row.intervalo_fim),
+    })));
   }, [current]);
 
   const done = status?.itens ?? [];
   const completed = done.filter((item) => item.ok).length;
-  const currentRows = useMemo(() => days.map((day) => hours.find((row) => row.dia_semana === day) ?? ({ dia_semana: day, hora_inicio: "", hora_fim: "", intervalo_inicio: "", intervalo_fim: "" })), [days, hours]);
+  const currentRows = useMemo(() => days.map((day) => hours.find((row) => row.dia_semana === day) ?? ({
+    dia_semana: day,
+    hora_inicio: "",
+    hora_fim: "",
+    possui_intervalo: false,
+    intervalo_inicio: "",
+    intervalo_fim: "",
+  })), [days, hours]);
 
   async function refresh() {
     await qc.invalidateQueries({ queryKey: ["setup-wizard-data", shopId] });
@@ -104,19 +122,35 @@ export function SetupWizard({ shopId }: { shopId: string }) {
   async function saveDaysAndHours() {
     if (!days.length) { toast.error("Selecione pelo menos um dia."); return false; }
     const rows = currentRows;
-    if (rows.some((row) => !validHourRow(row))) { toast.error("Revise abertura, fechamento e intervalos de todos os dias selecionados."); return false; }
+    if (rows.some((row) => !validHourRow(row))) { toast.error("Revise abertura, fechamento e a configuração de intervalo de todos os dias selecionados."); return false; }
     const existing = current?.bh ?? [];
     for (const row of existing) {
       const selected = days.includes(row.dia_semana);
       const edited = rows.find((item) => item.dia_semana === row.dia_semana);
       const payload = selected && edited
-        ? { aberto: true, hora_inicio: edited.hora_inicio, hora_fim: edited.hora_fim, intervalo_inicio: edited.intervalo_inicio || null, intervalo_fim: edited.intervalo_fim || null, possui_intervalo: Boolean(edited.intervalo_inicio && edited.intervalo_fim) }
+        ? {
+            aberto: true,
+            hora_inicio: edited.hora_inicio,
+            hora_fim: edited.hora_fim,
+            possui_intervalo: edited.possui_intervalo,
+            intervalo_inicio: edited.possui_intervalo ? edited.intervalo_inicio : null,
+            intervalo_fim: edited.possui_intervalo ? edited.intervalo_fim : null,
+          }
         : { aberto: false, intervalo_inicio: null, intervalo_fim: null, possui_intervalo: false };
       const { error } = await supabase.from("business_hours").update(payload).eq("id", row.id).eq("barbershop_id", shopId);
       if (error) { toast.error(error.message); return false; }
     }
     for (const row of rows.filter((item) => !existing.some((old) => old.dia_semana === item.dia_semana))) {
-      const { error } = await supabase.from("business_hours").insert({ barbershop_id: shopId, dia_semana: row.dia_semana, aberto: true, hora_inicio: row.hora_inicio, hora_fim: row.hora_fim, intervalo_inicio: row.intervalo_inicio || null, intervalo_fim: row.intervalo_fim || null, possui_intervalo: Boolean(row.intervalo_inicio && row.intervalo_fim) });
+      const { error } = await supabase.from("business_hours").insert({
+        barbershop_id: shopId,
+        dia_semana: row.dia_semana,
+        aberto: true,
+        hora_inicio: row.hora_inicio,
+        hora_fim: row.hora_fim,
+        possui_intervalo: row.possui_intervalo,
+        intervalo_inicio: row.possui_intervalo ? row.intervalo_inicio : null,
+        intervalo_fim: row.possui_intervalo ? row.intervalo_fim : null,
+      });
       if (error) { toast.error(error.message); return false; }
     }
     await refresh(); toast.success("Dias, horários e intervalos salvos."); return true;
@@ -143,8 +177,12 @@ export function SetupWizard({ shopId }: { shopId: string }) {
   }
 
   function toggleDay(day: number) { setDays((old) => old.includes(day) ? old.filter((item) => item !== day) : [...old, day].sort((a, b) => a - b)); }
-  function updateHour(day: number, field: keyof Omit<HourRow, "dia_semana">, value: string) {
-    setHours((old) => { const found = old.find((row) => row.dia_semana === day); if (found) return old.map((row) => row.dia_semana === day ? { ...row, [field]: value } : row); return [...old, { dia_semana: day, hora_inicio: "", hora_fim: "", intervalo_inicio: "", intervalo_fim: "", [field]: value }]; });
+  function updateHour(day: number, field: keyof Omit<HourRow, "dia_semana">, value: string | boolean) {
+    setHours((old) => {
+      const found = old.find((row) => row.dia_semana === day);
+      if (found) return old.map((row) => row.dia_semana === day ? { ...row, [field]: value } : row);
+      return [...old, { dia_semana: day, hora_inicio: "", hora_fim: "", possui_intervalo: false, intervalo_inicio: "", intervalo_fim: "", [field]: value }];
+    });
   }
 
   const ok = (key: string) => Boolean(done.find((item) => item.key === key)?.ok);
@@ -161,7 +199,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
 
     {step === 3 && <section className="mt-8"><h3 className="text-xl">Dias de atendimento</h3><p className="mt-1 text-sm text-muted-foreground">Selecione somente os dias em que a barbearia realmente atende. Nenhum dia é selecionado automaticamente.</p><div className="mt-5 grid gap-2 sm:grid-cols-2">{DIAS.map((day, index) => <button key={day} type="button" onClick={() => toggleDay(index)} className={`flex items-center gap-3 rounded-md border p-3 text-left transition-colors ${days.includes(index) ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}><span>{days.includes(index) ? "☑" : "☐"}</span>{day}</button>)}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(2)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={() => days.length ? setStep(4) : toast.error("Selecione pelo menos um dia.")}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
 
-    {step === 4 && <section className="mt-8"><h3 className="text-xl">DIAS E HORÁRIOS DE ATENDIMENTO</h3><p className="mt-1 text-sm text-muted-foreground">Configure abertura, fechamento e um intervalo opcional para cada dia selecionado.</p><div className="mt-5 space-y-4">{days.map((day) => { const row = currentRows.find((item) => item.dia_semana === day)!; return <div key={day} className="rounded-lg border border-border bg-background/40 p-4"><div className="flex items-center justify-between"><h4 className="font-display text-sm tracking-widest">{DIAS[day]?.toUpperCase()}</h4><span className="text-xs text-primary">☑ Atende</span></div><div className="mt-4 grid gap-3 sm:grid-cols-4"><label className="text-sm">Abre<input className={input + " mt-1"} type="time" value={row.hora_inicio} onChange={(e) => updateHour(day, "hora_inicio", e.target.value)} /></label><label className="text-sm">Fecha<input className={input + " mt-1"} type="time" value={row.hora_fim} onChange={(e) => updateHour(day, "hora_fim", e.target.value)} /></label><label className="text-sm">Intervalo início<input className={input + " mt-1"} type="time" value={row.intervalo_inicio} onChange={(e) => updateHour(day, "intervalo_inicio", e.target.value)} /></label><label className="text-sm">Intervalo fim<input className={input + " mt-1"} type="time" value={row.intervalo_fim} onChange={(e) => updateHour(day, "intervalo_fim", e.target.value)} /></label></div>{!validHourRow(row) && <p className="mt-3 flex items-center gap-2 text-xs text-primary"><AlertTriangle className="h-4 w-4" />Informe abertura/fechamento válidos e, se usado, um intervalo completo dentro do expediente.</p>}</div>; })}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(3)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={async () => { if (await saveDaysAndHours()) setStep(5); }}>Salvar e continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
+    {step === 4 && <section className="mt-8"><h3 className="text-xl">DIAS E HORÁRIOS DE ATENDIMENTO</h3><p className="mt-1 text-sm text-muted-foreground">Configure abertura, fechamento e escolha explicitamente se existe intervalo em cada dia.</p><div className="mt-5 space-y-4">{days.map((day) => { const row = currentRows.find((item) => item.dia_semana === day)!; return <div key={day} className="rounded-lg border border-border bg-background/40 p-4"><div className="flex items-center justify-between"><h4 className="font-display text-sm tracking-widest">{DIAS[day]?.toUpperCase()}</h4><span className="text-xs text-primary">☑ Atende</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm">Abre<input className={input + " mt-1"} type="time" value={row.hora_inicio} onChange={(e) => updateHour(day, "hora_inicio", e.target.value)} /></label><label className="text-sm">Fecha<input className={input + " mt-1"} type="time" value={row.hora_fim} onChange={(e) => updateHour(day, "hora_fim", e.target.value)} /></label></div><label className="mt-4 flex items-center gap-3 rounded-md border border-border p-3 text-sm"><input type="checkbox" checked={row.possui_intervalo} onChange={(e) => updateHour(day, "possui_intervalo", e.target.checked)} /> Possui intervalo</label>{row.possui_intervalo && <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-sm">Intervalo início<input className={input + " mt-1"} type="time" value={row.intervalo_inicio} onChange={(e) => updateHour(day, "intervalo_inicio", e.target.value)} /></label><label className="text-sm">Intervalo fim<input className={input + " mt-1"} type="time" value={row.intervalo_fim} onChange={(e) => updateHour(day, "intervalo_fim", e.target.value)} /></label></div>}{!validHourRow(row) && <p className="mt-3 flex items-center gap-2 text-xs text-primary"><AlertTriangle className="h-4 w-4" />Informe abertura/fechamento válidos e configure corretamente o intervalo selecionado.</p>}</div>; })}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(3)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={async () => { if (await saveDaysAndHours()) setStep(5); }}>Salvar e continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
 
     {step === 5 && <section className="mt-8"><h3 className="text-xl">Meios de pagamento</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre pelo menos um meio de pagamento real. Nenhum meio é pré-selecionado.</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><label className="text-sm">Nome<input className={input + " mt-1"} value={payment.name} onChange={(e) => setPayment({ ...payment, name: e.target.value })} placeholder="Ex.: Pix" /></label><label className="text-sm">Descrição (opcional)<input className={input + " mt-1"} value={payment.description} onChange={(e) => setPayment({ ...payment, description: e.target.value })} /></label><label className="text-sm">Ícone (opcional)<input className={input + " mt-1"} value={payment.icon} onChange={(e) => setPayment({ ...payment, icon: e.target.value })} /></label></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={addPayment}><Plus className="mr-2 inline h-4 w-4" />Cadastrar pagamento</button><button className={btnGhost} onClick={() => setStep(4)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={finish}>Finalizar <Check className="ml-1 inline h-4 w-4" /></button></div><ExistingList title="Meios cadastrados" items={(current?.payments ?? []).map((item) => item.name)} /></section>}
 
