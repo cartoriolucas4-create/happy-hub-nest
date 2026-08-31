@@ -3,36 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Eye, EyeOff, KeyRound, Mail, MessageCircle } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { SuperShell, sBtn, sBtnGhost, sInput } from "@/components/superadmin/SuperShell";
 import { EditarBarbearia, EditarContato } from "@/components/superadmin/EditarCliente";
-import {
-  STATUS_LICENCA,
-  dataBr,
-  dataHoraBr,
-  formatarRestante,
-  restanteMs,
-  statusLicencaClass,
-  type LicenseStatus,
-} from "@/lib/license";
-
-type Unidade = "dias" | "meses" | "anos";
-
-const ATALHOS: { label: string; quantidade: number; unidade: Unidade }[] = [
-  { label: "30 dias", quantidade: 30, unidade: "dias" },
-  { label: "60 dias", quantidade: 60, unidade: "dias" },
-  { label: "90 dias", quantidade: 90, unidade: "dias" },
-  { label: "6 meses", quantidade: 6, unidade: "meses" },
-  { label: "1 ano", quantidade: 1, unidade: "anos" },
-  { label: "2 anos", quantidade: 2, unidade: "anos" },
-];
+import { ControlePrazoAcesso } from "@/components/superadmin/ControlePrazoAcesso";
+import { dataBr, dataHoraBr, type LicenseStatus } from "@/lib/license";
 
 export const Route = createFileRoute("/_authenticated/super-admin/clientes/$id")({
   head: () => ({
@@ -52,8 +28,6 @@ export const Route = createFileRoute("/_authenticated/super-admin/clientes/$id")
 function ClienteDetalhe() {
   const { id } = Route.useParams();
   const queryClient = useQueryClient();
-  const [quantidade, setQuantidade] = useState(30);
-  const [unidade, setUnidade] = useState<Unidade>("dias");
   const [observacao, setObservacao] = useState("");
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
@@ -85,25 +59,6 @@ function ClienteDetalhe() {
     queryClient.invalidateQueries({ queryKey: ["sa-clientes"] });
     queryClient.invalidateQueries({ queryKey: ["sa-stats"] });
   }
-
-  const liberar = useMutation({
-    mutationFn: async (p: { quantidade: number; unidade: Unidade }) => {
-      const { data, error } = await supabase.rpc("sa_liberar_acesso", {
-        p_user_id: id,
-        p_quantidade: p.quantidade,
-        p_unidade: p.unidade,
-        ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}),
-      });
-      if (error) throw error;
-      return data as string;
-    },
-    onSuccess: (venc) => {
-      toast.success(`Acesso liberado até ${dataHoraBr(venc)}`);
-      setObservacao("");
-      recarregar();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   const bloquear = useMutation({
     mutationFn: async () => {
@@ -157,9 +112,8 @@ function ClienteDetalhe() {
     onError: (e: Error) => toast.error(e.message || "Não foi possível alterar a senha."),
   });
 
-  const carregando = liberar.isPending || bloquear.isPending || desbloquear.isPending;
+  const carregandoBloqueio = bloquear.isPending || desbloquear.isPending;
   const status = cliente?.status as LicenseStatus | undefined;
-  const ms = cliente ? restanteMs(cliente.vencimento) : 0;
   const telefoneDigits = (cliente?.telefone ?? "").replace(/\D/g, "");
 
   return (
@@ -173,9 +127,7 @@ function ClienteDetalhe() {
       }
     >
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
-      {!isLoading && !cliente && (
-        <p className="text-sm text-muted-foreground">Cliente não encontrado.</p>
-      )}
+      {!isLoading && !cliente && <p className="text-sm text-muted-foreground">Cliente não encontrado.</p>}
 
       {cliente && (
         <div className="space-y-8">
@@ -191,23 +143,12 @@ function ClienteDetalhe() {
             </dl>
             <div className="mt-5 flex flex-wrap gap-3">
               {telefoneDigits.length >= 10 && (
-                <a
-                  href={`https://wa.me/55${telefoneDigits}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={sBtnGhost}
-                >
+                <a href={`https://wa.me/55${telefoneDigits}`} target="_blank" rel="noopener noreferrer" className={sBtnGhost}>
                   <MessageCircle className="mr-1 inline h-4 w-4" /> WhatsApp
                 </a>
               )}
-              {cliente.email && (
-                <a href={`mailto:${cliente.email}`} className={sBtnGhost}>
-                  <Mail className="mr-1 inline h-4 w-4" /> E-mail
-                </a>
-              )}
-              <button onClick={() => setPasswordOpen(true)} className={sBtnGhost}>
-                <KeyRound className="mr-1 inline h-4 w-4" /> Trocar senha
-              </button>
+              {cliente.email && <a href={`mailto:${cliente.email}`} className={sBtnGhost}><Mail className="mr-1 inline h-4 w-4" /> E-mail</a>}
+              <button onClick={() => setPasswordOpen(true)} className={sBtnGhost}><KeyRound className="mr-1 inline h-4 w-4" /> Trocar senha</button>
             </div>
           </section>
 
@@ -221,134 +162,46 @@ function ClienteDetalhe() {
 
           <EditarBarbearia userId={id} onSaved={recarregar} />
 
+          <ControlePrazoAcesso
+            cliente={{
+              user_id: cliente.user_id,
+              nome: cliente.nome,
+              access_type: cliente.access_type,
+              status: cliente.status as LicenseStatus,
+              access_started_at: cliente.access_started_at,
+              trial_started_at: cliente.trial_started_at,
+              vencimento: cliente.vencimento,
+            }}
+            onChanged={recarregar}
+          />
+
           <section className="rounded-lg border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-2xl">Controle de acesso</h2>
-              {status && (
-                <span
-                  className={`rounded-full border px-3 py-1 text-xs ${statusLicencaClass(status)}`}
-                >
-                  {STATUS_LICENCA[status]}
-                </span>
+              <div>
+                <h2 className="text-2xl">Bloqueio de acesso</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Bloqueio é separado da expiração e da alteração de prazo.</p>
+              </div>
+              {status === "blocked" || status === "suspended" ? (
+                <button disabled={carregandoBloqueio} onClick={() => desbloquear.mutate()} className={sBtn}>DESBLOQUEAR</button>
+              ) : (
+                <button disabled={carregandoBloqueio} onClick={() => bloquear.mutate()} className="rounded-md border border-destructive/50 px-5 py-2.5 text-sm text-destructive hover:bg-destructive/10 disabled:opacity-60">BLOQUEAR ACESSO</button>
               )}
             </div>
-            <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Info
-                label="Tipo de acesso"
-                value={cliente.access_type === "trial" ? "Teste" : "Licença"}
-              />
-              <Info
-                label="Data de início"
-                value={dataHoraBr(cliente.access_started_at ?? cliente.trial_started_at)}
-              />
-              <Info label="Data de vencimento" value={dataHoraBr(cliente.vencimento)} />
-              <Info label="Tempo restante" value={ms > 0 ? formatarRestante(ms) : "vencido"} />
-            </dl>
-
-            <div className="mt-6">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Liberar acesso
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {ATALHOS.map((a) => (
-                  <button
-                    key={a.label}
-                    disabled={carregando}
-                    onClick={() => liberar.mutate({ quantidade: a.quantidade, unidade: a.unidade })}
-                    className="rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary disabled:opacity-60"
-                  >
-                    {a.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-[120px_160px_1fr_auto] sm:items-end">
-                <label className="block">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Quantidade
-                  </span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={quantidade}
-                    onChange={(e) => setQuantidade(Number(e.target.value))}
-                    className={`mt-2 ${sInput}`}
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Unidade
-                  </span>
-                  <select
-                    value={unidade}
-                    onChange={(e) => setUnidade(e.target.value as Unidade)}
-                    className={`mt-2 ${sInput}`}
-                  >
-                    <option value="dias">Dias</option>
-                    <option value="meses">Meses</option>
-                    <option value="anos">Anos</option>
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Observação
-                  </span>
-                  <input
-                    value={observacao}
-                    onChange={(e) => setObservacao(e.target.value)}
-                    placeholder="Ex.: pagamento realizado via WhatsApp"
-                    className={`mt-2 ${sInput}`}
-                  />
-                </label>
-                <button
-                  disabled={carregando}
-                  onClick={() => liberar.mutate({ quantidade, unidade })}
-                  className={sBtn}
-                >
-                  LIBERAR ACESSO
-                </button>
-              </div>
-
-              <p className="mt-3 text-xs text-muted-foreground">
-                Conta ativa: o prazo é somado ao vencimento atual. Conta expirada ou bloqueada: o
-                prazo começa agora.
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                {status === "blocked" || status === "suspended" ? (
-                  <button
-                    disabled={carregando}
-                    onClick={() => desbloquear.mutate()}
-                    className={sBtn}
-                  >
-                    DESBLOQUEAR
-                  </button>
-                ) : (
-                  <button
-                    disabled={carregando}
-                    onClick={() => bloquear.mutate()}
-                    className="rounded-md border border-destructive/50 px-5 py-2.5 text-sm text-destructive hover:bg-destructive/10 disabled:opacity-60"
-                  >
-                    BLOQUEAR ACESSO
-                  </button>
-                )}
-              </div>
-            </div>
+            <label className="mt-5 block">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Observação</span>
+              <input value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Motivo administrativo" className={`mt-2 ${sInput}`} />
+            </label>
           </section>
 
           <section>
             <h2 className="text-2xl">Histórico</h2>
             <div className="mt-4 space-y-3">
-              {(historico ?? []).length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhuma alteração registrada.</p>
-              )}
+              {(historico ?? []).length === 0 && <p className="text-sm text-muted-foreground">Nenhuma alteração registrada.</p>}
               {(historico ?? []).map((h) => (
                 <div key={h.id} className="rounded-lg border border-border bg-card p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-display text-sm tracking-widest text-primary">{h.acao}</p>
-                    <span className="text-xs text-muted-foreground">
-                      {dataHoraBr(h.created_at)}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{dataHoraBr(h.created_at)}</span>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {h.novo_prazo ? `Prazo: ${h.novo_prazo} · ` : ""}
@@ -362,81 +215,35 @@ function ClienteDetalhe() {
           </section>
         </div>
       )}
-      <Dialog
-        open={passwordOpen}
-        onOpenChange={(open) => {
-          if (!trocarSenha.isPending) setPasswordOpen(open);
-        }}
-      >
+
+      <Dialog open={passwordOpen} onOpenChange={(open) => { if (!trocarSenha.isPending) setPasswordOpen(open); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Trocar senha do cliente</DialogTitle>
-            <DialogDescription>
-              A senha é enviada somente para a função administrativa segura e não é armazenada no
-              histórico.
-            </DialogDescription>
+            <DialogDescription>A senha é enviada somente para a função administrativa segura e não é armazenada no histórico.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <label className="block">
               <span className="text-sm">Nova senha</span>
               <div className="relative">
-                <input
-                  type={mostrarSenha ? "text" : "password"}
-                  value={novaSenha}
-                  onChange={(e) => setNovaSenha(e.target.value)}
-                  autoComplete="new-password"
-                  className={`mt-1 ${sInput}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-3 top-3 text-muted-foreground"
-                  aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                >
+                <input type={mostrarSenha ? "text" : "password"} value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} autoComplete="new-password" className={`mt-1 ${sInput}`} />
+                <button type="button" onClick={() => setMostrarSenha(!mostrarSenha)} className="absolute right-3 top-3 text-muted-foreground" aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}>
                   {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </label>
             <label className="block">
               <span className="text-sm">Confirmar nova senha</span>
-              <input
-                type={mostrarSenha ? "text" : "password"}
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-                autoComplete="new-password"
-                className={`mt-1 ${sInput}`}
-              />
+              <input type={mostrarSenha ? "text" : "password"} value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} autoComplete="new-password" className={`mt-1 ${sInput}`} />
             </label>
-            <p className="text-xs text-muted-foreground">
-              Use ao menos 8 caracteres. Confirme a alteração antes de continuar.
-            </p>
+            <p className="text-xs text-muted-foreground">Use ao menos 8 caracteres. Confirme a alteração antes de continuar.</p>
             <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={confirmarTroca}
-                onChange={(e) => setConfirmarTroca(e.target.checked)}
-                className="mt-1"
-              />
+              <input type="checkbox" checked={confirmarTroca} onChange={(e) => setConfirmarTroca(e.target.checked)} className="mt-1" />
               Confirmo que desejo alterar a senha deste cliente.
             </label>
             <div className="flex justify-end gap-3">
-              <button
-                className={sBtnGhost}
-                onClick={() => setPasswordOpen(false)}
-                disabled={trocarSenha.isPending}
-              >
-                Cancelar
-              </button>
-              <button
-                className={sBtn}
-                disabled={
-                  trocarSenha.isPending ||
-                  novaSenha.length < 8 ||
-                  novaSenha !== confirmarSenha ||
-                  !confirmarTroca
-                }
-                onClick={() => trocarSenha.mutate()}
-              >
+              <button className={sBtnGhost} onClick={() => setPasswordOpen(false)} disabled={trocarSenha.isPending}>Cancelar</button>
+              <button className={sBtn} disabled={trocarSenha.isPending || novaSenha.length < 8 || novaSenha !== confirmarSenha || !confirmarTroca} onClick={() => trocarSenha.mutate()}>
                 {trocarSenha.isPending ? "ALTERANDO..." : "CONFIRMAR ALTERAÇÃO"}
               </button>
             </div>
@@ -448,10 +255,5 @@ function ClienteDetalhe() {
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-widest text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-sm">{value}</dd>
-    </div>
-  );
+  return <div><dt className="text-xs uppercase tracking-widest text-muted-foreground">{label}</dt><dd className="mt-1 text-sm">{value}</dd></div>;
 }
