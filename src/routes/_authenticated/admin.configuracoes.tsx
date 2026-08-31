@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, RotateCcw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Check, RotateCcw, Upload, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, btn, input } from "@/components/admin/AdminShell";
@@ -39,6 +39,8 @@ function Configuracoes() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [enviando, setEnviando] = useState<"logo" | "capa" | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!shop) return;
@@ -80,6 +82,14 @@ function Configuracoes() {
 
   async function enviarImagem(kind: "logo" | "capa", file: File | undefined) {
     if (!file || !form || !shop) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione uma imagem válida.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5 MB.");
+      return;
+    }
     setEnviando(kind);
     try {
       const path = await uploadMedia(shop.id, kind, file);
@@ -111,19 +121,52 @@ function Configuracoes() {
 
         <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="text-xs uppercase tracking-[0.2em] text-primary">Personalização</h2><h3 className="mt-2 text-2xl">Cor do Meu Link</h3><p className="mt-1 max-w-xl text-sm text-muted-foreground">Escolha a cor principal de destaque do seu Meu Link. O tema, conteúdo, horários, serviços e barbeiros permanecem preservados.</p></div><span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">Selecionado: <strong className="text-foreground">{selectedOption.name}</strong></span></div>
-
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {ACCENT_OPTIONS.map((option) => { const isSelected = option.value === selectedColor; const displayColor = option.id === "default" ? DEFAULT_ACCENT_COLOR : option.value; const foreground = accentForeground(displayColor); return <button key={option.id} type="button" aria-pressed={isSelected} onClick={() => setForm({ ...form, cor_primaria: option.value })} className={`group rounded-lg border p-3 text-left transition-all ${isSelected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"}`}><span className="relative flex h-12 w-full items-center justify-center rounded-md border border-black/10 shadow-sm" style={{ backgroundColor: displayColor, color: foreground }}>{isSelected && <Check className="h-5 w-5" strokeWidth={3} aria-hidden="true" />}</span><span className="mt-2 flex items-center justify-between gap-2 text-sm font-medium">{option.name}{isSelected && <span className="text-xs text-primary">Selecionada</span>}</span></button>; })}
           </div>
-
           <div className="mt-6 rounded-lg border border-border bg-background p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Prévia do Meu Link</p><p className="mt-1 text-sm text-muted-foreground">Veja como a cor será aplicada nos principais destaques.</p></div><span className="text-xs text-muted-foreground">{selectedOption.name}</span></div><div className="mt-4 grid gap-3 sm:grid-cols-3"><div className="rounded-md border border-border p-4"><p style={{ color: previewColor }} className="font-serif-display text-xl">Agende seu horário</p><p className="mt-1 text-xs text-muted-foreground">Título de destaque</p></div><div className="rounded-md border border-border p-4"><button type="button" style={{ backgroundColor: previewColor, color: previewForeground, borderColor: previewColor }} className="w-full rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-widest">Agendar agora</button><p className="mt-2 text-xs text-muted-foreground">Chamada para agendamento</p></div><div className="rounded-md border border-border p-4"><div style={{ borderColor: previewColor, color: previewColor }} className="rounded-md border p-3 text-xs"><span className="font-semibold">Horário selecionado</span><span className="mt-1 block text-muted-foreground">09:00 · 09:30 · 10:00</span></div><p className="mt-2 text-xs text-muted-foreground">Seleção e indicadores</p></div></div></div>
-
           <button type="button" disabled={salvar.isPending} className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary disabled:opacity-60" onClick={() => { if (!window.confirm("Deseja restaurar a cor padrão?")) return; const next = { ...form, cor_primaria: DEFAULT_ACCENT_DB_VALUE }; setForm(next); salvar.mutate(next); }}><RotateCcw className="h-4 w-4" aria-hidden="true" />REDEFINIR PARA PADRÃO</button>
         </section>
 
         <section><h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-primary">Textos</h2><div className="grid gap-4"><label><span className="text-xs uppercase tracking-widest text-muted-foreground">Slogan (frase de destaque no topo da página)</span><input className={input} placeholder="Precisão em cada detalhe." value={form.slogan} onChange={(e) => setForm({ ...form, slogan: e.target.value })} /></label><label><span className="text-xs uppercase tracking-widest text-muted-foreground">Texto da seção “A experiência”</span><textarea rows={2} className={input} placeholder="Mais que um corte: ambiente reservado, bebida e cuidado do início ao fim." value={form.sobre_experiencia} onChange={(e) => setForm({ ...form, sobre_experiencia: e.target.value })} /></label><label><span className="text-xs uppercase tracking-widest text-muted-foreground">Descrição / sobre a barbearia</span><textarea rows={3} className={input} value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></label><label><span className="text-xs uppercase tracking-widest text-muted-foreground">Mensagem inicial do botão WhatsApp</span><textarea rows={2} className={input} placeholder="Olá! Gostaria de saber mais sobre os serviços." value={form.mensagem_whatsapp} onChange={(e) => setForm({ ...form, mensagem_whatsapp: e.target.value })} /></label></div></section>
 
-        <section><h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-primary">Identidade visual</h2><div className="grid gap-6 sm:grid-cols-2"><div><span className="text-xs uppercase tracking-widest text-muted-foreground">Logo</span>{logoPreview && <img src={logoPreview} alt="Logo atual" className="mt-2 h-20 w-20 rounded-full border border-border object-cover" />}<input type="file" accept="image/*" disabled={enviando === "logo"} onChange={(e) => void enviarImagem("logo", e.target.files?.[0])} className="mt-2 block w-full text-sm text-muted-foreground" /></div><div><span className="text-xs uppercase tracking-widest text-muted-foreground">Imagem de capa</span>{coverPreview && <img src={coverPreview} alt="Capa atual" className="mt-2 h-20 w-full rounded-md border border-border object-cover" />}<input type="file" accept="image/*" disabled={enviando === "capa"} onChange={(e) => void enviarImagem("capa", e.target.files?.[0])} className="mt-2 block w-full text-sm text-muted-foreground" /></div></div></section>
+        <section>
+          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-primary">Identidade visual</h2>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="rounded-xl border border-border bg-card p-5">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Logo</span>
+              <p className="mt-1 text-sm text-muted-foreground">Recomendado: imagem quadrada 320 × 320 px.</p>
+              <div className="mt-4 flex flex-col items-start gap-4">
+                <div className="relative">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Logo atual" className="h-24 w-24 rounded-full border border-primary/30 bg-background object-cover shadow-sm" />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full border border-primary/30 bg-background text-xs text-muted-foreground">Sem logo</div>
+                  )}
+                  {logoPreview && <button type="button" aria-label="Remover logo" title="Remover logo" onClick={() => { setLogoPreview(null); setForm({ ...form, logo_url: "" }); if (logoInputRef.current) logoInputRef.current.value = ""; }} className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition hover:border-destructive hover:text-destructive"><X className="h-4 w-4" aria-hidden="true" /></button>}
+                </div>
+                <input ref={logoInputRef} id="logo-upload" type="file" accept="image/png,image/jpeg,image/webp,image/*" disabled={enviando === "logo"} onChange={(e) => void enviarImagem("logo", e.target.files?.[0])} className="sr-only" />
+                <button type="button" disabled={enviando === "logo"} onClick={() => logoInputRef.current?.click()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-primary bg-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-primary-foreground shadow-sm transition hover:bg-transparent hover:text-primary disabled:cursor-not-allowed disabled:opacity-60">
+                  <Upload className="h-4 w-4" aria-hidden="true" />
+                  {enviando === "logo" ? "ENVIANDO..." : logoPreview ? "TROCAR LOGO" : "ESCOLHER LOGO"}
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-5">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Imagem de capa</span>
+              <p className="mt-1 text-sm text-muted-foreground">Imagem principal exibida no topo do Meu Link.</p>
+              <div className="mt-4 space-y-4">
+                {coverPreview ? <img src={coverPreview} alt="Capa atual" className="h-24 w-full rounded-md border border-border object-cover" /> : <div className="flex h-24 w-full items-center justify-center rounded-md border border-dashed border-border text-sm text-muted-foreground">Sem imagem de capa</div>}
+                <input ref={coverInputRef} id="cover-upload" type="file" accept="image/png,image/jpeg,image/webp,image/*" disabled={enviando === "capa"} onChange={(e) => void enviarImagem("capa", e.target.files?.[0])} className="sr-only" />
+                <button type="button" disabled={enviando === "capa"} onClick={() => coverInputRef.current?.click()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-foreground transition hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60">
+                  <Upload className="h-4 w-4" aria-hidden="true" />
+                  {enviando === "capa" ? "ENVIANDO..." : coverPreview ? "TROCAR CAPA" : "ESCOLHER IMAGEM"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <button className={btn} disabled={salvar.isPending || Boolean(enviando)}>{salvar.isPending ? "SALVANDO..." : "SALVAR CONFIGURAÇÕES"}</button>
       </form>
