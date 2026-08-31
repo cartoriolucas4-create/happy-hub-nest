@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Check, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Copy, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DIAS, brl, hhmm } from "@/lib/barber";
@@ -11,14 +11,21 @@ type ServiceForm = { nome: string; descricao: string; preco: string; duracao_min
 type BarberForm = { nome: string; telefone: string; descricao: string; foto_url: string };
 type PaymentForm = { name: string; description: string; icon: string };
 type HourRow = { dia_semana: number; hora_inicio: string; hora_fim: string; possui_intervalo: boolean; intervalo_inicio: string; intervalo_fim: string };
+type Payment = { id: string; name: string; description: string | null; icon: string | null; active: boolean; display_order: number; pix_key: string | null; pix_beneficiary: string | null };
 
 const emptyService: ServiceForm = { nome: "", descricao: "", preco: "", duracao_minutos: "" };
 const emptyBarber: BarberForm = { nome: "", telefone: "", descricao: "", foto_url: "" };
 const emptyPayment: PaymentForm = { name: "", description: "", icon: "" };
 const keys = ["servicos", "barbeiros", "dias", "horarios", "pagamentos"] as const;
+const DEFAULT_PAYMENTS = [
+  { name: "DINHEIRO", icon: "💵" },
+  { name: "CARTÃO CRÉDITO", icon: "💳" },
+  { name: "CARTÃO DÉBITO", icon: "💳" },
+  { name: "PIX", icon: "PIX" },
+];
 
 function parseMoney(value: string) { return Number(value.replace(/\./g, "").replace(",", ".")); }
-
+function isPix(name: string) { return name.trim().toLowerCase() === "pix"; }
 function validHourRow(row: HourRow) {
   if (!row.hora_inicio || !row.hora_fim || row.hora_fim <= row.hora_inicio) return false;
   const hasStart = Boolean(row.intervalo_inicio);
@@ -30,6 +37,14 @@ function validHourRow(row: HourRow) {
   return true;
 }
 
+async function ensureDefaultPayments(shopId: string) {
+  const { data, error } = await supabase.from("payment_methods").select("id,name").eq("barbershop_id", shopId).order("display_order");
+  if (error) throw error;
+  if ((data ?? []).length > 0) return;
+  const { error: insertError } = await supabase.from("payment_methods").insert(DEFAULT_PAYMENTS.map((item, index) => ({ barbershop_id: shopId, name: item.name, description: null, icon: item.icon, active: true, display_order: index })));
+  if (insertError) throw insertError;
+}
+
 export function SetupWizard({ shopId }: { shopId: string }) {
   const { data: status } = useSetupStatus(shopId);
   const [step, setStep] = useState(1);
@@ -38,22 +53,25 @@ export function SetupWizard({ shopId }: { shopId: string }) {
   const [payment, setPayment] = useState<PaymentForm>(emptyPayment);
   const [days, setDays] = useState<number[]>([]);
   const [hours, setHours] = useState<HourRow[]>([]);
+  const [pixKey, setPixKey] = useState("");
+  const [pixBeneficiary, setPixBeneficiary] = useState("");
 
   const { data: current, refetch } = useQuery({
     queryKey: ["setup-wizard-data", shopId],
     enabled: Boolean(shopId),
     queryFn: async () => {
+      await ensureDefaultPayments(shopId);
       const [services, barbers, bh, payments] = await Promise.all([
         supabase.from("services").select("id,nome,descricao,preco,duracao_minutos,ativo").eq("barbershop_id", shopId).order("nome"),
         supabase.from("barbers").select("id,nome,telefone,descricao,foto_url,ativo").eq("barbershop_id", shopId).order("nome"),
         supabase.from("business_hours").select("*").eq("barbershop_id", shopId).order("dia_semana"),
-        supabase.from("payment_methods").select("id,name,description,icon,active,display_order").eq("barbershop_id", shopId).order("display_order"),
+        supabase.from("payment_methods").select("*").eq("barbershop_id", shopId).order("display_order"),
       ]);
       if (services.error) throw services.error;
       if (barbers.error) throw barbers.error;
       if (bh.error) throw bh.error;
       if (payments.error) throw payments.error;
-      return { services: services.data ?? [], barbers: barbers.data ?? [], bh: bh.data ?? [], payments: payments.data ?? [] };
+      return { services: services.data ?? [], barbers: barbers.data ?? [], bh: bh.data ?? [], payments: (payments.data ?? []) as unknown as Payment[] };
     },
   });
 
@@ -71,6 +89,9 @@ export function SetupWizard({ shopId }: { shopId: string }) {
       const intervaloFim = hhmm(row.intervalo_fim);
       return { dia_semana: row.dia_semana, hora_inicio: hhmm(row.hora_inicio), hora_fim: hhmm(row.hora_fim), possui_intervalo: Boolean(intervaloInicio && intervaloFim), intervalo_inicio: intervaloInicio, intervalo_fim: intervaloFim };
     }));
+    const pix = current.payments.find((item) => isPix(item.name));
+    setPixKey(pix?.pix_key ?? "");
+    setPixBeneficiary(pix?.pix_beneficiary ?? "");
   }, [current]);
 
   const done = status?.itens ?? [];
@@ -79,25 +100,19 @@ export function SetupWizard({ shopId }: { shopId: string }) {
 
   async function saveDaysAndHours() {
     if (!days.length) { toast.error("Selecione pelo menos um dia."); return false; }
-    const rows = currentRows;
-    if (rows.some((row) => !validHourRow(row))) { toast.error("Revise abertura e fechamento. Se houver intervalo, informe início e fim válidos dentro do expediente."); return false; }
+    if (currentRows.some((row) => !validHourRow(row))) { toast.error("Revise abertura e fechamento. Se houver intervalo, informe início e fim válidos dentro do expediente."); return false; }
     const existing = current?.bh ?? [];
-
     for (const oldRow of existing) {
       const selected = days.includes(oldRow.dia_semana);
-      const edited = rows.find((item) => item.dia_semana === oldRow.dia_semana);
-      const payload = selected && edited
-        ? { aberto: true, hora_inicio: edited.hora_inicio, hora_fim: edited.hora_fim, intervalo_inicio: edited.possui_intervalo ? edited.intervalo_inicio : null, intervalo_fim: edited.possui_intervalo ? edited.intervalo_fim : null }
-        : { aberto: false, intervalo_inicio: null, intervalo_fim: null };
+      const edited = currentRows.find((item) => item.dia_semana === oldRow.dia_semana);
+      const payload = selected && edited ? { aberto: true, hora_inicio: edited.hora_inicio, hora_fim: edited.hora_fim, intervalo_inicio: edited.possui_intervalo ? edited.intervalo_inicio : null, intervalo_fim: edited.possui_intervalo ? edited.intervalo_fim : null } : { aberto: false, intervalo_inicio: null, intervalo_fim: null };
       const { error } = await supabase.from("business_hours").update(payload).eq("id", oldRow.id).eq("barbershop_id", shopId);
       if (error) { toast.error(`Erro ao salvar ${DIAS[oldRow.dia_semana]}: ${error.message}`); return false; }
     }
-
-    for (const row of rows.filter((item) => !existing.some((old) => old.dia_semana === item.dia_semana))) {
+    for (const row of currentRows.filter((item) => !existing.some((old) => old.dia_semana === item.dia_semana))) {
       const { error } = await supabase.from("business_hours").insert({ barbershop_id: shopId, dia_semana: row.dia_semana, aberto: true, hora_inicio: row.hora_inicio, hora_fim: row.hora_fim, intervalo_inicio: row.possui_intervalo ? row.intervalo_inicio : null, intervalo_fim: row.possui_intervalo ? row.intervalo_fim : null });
       if (error) { toast.error(`Erro ao cadastrar ${DIAS[row.dia_semana]}: ${error.message}`); return false; }
     }
-
     await refetch();
     toast.success("Dias, horários e intervalos salvos.");
     return true;
@@ -127,6 +142,22 @@ export function SetupWizard({ shopId }: { shopId: string }) {
     setPayment(emptyPayment); await refetch(); toast.success("Meio de pagamento cadastrado.");
   }
 
+  async function savePix() {
+    const pix = current?.payments.find((item) => isPix(item.name));
+    if (!pix) return;
+    if (pixKey.trim() && pixBeneficiary.trim().length < 2) { toast.error("Informe o nome do beneficiário do Pix."); return; }
+    const { error } = await supabase.from("payment_methods").update({ pix_key: pixKey.trim() || null, pix_beneficiary: pixBeneficiary.trim() || null } as any).eq("id", pix.id).eq("barbershop_id", shopId);
+    if (error) { toast.error(error.message); return; }
+    await refetch();
+    toast.success("Dados do Pix salvos.");
+  }
+
+  async function copyPix() {
+    if (!pixKey) return;
+    try { await navigator.clipboard.writeText(pixKey); toast.success("Chave Pix copiada!"); }
+    catch { toast.error("Não foi possível copiar automaticamente."); }
+  }
+
   function toggleDay(day: number) { setDays((old) => old.includes(day) ? old.filter((item) => item !== day) : [...old, day].sort((a, b) => a - b)); }
   function updateHour(day: number, field: keyof Omit<HourRow, "dia_semana">, value: string | boolean) {
     setHours((old) => {
@@ -146,13 +177,17 @@ export function SetupWizard({ shopId }: { shopId: string }) {
 
     {step === 1 && <section className="mt-8"><h3 className="text-xl">Serviços</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre pelo menos um serviço real. O valor é o preço cobrado do cliente e a duração é o tempo necessário para realizar o serviço.</p><div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Nome do serviço<input className={input + " mt-1"} value={service.nome} onChange={(e) => setService({ ...service, nome: e.target.value })} placeholder="Ex.: Corte" /></label><label className="text-sm">Valor<input className={input + " mt-1"} inputMode="decimal" value={service.preco} onChange={(e) => setService({ ...service, preco: e.target.value })} placeholder="R$ 0,00" /></label><label className="text-sm">Duração (minutos)<input className={input + " mt-1"} type="number" min={5} max={480} value={service.duracao_minutos} onChange={(e) => setService({ ...service, duracao_minutos: e.target.value })} placeholder="30" /></label><label className="text-sm">Descrição (opcional)<input className={input + " mt-1"} value={service.descricao} onChange={(e) => setService({ ...service, descricao: e.target.value })} /></label></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={addService}><Plus className="mr-2 inline h-4 w-4" />Cadastrar serviço</button><button className={btnGhost} onClick={() => setStep(2)}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div><ExistingList title="Serviços cadastrados" items={(current?.services ?? []).map((item) => `${item.nome} · ${brl(item.preco)} · ${item.duracao_minutos} min`)} /></section>}
 
-    {step === 2 && <section className="mt-8"><h3 className="text-xl">Profissionais / Barbeiros</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre os profissionais reais da sua barbearia. Nenhum profissional padrão é criado.</p><div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Nome<input className={input + " mt-1"} value={barber.nome} onChange={(e) => setBarber({ ...barber, nome: e.target.value })} /></label><label className="text-sm">Telefone (opcional)<input className={input + " mt-1"} value={barber.telefone} onChange={(e) => setBarber({ ...barber, telefone: e.target.value })} /></label><label className="text-sm">Especialidade (opcional)<input className={input + " mt-1"} value={barber.descricao} onChange={(e) => setBarber({ ...barber, descricao: e.target.value })} /></label><label className="text-sm">URL da foto (opcional)<input className={input + " mt-1"} value={barber.foto_url} onChange={(e) => setBarber({ ...barber, foto_url: e.target.value })} /></label></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={addBarber}><Plus className="mr-2 inline h-4 w-4" />Cadastrar profissional</button><button className={btnGhost} onClick={() => setStep(3)}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div><ExistingList title="Profissionais cadastrados" items={(current?.barbers ?? []).map((item) => item.nome)} /></section>}
+    {step === 2 && <section className="mt-8"><h3 className="text-xl">Profissionais / Barbeiros</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre os profissionais reais da sua barbearia. Nenhum profissional é criado automaticamente.</p><div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Nome<input className={input + " mt-1"} value={barber.nome} onChange={(e) => setBarber({ ...barber, nome: e.target.value })} /></label><label className="text-sm">Telefone (opcional)<input className={input + " mt-1"} value={barber.telefone} onChange={(e) => setBarber({ ...barber, telefone: e.target.value })} /></label><label className="text-sm">Especialidade (opcional)<input className={input + " mt-1"} value={barber.descricao} onChange={(e) => setBarber({ ...barber, descricao: e.target.value })} /></label><label className="text-sm">URL da foto (opcional)<input className={input + " mt-1"} value={barber.foto_url} onChange={(e) => setBarber({ ...barber, foto_url: e.target.value })} /></label></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={addBarber}><Plus className="mr-2 inline h-4 w-4" />Cadastrar profissional</button><button className={btnGhost} onClick={() => setStep(3)}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div><ExistingList title="Profissionais cadastrados" items={(current?.barbers ?? []).map((item) => item.nome)} /></section>}
 
     {step === 3 && <section className="mt-8"><h3 className="text-xl">Dias de atendimento</h3><p className="mt-1 text-sm text-muted-foreground">Selecione somente os dias em que a barbearia realmente atende. Nenhum dia é selecionado automaticamente.</p><div className="mt-5 grid gap-2 sm:grid-cols-2">{DIAS.map((day, index) => <button key={day} type="button" onClick={() => toggleDay(index)} className={`flex items-center gap-3 rounded-md border p-3 text-left transition-colors ${days.includes(index) ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}><span>{days.includes(index) ? "☑" : "☐"}</span>{day}</button>)}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(2)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={() => days.length ? setStep(4) : toast.error("Selecione pelo menos um dia.")}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
 
-    {step === 4 && <section className="mt-8"><h3 className="text-xl">DIAS E HORÁRIOS DE ATENDIMENTO</h3><p className="mt-1 text-sm text-muted-foreground">Configure abertura e fechamento. O intervalo é opcional e usa somente início e fim no banco.</p><div className="mt-5 space-y-4">{days.map((day) => { const row = currentRows.find((item) => item.dia_semana === day)!; return <div key={day} className="rounded-lg border border-border bg-background/40 p-4"><div className="flex items-center justify-between"><h4 className="font-display text-sm tracking-widest">{DIAS[day]?.toUpperCase()}</h4><span className="text-xs text-primary">☑ Atende</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm">Abre<input className={input + " mt-1"} type="time" value={row.hora_inicio} onChange={(e) => updateHour(day, "hora_inicio", e.target.value)} /></label><label className="text-sm">Fecha<input className={input + " mt-1"} type="time" value={row.hora_fim} onChange={(e) => updateHour(day, "hora_fim", e.target.value)} /></label></div><label className="mt-4 flex items-center gap-3 rounded-md border border-border p-3 text-sm"><input type="checkbox" checked={row.possui_intervalo} onChange={(e) => updateHour(day, "possui_intervalo", e.target.checked)} /> Possui intervalo</label>{row.possui_intervalo && <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-sm">Intervalo início<input className={input + " mt-1"} type="time" value={row.intervalo_inicio} onChange={(e) => updateHour(day, "intervalo_inicio", e.target.value)} /></label><label className="text-sm">Intervalo fim<input className={input + " mt-1"} type="time" value={row.intervalo_fim} onChange={(e) => updateHour(day, "intervalo_fim", e.target.value)} /></label></div>}{!validHourRow(row) && <p className="mt-3 flex items-center gap-2 text-xs text-primary"><AlertTriangle className="h-4 w-4" />Informe abertura e fechamento válidos. Se ativar intervalo, informe início e fim dentro do expediente.</p>}</div>; })}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(3)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={async () => { if (await saveDaysAndHours()) setStep(5); }}>Salvar e continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
+    {step === 4 && <section className="mt-8"><h3 className="text-xl">DIAS E HORÁRIOS DE ATENDIMENTO</h3><p className="mt-1 text-sm text-muted-foreground">Configure abertura e fechamento. O intervalo é opcional.</p><div className="mt-5 space-y-4">{days.map((day) => { const row = currentRows.find((item) => item.dia_semana === day)!; return <div key={day} className="rounded-lg border border-border bg-background/40 p-4"><div className="flex items-center justify-between"><h4 className="font-display text-sm tracking-widest">{DIAS[day]?.toUpperCase()}</h4><span className="text-xs text-primary">☑ Atende</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm">Abre<input className={input + " mt-1"} type="time" value={row.hora_inicio} onChange={(e) => updateHour(day, "hora_inicio", e.target.value)} /></label><label className="text-sm">Fecha<input className={input + " mt-1"} type="time" value={row.hora_fim} onChange={(e) => updateHour(day, "hora_fim", e.target.value)} /></label></div><label className="mt-4 flex items-center gap-3 rounded-md border border-border p-3 text-sm"><input type="checkbox" checked={row.possui_intervalo} onChange={(e) => updateHour(day, "possui_intervalo", e.target.checked)} /> Possui intervalo</label>{row.possui_intervalo && <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-sm">Intervalo início<input className={input + " mt-1"} type="time" value={row.intervalo_inicio} onChange={(e) => updateHour(day, "intervalo_inicio", e.target.value)} /></label><label className="text-sm">Intervalo fim<input className={input + " mt-1"} type="time" value={row.intervalo_fim} onChange={(e) => updateHour(day, "intervalo_fim", e.target.value)} /></label></div>}{!validHourRow(row) && <p className="mt-3 flex items-center gap-2 text-xs text-primary"><AlertTriangle className="h-4 w-4" />Informe abertura e fechamento válidos.</p>}</div>; })}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(3)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={async () => { if (await saveDaysAndHours()) setStep(5); }}>Salvar e continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
 
-    {step === 5 && <section className="mt-8"><h3 className="text-xl">Meios de pagamento</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre pelo menos um meio de pagamento real. Nenhum meio é pré-selecionado.</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><label className="text-sm">Nome<input className={input + " mt-1"} value={payment.name} onChange={(e) => setPayment({ ...payment, name: e.target.value })} placeholder="Ex.: Pix" /></label><label className="text-sm">Descrição (opcional)<input className={input + " mt-1"} value={payment.description} onChange={(e) => setPayment({ ...payment, description: e.target.value })} /></label><label className="text-sm">Ícone (opcional)<input className={input + " mt-1"} value={payment.icon} onChange={(e) => setPayment({ ...payment, icon: e.target.value })} /></label></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={addPayment}><Plus className="mr-2 inline h-4 w-4" />Cadastrar pagamento</button><button className={btnGhost} onClick={() => setStep(4)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={async () => { if (await saveDaysAndHours()) toast.success("Configuração salva."); }}>Finalizar <Check className="ml-1 inline h-4 w-4" /></button></div><ExistingList title="Meios cadastrados" items={(current?.payments ?? []).map((item) => item.name)} /></section>}
+    {step === 5 && <section className="mt-8"><h3 className="text-xl">Meios de pagamento</h3><p className="mt-1 text-sm text-muted-foreground">Dinheiro, cartão de crédito, cartão de débito e Pix já vêm cadastrados como padrão. Você pode manter, desativar ou personalizar cada um.</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><label className="text-sm">Nome<input className={input + " mt-1"} value={payment.name} onChange={(e) => setPayment({ ...payment, name: e.target.value })} placeholder="Ex.: Vale alimentação" /></label><label className="text-sm">Descrição (opcional)<input className={input + " mt-1"} value={payment.description} onChange={(e) => setPayment({ ...payment, description: e.target.value })} /></label><label className="text-sm">Ícone (opcional)<input className={input + " mt-1"} value={payment.icon} onChange={(e) => setPayment({ ...payment, icon: e.target.value })} placeholder="Ex.: 💳" /></label></div><div className="mt-4 flex flex-wrap gap-2"><button className={btn} onClick={addPayment}><Plus className="mr-2 inline h-4 w-4" />Cadastrar outro pagamento</button><button className={btnGhost} onClick={() => setStep(4)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button></div>
+      {current?.payments.find((item) => isPix(item.name)) && <div className="mt-6 rounded-lg border border-primary/30 bg-primary/5 p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h4 className="text-base font-semibold text-primary">Configurar chave Pix</h4><p className="mt-1 text-xs text-muted-foreground">Opcional. Se você preencher, o cliente poderá copiar a chave diretamente no seu Meu Link.</p></div><span className="rounded-full border border-primary/30 px-2 py-1 text-[10px] uppercase tracking-widest text-primary">PIX</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm">Nome do beneficiário<input className={input + " mt-1"} placeholder="Ex.: João da Silva" value={pixBeneficiary} onChange={(e) => setPixBeneficiary(e.target.value)} /></label><label className="text-sm">Chave Pix<input className={input + " mt-1"} placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória" value={pixKey} onChange={(e) => setPixKey(e.target.value)} /></label></div><div className="mt-4 flex flex-wrap items-center gap-2"><button className={btn} onClick={savePix}>Salvar dados do Pix</button>{pixKey && <button type="button" className={btnGhost} onClick={copyPix}><Copy className="mr-1 inline h-4 w-4" />Copiar chave</button>}</div></div>}
+      <ExistingList title="Meios cadastrados" items={(current?.payments ?? []).map((item) => `${item.name}${isPix(item.name) && item.pix_beneficiary ? ` · Beneficiário: ${item.pix_beneficiary}` : ""}`)} />
+      <div className="mt-6 flex justify-end"><button className={btn} onClick={async () => { if (await saveDaysAndHours()) toast.success("Configuração salva."); }}>Finalizar <Check className="ml-1 inline h-4 w-4" /></button></div>
+    </section>}
 
     {step === 6 && <section className="mt-10 text-center"><Check className="mx-auto h-12 w-12 text-emerald-400" /><h3 className="mt-5 text-3xl">Configuração concluída!</h3><p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">Sua barbearia está pronta para usar o Meu Link, disponibilidade e agendamentos com os dados reais cadastrados.</p></section>}
   </div>;
