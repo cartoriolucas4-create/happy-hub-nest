@@ -32,13 +32,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) { return <html lang="pt-BR"><head><HeadContent /></head><body>{children}<Scripts /></body></html>; }
 
+function applyAccentStyle(value: string | null | undefined) {
+  for (const [property, cssValue] of Object.entries(accentStyle(value))) {
+    document.documentElement.style.setProperty(property, cssValue);
+  }
+}
+
 function PublicAccentController() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   useEffect(() => {
     const match = pathname.match(/^\/barbearia\/([^/]+)(?:\/agendar)?\/?$/);
     if (!match) {
-      Object.assign(document.documentElement.style, accentStyle(DEFAULT_ACCENT_COLOR));
+      applyAccentStyle(DEFAULT_ACCENT_COLOR);
       return;
     }
 
@@ -51,10 +57,10 @@ function PublicAccentController() {
       .maybeSingle()
       .then(({ data }) => {
         if (!active) return;
-        Object.assign(document.documentElement.style, accentStyle(data?.cor_primaria));
+        applyAccentStyle(data?.cor_primaria);
       })
       .catch(() => {
-        if (active) Object.assign(document.documentElement.style, accentStyle(DEFAULT_ACCENT_COLOR));
+        if (active) applyAccentStyle(DEFAULT_ACCENT_COLOR);
       });
 
     return () => {
