@@ -17,6 +17,8 @@ import {
   Menu,
   X,
   ChevronDown,
+  ShoppingCart,
+  ReceiptText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
@@ -137,6 +139,32 @@ export function AdminShell({
         Dashboard
       </Link>
 
+      <Link
+        to="/admin/vendas-externas"
+        onClick={() => setOpen(false)}
+        className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${
+          isActive(pathname, "/admin/vendas-externas")
+            ? "bg-primary/15 text-primary"
+            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        }`}
+      >
+        <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+        Vendas Externas
+      </Link>
+
+      <Link
+        to="/admin/custos"
+        onClick={() => setOpen(false)}
+        className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${
+          isActive(pathname, "/admin/custos")
+            ? "bg-primary/15 text-primary"
+            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        }`}
+      >
+        <ReceiptText className="h-4 w-4" aria-hidden="true" />
+        Custos
+      </Link>
+
       {SIDEBAR_GROUPS.map((group) => {
         const active = group.items.some((item) => isActive(pathname, item.to));
         const expanded = groups[group.key];
@@ -233,7 +261,6 @@ export function AdminShell({
             {actions}
           </div>
           <div className="mt-8 pb-16">
-            {/* O aviso de prazo de acesso aparece somente no Dashboard. */}
             {pathname === "/admin" && <LicenseBanner />}
             <AccessGate>{children}</AccessGate>
           </div>
