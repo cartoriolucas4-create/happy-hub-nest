@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
+import { useShop } from "@/lib/shop";
 
 export const MENU = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -97,6 +98,22 @@ export function AdminShell({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: shop } = useShop();
+
+  const { data: pendingAgendamentos = 0 } = useQuery({
+    queryKey: ["pending-agendamentos", shop?.id],
+    enabled: Boolean(shop?.id),
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("barbershop_id", shop!.id)
+        .eq("status", "pendente");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
 
   useEffect(() => {
     const activeGroup = groupForPath(pathname);
@@ -189,6 +206,7 @@ export function AdminShell({
                 <div className="ml-7 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
                   {group.items.map((item) => {
                     const itemActive = isActive(pathname, item.to);
+                    const showPending = item.to === "/admin/agendamentos" && pendingAgendamentos > 0;
                     return (
                       <Link
                         key={item.to}
@@ -201,7 +219,14 @@ export function AdminShell({
                         }`}
                       >
                         <item.icon className="h-3.5 w-3.5" aria-hidden="true" />
-                        {item.label}
+                        <span className="flex-1">{item.label}</span>
+                        {showPending && (
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full bg-red-500"
+                            aria-label="Há agendamentos pendentes"
+                            title="Há agendamentos pendentes"
+                          />
+                        )}
                       </Link>
                     );
                   })}
