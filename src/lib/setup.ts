@@ -9,7 +9,6 @@ type BusinessHour = {
   aberto: boolean;
   hora_inicio: string | null;
   hora_fim: string | null;
-  possui_intervalo: boolean | null;
   intervalo_inicio: string | null;
   intervalo_fim: string | null;
 };
@@ -17,10 +16,12 @@ type BusinessHour = {
 export function isValidHourRange(h: BusinessHour) {
   if (!h.aberto || !h.hora_inicio || !h.hora_fim) return false;
   if (h.hora_fim <= h.hora_inicio) return false;
-  if (!h.possui_intervalo) return !h.intervalo_inicio && !h.intervalo_fim;
-  if (!h.intervalo_inicio || !h.intervalo_fim) return false;
-  if (h.intervalo_fim <= h.intervalo_inicio) return false;
-  if (h.intervalo_inicio < h.hora_inicio || h.intervalo_fim > h.hora_fim) return false;
+  const hasIntervalStart = Boolean(h.intervalo_inicio);
+  const hasIntervalEnd = Boolean(h.intervalo_fim);
+  if (!hasIntervalStart && !hasIntervalEnd) return true;
+  if (!hasIntervalStart || !hasIntervalEnd) return false;
+  if (h.intervalo_fim! <= h.intervalo_inicio!) return false;
+  if (h.intervalo_inicio! < h.hora_inicio || h.intervalo_fim! > h.hora_fim) return false;
   return true;
 }
 
@@ -32,7 +33,7 @@ export function useSetupStatus(shopId: string | null | undefined) {
       const [barbeiros, servicos, horas, pagamentos] = await Promise.all([
         supabase.from("barbers").select("id", { count: "exact", head: true }).eq("barbershop_id", shopId!).eq("ativo", true),
         supabase.from("services").select("id", { count: "exact", head: true }).eq("barbershop_id", shopId!).eq("ativo", true).not("nome", "is", null),
-        supabase.from("business_hours").select("dia_semana, aberto, hora_inicio, hora_fim, possui_intervalo, intervalo_inicio, intervalo_fim").eq("barbershop_id", shopId!),
+        supabase.from("business_hours").select("dia_semana, aberto, hora_inicio, hora_fim, intervalo_inicio, intervalo_fim").eq("barbershop_id", shopId!),
         supabase.from("payment_methods").select("id", { count: "exact", head: true }).eq("barbershop_id", shopId!).eq("active", true),
       ]);
       if (barbeiros.error) throw barbeiros.error;
@@ -47,7 +48,7 @@ export function useSetupStatus(shopId: string | null | undefined) {
         { key: "servicos", label: "Serviços", descricao: "Cadastre pelo menos um serviço válido.", to: "/admin/configurar", ok: (servicos.count ?? 0) > 0 },
         { key: "barbeiros", label: "Profissionais", descricao: "Cadastre pelo menos um profissional ativo.", to: "/admin/configurar", ok: (barbeiros.count ?? 0) > 0 },
         { key: "dias", label: "Dias de atendimento", descricao: "Selecione pelo menos um dia de funcionamento.", to: "/admin/configurar", ok: abertos.length > 0 },
-        { key: "horarios", label: "Horários e intervalos", descricao: "Defina horários válidos e uma configuração explícita de intervalo para todos os dias abertos.", to: "/admin/configurar", ok: horariosOk },
+        { key: "horarios", label: "Horários e intervalos", descricao: "Defina horários válidos; o intervalo é opcional.", to: "/admin/configurar", ok: horariosOk },
         { key: "pagamentos", label: "Meios de pagamento", descricao: "Cadastre pelo menos um meio de pagamento ativo.", to: "/admin/configurar", ok: (pagamentos.count ?? 0) > 0 },
       ];
       const pendentes = itens.filter((item) => !item.ok);
