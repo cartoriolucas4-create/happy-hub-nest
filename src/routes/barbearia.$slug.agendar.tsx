@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Check, CalendarDays, MessageCircle } from "lucide-react";
+import { ArrowLeft, Check, CalendarDays, MessageCircle, Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { brDate, brl, hhmm, isPhone, todayIso, addDays, waLink, mensagemAgendamento } from "@/lib/barber";
 import { WhatsAppFloat } from "@/components/public/WhatsAppFloat";
@@ -33,13 +33,6 @@ type BusinessHour = {
 };
 
 const DIAS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-
-function isoLocalDate(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
 
 function diaSemana(iso: string) {
   return new Date(`${iso}T12:00:00`).getDay();
@@ -101,7 +94,8 @@ function Agendar() {
       const h = base.businessHours.find((item) => item.dia_semana === diaSemana(iso));
       return Boolean(h && horaValida(h));
     });
-    if (firstOpen && !horaValida(base.businessHours.find((h) => h.dia_semana === diaSemana(data)) ?? { dia_semana: -1, aberto: false, hora_inicio: null, hora_fim: null, intervalo_inicio: null, intervalo_fim: null })) {
+    const current = base.businessHours.find((h) => h.dia_semana === diaSemana(data));
+    if (firstOpen && !horaValida(current ?? { dia_semana: -1, aberto: false, hora_inicio: null, hora_fim: null, intervalo_inicio: null, intervalo_fim: null })) {
       setData(firstOpen);
       setHora("");
     }
@@ -119,21 +113,32 @@ function Agendar() {
     return { iso, dia: diaSemana(iso), nome: DIAS[diaSemana(iso)], horario: h };
   });
 
-  const { data: horarios, isFetching: buscandoHorarios, isError: erroAoBuscarHorarios } = useQuery({
+  const { data: horarios, isFetching: buscandoHorarios, isError: erroAoBuscarHorarios, refetch: recarregarHorarios } = useQuery({
     queryKey: ["horarios-publicos", slug, barberId, serviceId, data],
     enabled: step === 3 && Boolean(barberId && serviceId && data),
     queryFn: async () => {
-      const { data: res, error } = await supabase.rpc("horarios_disponiveis", { p_slug: slug, p_barber_id: barberId, p_service_id: serviceId, p_data: data });
+      const { data: res, error } = await supabase.rpc("horarios_disponiveis", {
+        p_slug: slug,
+        p_barber_id: barberId,
+        p_service_id: serviceId,
+        p_data: data,
+      });
       if (error) throw error;
       return res ?? [];
     },
   });
+
+  function selecionarData(novaData: string) {
+    setData(novaData);
+    setHora("");
+  }
 
   function validarDados() {
     if (nome.trim().length < 3) return "Informe seu nome completo.";
     if (!isPhone(telefone)) return "Informe um telefone válido com DDD.";
     return null;
   }
+
   function validarPagamento() {
     if (metodos.length === 0) return null;
     if (!paymentMethodId) return "Escolha um método de pagamento.";
@@ -213,22 +218,44 @@ function Agendar() {
         {step === 3 && <section className="mt-8">
           <h1 className="text-3xl">Data e horário</h1>
           <p className="mt-2 text-sm text-muted-foreground">Escolha um dia que esteja aberto. Os horários abaixo respeitam a abertura e o fechamento cadastrados pela barbearia.</p>
+
           <div className="mt-6 grid grid-cols-7 gap-1.5 sm:gap-2">
             {semana.map((item) => {
               const aberto = horaValida(item.horario ?? { dia_semana: item.dia, aberto: false, hora_inicio: null, hora_fim: null, intervalo_inicio: null, intervalo_fim: null });
               const selecionado = item.iso === data;
-              return <button key={item.iso} type="button" disabled={!aberto} onClick={() => { setData(item.iso); setHora(""); }} className={`min-w-0 rounded-lg border px-1 py-3 text-center transition ${selecionado ? "border-primary bg-primary/15 text-primary" : aberto ? "border-border bg-card hover:border-primary" : "cursor-not-allowed border-border/50 bg-secondary/30 opacity-40"}`}><span className="block truncate text-[10px] uppercase tracking-wider">{item.nome.slice(0, 3)}</span><span className="mt-1 block text-lg font-semibold">{item.iso.slice(8, 10)}</span></button>;
+              return <button key={item.iso} type="button" disabled={!aberto} onClick={() => selecionarData(item.iso)} className={`min-w-0 rounded-lg border px-1 py-3 text-center transition ${selecionado ? "border-primary bg-primary/15 text-primary" : aberto ? "border-border bg-card hover:border-primary" : "cursor-not-allowed border-border/50 bg-secondary/30 opacity-40"}`}><span className="block truncate text-[10px] uppercase tracking-wider">{item.nome.slice(0, 3)}</span><span className="mt-1 block text-lg font-semibold">{item.iso.slice(8, 10)}</span></button>;
             })}
           </div>
-          <input type="date" className={`${inputCls} mt-4`} min={todayIso()} max={addDays(todayIso(), 60)} value={data} onChange={(e) => { setData(e.target.value); setHora(""); }} />
+
+          <input type="date" className={`${inputCls} mt-4`} min={todayIso()} max={addDays(todayIso(), 60)} value={data} onChange={(e) => selecionarData(e.target.value)} />
+
           {horarioDoDia && horaValida(horarioDoDia) && <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4"><p className="text-xs uppercase tracking-wider text-muted-foreground">Horário de funcionamento</p><p className="mt-1 text-lg font-medium text-primary">{hhmm(horarioDoDia.hora_inicio!)} às {hhmm(horarioDoDia.hora_fim!)}</p>{horarioDoDia.intervalo_inicio && horarioDoDia.intervalo_fim && <p className="mt-1 text-xs text-muted-foreground">Intervalo: {hhmm(horarioDoDia.intervalo_inicio)} às {hhmm(horarioDoDia.intervalo_fim)}</p>}</div>}
+
           {!base.businessHours.some(horaValida) && <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-muted-foreground">A barbearia ainda não cadastrou dias e horários de funcionamento.</p>}
-          <div className="mt-6 flex flex-wrap gap-2">
-            {buscandoHorarios && <p className="text-sm text-muted-foreground">Carregando horários disponíveis...</p>}
-            {!buscandoHorarios && erroAoBuscarHorarios && <p className="flex items-center gap-2 text-sm text-destructive"><CalendarDays className="h-4 w-4" /> Não foi possível carregar os horários. Tente novamente.</p>}
-            {!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).length === 0 && <p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" /> Não há horários livres nesta data.</p>}
-            {(horarios ?? []).map((h) => <button key={`${h.barber_id}-${h.hora}`} onClick={() => { setHora(hhmm(h.hora)); setStep(4); }} className="rounded-md border border-border bg-card px-4 py-2 font-display text-lg hover:border-primary hover:text-primary">{hhmm(h.hora)}</button>)}
+
+          <div className="mt-5 rounded-lg border border-border bg-card/40 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Clock3 className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <h2 className="text-base font-semibold">Horários disponíveis</h2>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Selecione um horário livre para continuar.</p>
+              </div>
+              {!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).length > 0 && <span className="text-xs text-muted-foreground">{(horarios ?? []).length} disponível{(horarios ?? []).length === 1 ? "" : "eis"}</span>}
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {buscandoHorarios && <div className="col-span-full flex items-center gap-2 py-3 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4 animate-pulse" /> Carregando horários disponíveis...</div>}
+
+              {!buscandoHorarios && erroAoBuscarHorarios && <div className="col-span-full rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><div className="flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Não foi possível carregar os horários.</div><button type="button" onClick={() => recarregarHorarios()} className="mt-2 text-xs underline hover:text-primary">Tentar novamente</button></div>}
+
+              {!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).length === 0 && <div className="col-span-full flex items-center gap-2 py-3 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" /> Não há horários livres nesta data.</div>}
+
+              {!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).map((h) => <button key={`${h.barber_id}-${h.hora}`} type="button" onClick={() => { setHora(hhmm(h.hora)); setStep(4); }} className="rounded-md border border-border bg-card px-4 py-3 text-center font-display text-lg transition hover:border-primary hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/50">{hhmm(h.hora)}</button>)}
+            </div>
           </div>
+
           <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(2)}>Voltar</button>
         </section>}
 
