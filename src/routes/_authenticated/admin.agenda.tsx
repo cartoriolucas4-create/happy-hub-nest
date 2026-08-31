@@ -24,12 +24,15 @@ export const Route = createFileRoute("/_authenticated/admin/agenda")({
 
 function Agenda() {
   const { data: shop } = useShop();
-  const [dia, setDia] = useState(todayIso());
+  const hoje = todayIso();
+  const [dia, setDia] = useState(hoje);
   const [modo, setModo] = useState<"dia" | "semana">("dia");
   const [barbeiro, setBarbeiro] = useState("");
 
-  const inicio = modo === "dia" ? dia : dia;
-  const fim = modo === "dia" ? dia : addDays(dia, 6);
+  const inicioSemana = addDays(dia, -new Date(`${dia}T12:00:00`).getDay());
+  const inicio = modo === "dia" ? dia : inicioSemana;
+  const fim = modo === "dia" ? dia : addDays(inicioSemana, 6);
+  const diasNavegacao = Array.from({ length: 7 }, (_, i) => addDays(inicioSemana, i));
 
   const { data: barbers } = useQuery({
     queryKey: ["barbers-min", shop?.id],
@@ -59,33 +62,99 @@ function Agenda() {
     },
   });
 
-  const dias = modo === "dia" ? [dia] : Array.from({ length: 7 }, (_, i) => addDays(dia, i));
+  const dias = modo === "dia" ? [dia] : diasNavegacao;
+
+  const selecionarDia = (d: string) => {
+    setDia(d);
+    setModo("dia");
+  };
+
+  const nomeDia = (d: string) => {
+    const indice = new Date(`${d}T12:00:00`).getDay();
+    const curto = DIAS[indice]?.slice(0, 3).toUpperCase() ?? "";
+    if (d === hoje) return "HOJE";
+    if (d === addDays(hoje, 1)) return "AMANHÃ";
+    if (d === addDays(hoje, 2)) return "DEPOIS";
+    return curto;
+  };
 
   return (
-    <AdminShell title="Agenda" subtitle="Visualize os atendimentos por dia ou semana">
-      <div className="flex flex-wrap items-center gap-3">
-        <button className={btnGhost} onClick={() => setDia(addDays(dia, modo === "dia" ? -1 : -7))}>
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <input type="date" className={`${input} w-44`} value={dia} onChange={(e) => setDia(e.target.value)} />
-        <button className={btnGhost} onClick={() => setDia(addDays(dia, modo === "dia" ? 1 : 7))}>
-          <ChevronRight className="h-4 w-4" />
-        </button>
-        <button className={btnGhost} onClick={() => setDia(todayIso())}>
-          Hoje
-        </button>
-        <select className={`${input} w-32`} value={modo} onChange={(e) => setModo(e.target.value as "dia" | "semana")}>
-          <option value="dia">Dia</option>
-          <option value="semana">Semana</option>
-        </select>
-        <select className={`${input} w-48`} value={barbeiro} onChange={(e) => setBarbeiro(e.target.value)}>
-          <option value="">Todos os barbeiros</option>
-          {(barbers ?? []).map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.nome}
-            </option>
-          ))}
-        </select>
+    <AdminShell title="Agenda" subtitle="Escolha o dia em um clique">
+      <div className="rounded-lg border border-border bg-card p-3 sm:p-4">
+        <div className="flex items-center justify-between gap-3">
+          <button
+            className={`${btnGhost} h-10 w-10 shrink-0 p-0`}
+            aria-label="Semana anterior"
+            onClick={() => setDia(addDays(inicioSemana, -7))}
+          >
+            <ChevronLeft className="mx-auto h-4 w-4" />
+          </button>
+
+          <div className="min-w-0 text-center">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Semana de</p>
+            <p className="font-display text-lg">{brDate(inicioSemana)} – {brDate(fim)}</p>
+          </div>
+
+          <button
+            className={`${btnGhost} h-10 w-10 shrink-0 p-0`}
+            aria-label="Próxima semana"
+            onClick={() => setDia(addDays(inicioSemana, 7))}
+          >
+            <ChevronRight className="mx-auto h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-7">
+          {diasNavegacao.map((d) => {
+            const selecionado = d === dia && modo === "dia";
+            const hojeDia = d === hoje;
+            return (
+              <button
+                key={d}
+                onClick={() => selecionarDia(d)}
+                aria-pressed={selecionado}
+                className={`min-h-16 rounded-md border px-2 py-2 text-center transition-colors hover:border-primary ${
+                  selecionado ? "border-primary bg-primary/15 text-primary" : "border-border bg-background"
+                }`}
+              >
+                <span className="block text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                  {nomeDia(d)}
+                </span>
+                <span className="mt-1 block font-display text-xl">{d.slice(8, 10)}</span>
+                {hojeDia && <span className="mx-auto mt-1 block h-1 w-1 rounded-full bg-primary" />}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <button
+            className={`${btnGhost} ${dia === hoje && modo === "dia" ? "border-primary text-primary" : ""}`}
+            onClick={() => selecionarDia(hoje)}
+          >
+            Hoje
+          </button>
+          <div className="flex overflow-hidden rounded-md border border-border">
+            <button
+              className={`px-3 py-2 text-xs ${modo === "dia" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
+              onClick={() => setModo("dia")}
+            >
+              Dia
+            </button>
+            <button
+              className={`border-l border-border px-3 py-2 text-xs ${modo === "semana" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
+              onClick={() => setModo("semana")}
+            >
+              Semana
+            </button>
+          </div>
+          <select className={`${input} ml-auto w-full sm:w-48`} value={barbeiro} onChange={(e) => setBarbeiro(e.target.value)}>
+            <option value="">Todos os barbeiros</option>
+            {(barbers ?? []).map((b) => (
+              <option key={b.id} value={b.id}>{b.nome}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {isLoading && (
@@ -94,7 +163,7 @@ function Agenda() {
         </div>
       )}
 
-      <div className={`mt-8 grid gap-4 ${modo === "semana" ? "lg:grid-cols-2" : ""}`}>
+      <div className={`mt-6 grid gap-4 ${modo === "semana" ? "lg:grid-cols-2" : ""}`}>
         {dias.map((d) => {
           const doDia = (lista ?? []).filter((a) => a.data === d);
           const [, , dd] = d.split("-");
@@ -110,17 +179,11 @@ function Agenda() {
                 {doDia.map((a) => (
                   <div key={a.id} className="rounded-md border border-border/70 bg-background p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="font-display text-lg text-primary">
-                        {hhmm(a.hora_inicio)}–{hhmm(a.hora_fim)}
-                      </p>
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] ${statusClass(a.status)}`}>
-                        {STATUS_LABEL[a.status]}
-                      </span>
+                      <p className="font-display text-lg text-primary">{hhmm(a.hora_inicio)}–{hhmm(a.hora_fim)}</p>
+                      <span className={`rounded-full border px-2 py-0.5 text-[10px] ${statusClass(a.status)}`}>{STATUS_LABEL[a.status]}</span>
                     </div>
                     <p className="mt-1 text-sm">{a.cliente_nome}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {a.services?.nome ?? "Serviço"} · {a.barbers?.nome} · {brl(a.valor)}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{a.services?.nome ?? "Serviço"} · {a.barbers?.nome} · {brl(a.valor)}</p>
                   </div>
                 ))}
               </div>
