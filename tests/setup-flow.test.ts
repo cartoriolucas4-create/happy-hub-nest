@@ -5,6 +5,8 @@ const setup = readFileSync("src/lib/setup.ts", "utf8");
 const wizard = readFileSync("src/components/admin/SetupWizard.tsx", "utf8");
 const dashboard = readFileSync("src/components/admin/SetupChecklist.tsx", "utf8");
 const meuLink = readFileSync("src/routes/_authenticated/admin.meu-link.tsx", "utf8");
+const publicGate = readFileSync("src/components/public/PublicSetupGate.tsx", "utf8");
+const root = readFileSync("src/routes/__root.tsx", "utf8");
 const migration = readFileSync("supabase/migrations/20260831010000_require_real_barbershop_setup.sql", "utf8");
 
 test("readiness is based on real service, professional, days/hours and payment data", () => {
@@ -32,7 +34,9 @@ test("new shops no longer receive automatic payment methods", () => {
   expect(migration).toContain("DROP TRIGGER IF EXISTS barbershops_seed_payment_methods");
 });
 
-test("public booking is rejected until real setup is complete", () => {
+test("public site is blocked until operational readiness", () => {
+  expect(publicGate).toContain('supabase.rpc("barbearia_operacional"');
+  expect(publicGate).toContain("Esta barbearia ainda está configurando seu atendimento.");
+  expect(root).toContain("<PublicSetupGate><Outlet /></PublicSetupGate>");
   expect(migration).toContain("barbershop_setup_complete(v_shop)");
-  expect(migration).toContain("Esta barbearia ainda esta configurando seu atendimento");
 });
