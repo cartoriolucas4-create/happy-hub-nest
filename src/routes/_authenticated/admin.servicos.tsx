@@ -32,7 +32,7 @@ type Form = {
   ativo: boolean;
 };
 
-const vazio: Form = { nome: "", descricao: "", preco: "", duracao_minutos: "30", ativo: true };
+const vazio: Form = { nome: "", descricao: "", preco: "", duracao_minutos: "", ativo: true };
 
 function Servicos() {
   const { data: shop } = useShop();
@@ -43,63 +43,78 @@ function Servicos() {
     queryKey: ["servicos", shop?.id],
     enabled: Boolean(shop?.id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("*").order("nome");
+      if (!shop?.id) throw new Error("Barbearia não identificada.");
+      const { data, error } = await supabase.from("services").select("*").eq("barbershop_id", shop.id).order("nome");
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
   });
 
   const salvar = useMutation({
     mutationFn: async (f: Form) => {
+      if (!shop?.id) throw new Error("Barbearia não identificada.");
+      const preco = Number(f.preco.replace(/\./g, "").replace(",", "."));
+      const duracao = Number(f.duracao_minutos);
+      if (!f.nome.trim() || !Number.isFinite(preco) || preco < 0 || !Number.isInteger(duracao) || duracao < 5 || duracao > 480) {
+        throw new Error("Informe nome, preço e duração válidos.");
+      }
       const payload = {
-        barbershop_id: shop!.id,
+        barbershop_id: shop.id,
         nome: f.nome.trim(),
         descricao: f.descricao.trim() || null,
-        preco: Number(f.preco.replace(",", ".")),
-        duracao_minutos: Number(f.duracao_minutos),
+        preco,
+        duracao_minutos: duracao,
         ativo: f.ativo,
       };
-      const res = f.id
-        ? await supabase.from("services").update(payload).eq("id", f.id)
-        : await supabase.from("services").insert(payload);
-      if (res.error) throw res.error;
+      if (f.id) {
+        const res = await supabase.from("services").update(payload).eq("id", f.id).eq("barbershop_id", shop.id).select("id").single();
+        if (res.error) throw res.error;
+      } else {
+        const res = await supabase.from("services").insert(payload).select("id").single();
+        if (res.error) throw res.error;
+      }
+      const verify = await supabase.from("services").select("id,nome,descricao,preco,duracao_minutos,ativo").eq("id", f.id ?? payload.barbershop_id).eq("barbershop_id", shop.id).maybeSingle();
+      if (f.id && verify.error) throw verify.error;
+      if (f.id && !verify.data) throw new Error("O serviço não foi encontrado após o salvamento.");
     },
     onSuccess: () => {
       toast.success("Serviço salvo!");
       setForm(null);
-      qc.invalidateQueries({ queryKey: ["servicos"] });
+      qc.invalidateQueries({ queryKey: ["servicos", shop?.id] });
+      qc.invalidateQueries({ queryKey: ["barbeiros", shop?.id] });
+      qc.invalidateQueries({ queryKey: ["agendar-base"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const excluir = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("services").delete().eq("id", id);
+      if (!shop?.id) throw new Error("Barbearia não identificada.");
+      const appointments = await supabase.from("appointments").select("id", { count: "exact", head: true }).eq("barbershop_id", shop.id).eq("service_id", id);
+      if (appointments.error) throw appointments.error;
+
+      if ((appointments.count ?? 0) > 0) {
+        const { error } = await supabase.from("services").update({ ativo: false }).eq("id", id).eq("barbershop_id", shop.id);
+        if (error) throw error;
+        return "inativado" as const;
+      }
+
+      const { error } = await supabase.from("services").delete().eq("id", id).eq("barbershop_id", shop.id);
       if (error) throw error;
+      return "excluido" as const;
     },
-    onSuccess: () => {
-      toast.success("Serviço excluído.");
-      qc.invalidateQueries({ queryKey: ["servicos"] });
+    onSuccess: (result) => {
+      toast.success(result === "inativado" ? "Serviço inativado para preservar o histórico." : "Serviço excluído.");
+      qc.invalidateQueries({ queryKey: ["servicos", shop?.id] });
+      qc.invalidateQueries({ queryKey: ["barbeiros", shop?.id] });
+      qc.invalidateQueries({ queryKey: ["agendar-base"] });
     },
-    onError: () => toast.error("Não foi possível excluir. Desative o serviço se ele já possui agendamentos."),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form) return;
-    if (form.nome.trim().length < 2) {
-      toast.error("Informe o nome do serviço.");
-      return;
-    }
-    const preco = Number(form.preco.replace(",", "."));
-    if (!Number.isFinite(preco) || preco < 0) {
-      toast.error("Informe um preço válido.");
-      return;
-    }
-    if (Number(form.duracao_minutos) < 5) {
-      toast.error("A duração mínima é de 5 minutos.");
-      return;
-    }
     salvar.mutate(form);
   }
 
@@ -123,83 +138,43 @@ function Servicos() {
           </label>
           <label className="sm:col-span-2">
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Descrição</span>
-            <input
-              className={input}
-              value={form.descricao}
-              onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-            />
+            <input className={input} value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} />
           </label>
           <label>
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Preço (R$)</span>
-            <input className={input} value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} />
+            <input className={input} inputMode="decimal" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} />
           </label>
           <label>
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Duração (min)</span>
-            <input
-              type="number"
-              min={5}
-              step={5}
-              className={input}
-              value={form.duracao_minutos}
-              onChange={(e) => setForm({ ...form, duracao_minutos: e.target.value })}
-            />
+            <input type="number" min={5} max={480} step={5} className={input} value={form.duracao_minutos} onChange={(e) => setForm({ ...form, duracao_minutos: e.target.value })} />
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={form.ativo}
-              onChange={(e) => setForm({ ...form, ativo: e.target.checked })}
-            />
+            <input type="checkbox" checked={form.ativo} onChange={(e) => setForm({ ...form, ativo: e.target.checked })} />
             Serviço ativo
           </label>
           <div className="flex gap-2 sm:col-span-2">
-            <button className={btn} disabled={salvar.isPending}>
-              {salvar.isPending ? "SALVANDO..." : "SALVAR"}
-            </button>
-            <button type="button" className={btnGhost} onClick={() => setForm(null)}>
-              Cancelar
-            </button>
+            <button className={btn} disabled={salvar.isPending}>{salvar.isPending ? "SALVANDO..." : "SALVAR"}</button>
+            <button type="button" className={btnGhost} onClick={() => setForm(null)}>Cancelar</button>
           </div>
         </form>
       )}
 
       {isLoading && <Empty>Carregando...</Empty>}
-      {servicos?.length === 0 && <Empty>Nenhum serviço cadastrado ainda.</Empty>}
+      {!isLoading && servicos?.length === 0 && <Empty>Nenhum serviço cadastrado.</Empty>}
       <div className="grid gap-3 sm:grid-cols-2">
         {(servicos ?? []).map((s) => (
           <div key={s.id} className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-xl">{s.nome}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {brl(s.preco)} · {s.duracao_minutos} min {s.ativo ? "" : "· inativo"}
-                </p>
+                <p className="text-sm text-muted-foreground">{brl(s.preco)} · {s.duracao_minutos} min {s.ativo ? "" : "· inativo"}</p>
                 {s.descricao && <p className="mt-2 text-sm text-muted-foreground">{s.descricao}</p>}
               </div>
               <div className="flex gap-2">
-                <button
-                  aria-label="Editar"
-                  onClick={() =>
-                    setForm({
-                      id: s.id,
-                      nome: s.nome,
-                      descricao: s.descricao ?? "",
-                      preco: String(s.preco),
-                      duracao_minutos: String(s.duracao_minutos),
-                      ativo: s.ativo,
-                    })
-                  }
-                  className="text-muted-foreground hover:text-primary"
-                >
+                <button aria-label="Editar" onClick={() => setForm({ id: s.id, nome: s.nome, descricao: s.descricao ?? "", preco: String(s.preco), duracao_minutos: String(s.duracao_minutos), ativo: s.ativo })} className="text-muted-foreground hover:text-primary">
                   <Pencil className="h-4 w-4" />
                 </button>
-                <button
-                  aria-label="Excluir"
-                  onClick={() => {
-                    if (confirm(`Excluir o serviço "${s.nome}"?`)) excluir.mutate(s.id);
-                  }}
-                  className="text-muted-foreground hover:text-destructive"
-                >
+                <button aria-label="Excluir" disabled={excluir.isPending} onClick={() => { if (confirm(`Excluir o serviço "${s.nome}"?`)) excluir.mutate(s.id); }} className="text-muted-foreground hover:text-destructive disabled:opacity-50">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
