@@ -46,6 +46,14 @@ export function brl(value: number | string | null | undefined) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+/** Máscara de entrada monetária brasileira: 1999 → 19,99; 150099 → 1.500,99. */
+export function formatBrlInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  const amount = Number(digits) / 100;
+  return amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function hhmm(t: string | null | undefined) {
   return (t ?? "").slice(0, 5);
 }
