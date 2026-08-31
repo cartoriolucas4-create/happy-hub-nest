@@ -72,56 +72,120 @@ function PublicAccentController() {
   return null;
 }
 
-/**
- * Applies the Brazilian currency mask to financial inputs marked with inputmode="decimal".
- * It intentionally uses the native input value setter before dispatching a fresh input event,
- * so React controlled inputs receive the formatted value instead of reverting to the raw digits.
- * Typing 1999 => 19,99 and 150099 => 1.500,99. Paste, backspace and delete are supported too.
- */
+function isCurrencyInput(input: HTMLInputElement) {
+  if (input.inputMode !== "decimal") return false;
+  const text = [
+    input.name,
+    input.id,
+    input.placeholder,
+    input.getAttribute("aria-label"),
+    input.getAttribute("data-field"),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  const labelText = input.closest("label")?.textContent?.toLowerCase() ?? "";
+  const context = `${text} ${labelText}`;
+  return /(pre[cç]o|valor|custo|desconto|total|faturamento|venda|receita|pagamento|r\$|dinheiro)/i.test(context);
+}
+
+function formattedCaretPosition(formatted: string, digitIndex: number) {
+  if (digitIndex <= 0) return 0;
+  let seen = 0;
+  for (let i = 0; i < formatted.length; i += 1) {
+    if (/\d/.test(formatted[i]!)) {
+      seen += 1;
+      if (seen >= digitIndex) return i + 1;
+    }
+  }
+  return formatted.length;
+}
+
 function BrlInputController() {
   useEffect(() => {
     const bound = new WeakSet<HTMLInputElement>();
-    const syntheticEvents = new WeakSet<Event>();
 
-    const setNativeValue = (input: HTMLInputElement, value: string) => {
-      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-      if (setter) setter.call(input, value);
-      else input.value = value;
-    };
-
-    const format = (input: HTMLInputElement, notifyReact = true) => {
-      const formatted = formatBrlInput(input.value);
-      if (formatted === input.value) return;
-
-      setNativeValue(input, formatted);
-      const end = formatted.length;
-      try { input.setSelectionRange(end, end); } catch { /* non-text input fallback */ }
-
-      if (notifyReact) {
-        const event = new Event("input", { bubbles: true });
-        syntheticEvents.add(event);
-        input.dispatchEvent(event);
+    const emitValue = (input: HTMLInputElement, value: string, caretDigits: number) => {
+      input.value = value;
+      const caret = formattedCaretPosition(value, caretDigits);
+      try {
+        input.setSelectionRange(caret, caret);
+      } catch {
+        // Some input types do not support selection ranges.
       }
+      input.dispatchEvent(new Event("input", { bubbles: true }));
     };
 
     const bind = () => {
       document.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]').forEach((input) => {
-        if (bound.has(input)) return;
+        if (bound.has(input) || !isCurrencyInput(input)) return;
         bound.add(input);
 
-        const onInput = (event: Event) => {
-          if (syntheticEvents.has(event)) return;
-          format(input, true);
-        };
-        const onFocus = () => format(input, true);
+        const beforeInput = (event: InputEvent) => {
+          if (!isCurrencyInput(input)) return;
+          const start = input.selectionStart ?? input.value.length;
+          const end = input.selectionEnd ?? start;
+          const currentDigits = input.value.replace(/\D/g, "");
+          const startDigits = input.value.slice(0, start).replace(/\D/g, "").length;
+          const endDigits = input.value.slice(0, end).replace(/\D/g, "").length;
+          const inputType = event.inputType;
 
-        input.addEventListener("input", onInput, true);
-        input.addEventListener("focus", onFocus);
-        (input as HTMLInputElement & { __brlCleanup?: () => void }).__brlCleanup = () => {
-          input.removeEventListener("input", onInput, true);
-          input.removeEventListener("focus", onFocus);
-          bound.delete(input);
+          if (inputType === "insertText" || inputType === "insertFromPaste" || inputType === "insertReplacementText") {
+            const inserted = (event.data ?? "").replace(/\D/g, "");
+            if (!inserted) {
+              event.preventDefault();
+              return;
+            }
+            event.preventDefault();
+            const nextDigits = currentDigits.slice(0, startDigits) + inserted + currentDigits.slice(endDigits);
+            const formatted = formatBrlInput(nextDigits);
+            emitValue(input, formatted, startDigits + inserted.length);
+            return;
+          }
+
+          if (inputType === "deleteContentBackward" || inputType === "deleteContentForward") {
+            event.preventDefault();
+            let removeStart = startDigits;
+            let removeEnd = endDigits;
+            if (startDigits === endDigits) {
+              if (inputType === "deleteContentBackward") {
+                if (removeStart === 0) return;
+                removeStart -= 1;
+              } else {
+                if (removeEnd >= currentDigits.length) return;
+                removeEnd += 1;
+              }
+            }
+            const nextDigits = currentDigits.slice(0, removeStart) + currentDigits.slice(removeEnd);
+            const formatted = formatBrlInput(nextDigits);
+            emitValue(input, formatted, removeStart);
+          }
         };
+
+        const paste = (event: ClipboardEvent) => {
+          if (!isCurrencyInput(input)) return;
+          const pasted = event.clipboardData?.getData("text") ?? "";
+          const digits = pasted.replace(/\D/g, "");
+          if (!digits) return;
+          event.preventDefault();
+          const start = input.selectionStart ?? input.value.length;
+          const end = input.selectionEnd ?? start;
+          const currentDigits = input.value.replace(/\D/g, "");
+          const startDigits = input.value.slice(0, start).replace(/\D/g, "").length;
+          const endDigits = input.value.slice(0, end).replace(/\D/g, "").length;
+          const nextDigits = currentDigits.slice(0, startDigits) + digits + currentDigits.slice(endDigits);
+          emitValue(input, formatBrlInput(nextDigits), startDigits + digits.length);
+        };
+
+        const focus = () => {
+          const digits = input.value.replace(/\D/g, "");
+          const formatted = formatBrlInput(digits);
+          if (formatted !== input.value) emitValue(input, formatted, formatted.replace(/\D/g, "").length);
+        };
+
+        input.addEventListener("beforeinput", beforeInput);
+        input.addEventListener("paste", paste);
+        input.addEventListener("focus", focus);
       });
     };
 
@@ -129,12 +193,7 @@ function BrlInputController() {
     const observer = new MutationObserver(bind);
     observer.observe(document.body, { childList: true, subtree: true });
 
-    return () => {
-      observer.disconnect();
-      document.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]').forEach((input) => {
-        (input as HTMLInputElement & { __brlCleanup?: () => void }).__brlCleanup?.();
-      });
-    };
+    return () => observer.disconnect();
   }, []);
 
   return null;
