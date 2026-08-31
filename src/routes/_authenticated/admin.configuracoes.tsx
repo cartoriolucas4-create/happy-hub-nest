@@ -158,6 +158,7 @@ function Configuracoes() {
             <div className="rounded-xl border border-border bg-card p-5">
               <span className="text-xs uppercase tracking-widest text-muted-foreground">Imagem de capa</span>
               <p className="mt-1 text-sm text-muted-foreground">Imagem principal exibida no topo do Meu Link.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Recomendado: 1920 × 1080 px.</p>
               <div className="mt-4 space-y-4">
                 <div className="relative">
                   {coverPreview ? <img src={coverPreview} alt="Capa atual" className="h-24 w-full rounded-md border border-border object-cover" /> : <div className="flex h-24 w-full items-center justify-center rounded-md border border-dashed border-border text-sm text-muted-foreground">Sem imagem de capa</div>}
