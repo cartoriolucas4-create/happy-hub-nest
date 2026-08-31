@@ -2,105 +2,46 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type SetupItemKey = "dias" | "barbeiros" | "servicos" | "horarios" | "pagamentos";
+export type SetupItem = { key: SetupItemKey; label: string; descricao: string; to: string; ok: boolean };
 
-export type SetupItem = {
-  key: SetupItemKey;
-  label: string;
-  descricao: string;
-  to: string;
-  ok: boolean;
-};
-
-/**
- * Estado da configuração inicial calculado SEMPRE a partir dos dados reais da
- * barbearia (nunca só de um booleano), para que a exclusão posterior de
- * barbeiros, serviços ou horários volte a marcar a barbearia como incompleta.
- */
 export function useSetupStatus(shopId: string | null | undefined) {
   return useQuery({
     queryKey: ["setup-status", shopId],
     enabled: Boolean(shopId),
     queryFn: async () => {
       const [barbeiros, servicos, horas, pagamentos] = await Promise.all([
-        supabase
-          .from("barbers")
-          .select("id", { count: "exact", head: true })
-          .eq("barbershop_id", shopId!)
-          .eq("ativo", true),
-        supabase
-          .from("services")
-          .select("id", { count: "exact", head: true })
-          .eq("barbershop_id", shopId!)
-          .eq("ativo", true),
-        supabase
-          .from("business_hours")
-          .select("dia_semana, aberto, hora_inicio, hora_fim")
-          .eq("barbershop_id", shopId!),
-        supabase
-          .from("payment_methods")
-          .select("id", { count: "exact", head: true })
-          .eq("barbershop_id", shopId!)
-          .eq("active", true),
+        supabase.from("barbers").select("id", { count: "exact", head: true }).eq("barbershop_id", shopId!).eq("ativo", true),
+        supabase.from("services").select("id", { count: "exact", head: true }).eq("barbershop_id", shopId!).eq("ativo", true).not("nome", "is", null),
+        supabase.from("business_hours").select("dia_semana, aberto, hora_inicio, hora_fim").eq("barbershop_id", shopId!),
+        supabase.from("payment_methods").select("id", { count: "exact", head: true }).eq("barbershop_id", shopId!).eq("active", true),
       ]);
+      if (barbeiros.error) throw barbeiros.error;
+      if (servicos.error) throw servicos.error;
+      if (horas.error) throw horas.error;
+      if (pagamentos.error) throw pagamentos.error;
 
       const abertos = (horas.data ?? []).filter((h) => h.aberto);
-      const horariosOk =
-        abertos.length > 0 && abertos.every((h) => Boolean(h.hora_inicio && h.hora_fim && h.hora_fim > h.hora_inicio));
-
+      const horariosOk = abertos.length > 0 && abertos.every((h) => Boolean(h.hora_inicio && h.hora_fim && h.hora_fim > h.hora_inicio));
       const itens: SetupItem[] = [
-        {
-          key: "dias",
-          label: "Dias de atendimento",
-          descricao: "Escolha em quais dias da semana a barbearia atende.",
-          to: "/admin/horarios",
-          ok: abertos.length > 0,
-        },
-        {
-          key: "barbeiros",
-          label: "Barbeiros",
-          descricao: "Cadastre pelo menos um profissional.",
-          to: "/admin/barbeiros",
-          ok: (barbeiros.count ?? 0) > 0,
-        },
-        {
-          key: "servicos",
-          label: "Serviços",
-          descricao: "Cadastre pelo menos um serviço com preço e duração.",
-          to: "/admin/servicos",
-          ok: (servicos.count ?? 0) > 0,
-        },
-        {
-          key: "horarios",
-          label: "Horários",
-          descricao: "Defina o horário de abertura e fechamento dos dias abertos.",
-          to: "/admin/horarios",
-          ok: horariosOk,
-        },
-        {
-          key: "pagamentos",
-          label: "Meios de pagamento",
-          descricao: "Cadastre as formas de pagamento que você aceita.",
-          to: "/admin/pagamentos",
-          ok: (pagamentos.count ?? 0) > 0,
-        },
+        { key: "servicos", label: "Serviço", descricao: "Cadastre pelo menos um serviço válido.", to: "/admin/configurar", ok: (servicos.count ?? 0) > 0 },
+        { key: "barbeiros", label: "Profissional", descricao: "Cadastre pelo menos um profissional ativo.", to: "/admin/configurar", ok: (barbeiros.count ?? 0) > 0 },
+        { key: "dias", label: "Dias de atendimento", descricao: "Selecione pelo menos um dia de funcionamento.", to: "/admin/configurar", ok: abertos.length > 0 },
+        { key: "horarios", label: "Horários", descricao: "Defina horários válidos para todos os dias selecionados.", to: "/admin/configurar", ok: horariosOk },
+        { key: "pagamentos", label: "Meios de pagamento", descricao: "Cadastre pelo menos um meio de pagamento ativo.", to: "/admin/configurar", ok: (pagamentos.count ?? 0) > 0 },
       ];
-
-      const pendentes = itens.filter((i) => !i.ok);
+      const pendentes = itens.filter((item) => !item.ok);
       return { itens, pendentes, completo: pendentes.length === 0 };
     },
     staleTime: 10_000,
   });
 }
 
-/** Verifica no banco se a barbearia pode receber agendamentos públicos. */
 export function useBarbeariaOperacional(shopId: string | null | undefined) {
   return useQuery({
     queryKey: ["operacional", shopId],
     enabled: Boolean(shopId),
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("barbearia_operacional", {
-        p_barbershop_id: shopId!,
-      });
+      const { data, error } = await supabase.rpc("barbearia_operacional", { p_barbershop_id: shopId! });
       if (error) throw error;
       return Boolean(data);
     },
