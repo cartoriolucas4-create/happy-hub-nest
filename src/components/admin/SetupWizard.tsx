@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,15 +30,16 @@ function parseMoney(value: string) {
 
 function validHourRow(row: HourRow) {
   if (!row.hora_inicio || !row.hora_fim || row.hora_fim <= row.hora_inicio) return false;
-  if (!row.possui_intervalo) return !row.intervalo_inicio && !row.intervalo_fim;
-  if (!row.intervalo_inicio || !row.intervalo_fim) return false;
+  const hasStart = Boolean(row.intervalo_inicio);
+  const hasEnd = Boolean(row.intervalo_fim);
+  if (!row.possui_intervalo) return !hasStart && !hasEnd;
+  if (!hasStart || !hasEnd) return false;
   if (row.intervalo_fim <= row.intervalo_inicio) return false;
   if (row.intervalo_inicio < row.hora_inicio || row.intervalo_fim > row.hora_fim) return false;
   return true;
 }
 
 export function SetupWizard({ shopId }: { shopId: string }) {
-  const qc = useQueryClient();
   const { data: status } = useSetupStatus(shopId);
   const [step, setStep] = useState(1);
   const [service, setService] = useState<ServiceForm>(emptyService);
@@ -48,23 +48,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
   const [days, setDays] = useState<number[]>([]);
   const [hours, setHours] = useState<HourRow[]>([]);
 
-  const { data: current } = useQuery({
-    queryKey: ["setup-wizard-data", shopId],
-    enabled: Boolean(shopId),
-    queryFn: async () => {
-      const [services, barbers, bh, payments] = await Promise.all([
-        supabase.from("services").select("id,nome,descricao,preco,duracao_minutos,ativo").eq("barbershop_id", shopId).order("nome"),
-        supabase.from("barbers").select("id,nome,telefone,descricao,foto_url,ativo").eq("barbershop_id", shopId).order("nome"),
-        supabase.from("business_hours").select("*").eq("barbershop_id", shopId).order("dia_semana"),
-        supabase.from("payment_methods").select("id,name,description,icon,active,display_order").eq("barbershop_id", shopId).order("display_order"),
-      ]);
-      if (services.error) throw services.error;
-      if (barbers.error) throw barbers.error;
-      if (bh.error) throw bh.error;
-      if (payments.error) throw payments.error;
-      return { services: services.data ?? [], barbers: barbers.data ?? [], bh: bh.data ?? [], payments: payments.data ?? [] };
-    },
-  });
+  const { data: current, refetch } = useQueryData(shopId);
 
   useEffect(() => {
     if (!status || status.completo) return;
@@ -75,14 +59,18 @@ export function SetupWizard({ shopId }: { shopId: string }) {
   useEffect(() => {
     if (!current) return;
     setDays(current.bh.filter((row) => row.aberto).map((row) => row.dia_semana));
-    setHours(current.bh.filter((row) => row.aberto).map((row) => ({
-      dia_semana: row.dia_semana,
-      hora_inicio: hhmm(row.hora_inicio),
-      hora_fim: hhmm(row.hora_fim),
-      possui_intervalo: Boolean(row.possui_intervalo ?? (row.intervalo_inicio && row.intervalo_fim)),
-      intervalo_inicio: hhmm(row.intervalo_inicio),
-      intervalo_fim: hhmm(row.intervalo_fim),
-    })));
+    setHours(current.bh.filter((row) => row.aberto).map((row) => {
+      const intervaloInicio = hhmm(row.intervalo_inicio);
+      const intervaloFim = hhmm(row.intervalo_fim);
+      return {
+        dia_semana: row.dia_semana,
+        hora_inicio: hhmm(row.hora_inicio),
+        hora_fim: hhmm(row.hora_fim),
+        possui_intervalo: Boolean(intervaloInicio && intervaloFim),
+        intervalo_inicio: intervaloInicio,
+        intervalo_fim: intervaloFim,
+      };
+    }));
   }, [current]);
 
   const done = status?.itens ?? [];
@@ -97,16 +85,16 @@ export function SetupWizard({ shopId }: { shopId: string }) {
   })), [days, hours]);
 
   async function refresh() {
-    await qc.invalidateQueries({ queryKey: ["setup-wizard-data", shopId] });
-    await qc.invalidateQueries({ queryKey: ["setup-status", shopId] });
-    await qc.invalidateQueries({ queryKey: ["operacional", shopId] });
-    await qc.invalidateQueries({ queryKey: ["public-setup-gate"] });
+    await refetch();
   }
 
   async function addService() {
     const preco = parseMoney(service.preco);
     const duracao = Number(service.duracao_minutos);
-    if (service.nome.trim().length < 2 || !Number.isFinite(preco) || preco < 0 || !Number.isInteger(duracao) || duracao < 5 || duracao > 480) { toast.error("Informe nome, valor e duração válidos."); return; }
+    if (service.nome.trim().length < 2 || !Number.isFinite(preco) || preco < 0 || !Number.isInteger(duracao) || duracao < 5 || duracao > 480) {
+      toast.error("Informe nome, valor e duração válidos.");
+      return;
+    }
     const { error } = await supabase.from("services").insert({ barbershop_id: shopId, nome: service.nome.trim(), descricao: service.descricao.trim() || null, preco, duracao_minutos: duracao, ativo: true });
     if (error) { toast.error(error.message); return; }
     setService(emptyService); await refresh(); toast.success("Serviço cadastrado.");
@@ -122,24 +110,32 @@ export function SetupWizard({ shopId }: { shopId: string }) {
   async function saveDaysAndHours() {
     if (!days.length) { toast.error("Selecione pelo menos um dia."); return false; }
     const rows = currentRows;
-    if (rows.some((row) => !validHourRow(row))) { toast.error("Revise abertura, fechamento e a configuração de intervalo de todos os dias selecionados."); return false; }
+    if (rows.some((row) => !validHourRow(row))) {
+      toast.error("Revise abertura e fechamento. Se houver intervalo, informe início e fim válidos dentro do expediente.");
+      return false;
+    }
+
     const existing = current?.bh ?? [];
-    for (const row of existing) {
-      const selected = days.includes(row.dia_semana);
-      const edited = rows.find((item) => item.dia_semana === row.dia_semana);
+    for (const oldRow of existing) {
+      const selected = days.includes(oldRow.dia_semana);
+      const edited = rows.find((item) => item.dia_semana === oldRow.dia_semana);
       const payload = selected && edited
         ? {
             aberto: true,
             hora_inicio: edited.hora_inicio,
             hora_fim: edited.hora_fim,
-            possui_intervalo: edited.possui_intervalo,
             intervalo_inicio: edited.possui_intervalo ? edited.intervalo_inicio : null,
             intervalo_fim: edited.possui_intervalo ? edited.intervalo_fim : null,
           }
-        : { aberto: false, intervalo_inicio: null, intervalo_fim: null, possui_intervalo: false };
-      const { error } = await supabase.from("business_hours").update(payload).eq("id", row.id).eq("barbershop_id", shopId);
-      if (error) { toast.error(error.message); return false; }
+        : {
+            aberto: false,
+            intervalo_inicio: null,
+            intervalo_fim: null,
+          };
+      const { error } = await supabase.from("business_hours").update(payload).eq("id", oldRow.id).eq("barbershop_id", shopId);
+      if (error) { toast.error(`Erro ao salvar ${DIAS[oldRow.dia_semana]}: ${error.message}`); return false; }
     }
+
     for (const row of rows.filter((item) => !existing.some((old) => old.dia_semana === item.dia_semana))) {
       const { error } = await supabase.from("business_hours").insert({
         barbershop_id: shopId,
@@ -147,13 +143,15 @@ export function SetupWizard({ shopId }: { shopId: string }) {
         aberto: true,
         hora_inicio: row.hora_inicio,
         hora_fim: row.hora_fim,
-        possui_intervalo: row.possui_intervalo,
         intervalo_inicio: row.possui_intervalo ? row.intervalo_inicio : null,
         intervalo_fim: row.possui_intervalo ? row.intervalo_fim : null,
       });
-      if (error) { toast.error(error.message); return false; }
+      if (error) { toast.error(`Erro ao cadastrar ${DIAS[row.dia_semana]}: ${error.message}`); return false; }
     }
-    await refresh(); toast.success("Dias, horários e intervalos salvos."); return true;
+
+    await refresh();
+    toast.success("Dias, horários e intervalos salvos.");
+    return true;
   }
 
   async function addPayment() {
@@ -164,25 +162,22 @@ export function SetupWizard({ shopId }: { shopId: string }) {
     setPayment(emptyPayment); await refresh(); toast.success("Meio de pagamento cadastrado.");
   }
 
-  async function finish() {
-    if (step === 4 && !(await saveDaysAndHours())) return;
-    await qc.invalidateQueries({ queryKey: ["setup-status", shopId] });
-    const fresh = await qc.fetchQuery({ queryKey: ["setup-status", shopId] });
-    if (!fresh.completo) {
-      const firstPending = keys.findIndex((key) => !fresh.itens.find((item) => item.key === key)?.ok);
-      if (firstPending >= 0) setStep(firstPending + 1);
-      toast.error("Ainda existem etapas pendentes."); return;
-    }
-    toast.success("Configuração concluída!"); setStep(6);
+  function toggleDay(day: number) {
+    setDays((old) => old.includes(day) ? old.filter((item) => item !== day) : [...old, day].sort((a, b) => a - b));
   }
 
-  function toggleDay(day: number) { setDays((old) => old.includes(day) ? old.filter((item) => item !== day) : [...old, day].sort((a, b) => a - b)); }
   function updateHour(day: number, field: keyof Omit<HourRow, "dia_semana">, value: string | boolean) {
     setHours((old) => {
       const found = old.find((row) => row.dia_semana === day);
       if (found) return old.map((row) => row.dia_semana === day ? { ...row, [field]: value } : row);
       return [...old, { dia_semana: day, hora_inicio: "", hora_fim: "", possui_intervalo: false, intervalo_inicio: "", intervalo_fim: "", [field]: value }];
     });
+  }
+
+  async function finish() {
+    if (!(await saveDaysAndHours())) return;
+    toast.success("Horários salvos. Complete as demais etapas para liberar o Meu Link.");
+    setStep(5);
   }
 
   const ok = (key: string) => Boolean(done.find((item) => item.key === key)?.ok);
@@ -199,12 +194,33 @@ export function SetupWizard({ shopId }: { shopId: string }) {
 
     {step === 3 && <section className="mt-8"><h3 className="text-xl">Dias de atendimento</h3><p className="mt-1 text-sm text-muted-foreground">Selecione somente os dias em que a barbearia realmente atende. Nenhum dia é selecionado automaticamente.</p><div className="mt-5 grid gap-2 sm:grid-cols-2">{DIAS.map((day, index) => <button key={day} type="button" onClick={() => toggleDay(index)} className={`flex items-center gap-3 rounded-md border p-3 text-left transition-colors ${days.includes(index) ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}><span>{days.includes(index) ? "☑" : "☐"}</span>{day}</button>)}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(2)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={() => days.length ? setStep(4) : toast.error("Selecione pelo menos um dia.")}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
 
-    {step === 4 && <section className="mt-8"><h3 className="text-xl">DIAS E HORÁRIOS DE ATENDIMENTO</h3><p className="mt-1 text-sm text-muted-foreground">Configure abertura, fechamento e escolha explicitamente se existe intervalo em cada dia.</p><div className="mt-5 space-y-4">{days.map((day) => { const row = currentRows.find((item) => item.dia_semana === day)!; return <div key={day} className="rounded-lg border border-border bg-background/40 p-4"><div className="flex items-center justify-between"><h4 className="font-display text-sm tracking-widest">{DIAS[day]?.toUpperCase()}</h4><span className="text-xs text-primary">☑ Atende</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm">Abre<input className={input + " mt-1"} type="time" value={row.hora_inicio} onChange={(e) => updateHour(day, "hora_inicio", e.target.value)} /></label><label className="text-sm">Fecha<input className={input + " mt-1"} type="time" value={row.hora_fim} onChange={(e) => updateHour(day, "hora_fim", e.target.value)} /></label></div><label className="mt-4 flex items-center gap-3 rounded-md border border-border p-3 text-sm"><input type="checkbox" checked={row.possui_intervalo} onChange={(e) => updateHour(day, "possui_intervalo", e.target.checked)} /> Possui intervalo</label>{row.possui_intervalo && <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-sm">Intervalo início<input className={input + " mt-1"} type="time" value={row.intervalo_inicio} onChange={(e) => updateHour(day, "intervalo_inicio", e.target.value)} /></label><label className="text-sm">Intervalo fim<input className={input + " mt-1"} type="time" value={row.intervalo_fim} onChange={(e) => updateHour(day, "intervalo_fim", e.target.value)} /></label></div>}{!validHourRow(row) && <p className="mt-3 flex items-center gap-2 text-xs text-primary"><AlertTriangle className="h-4 w-4" />Informe abertura/fechamento válidos e configure corretamente o intervalo selecionado.</p>}</div>; })}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(3)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={async () => { if (await saveDaysAndHours()) setStep(5); }}>Salvar e continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
+    {step === 4 && <section className="mt-8"><h3 className="text-xl">DIAS E HORÁRIOS DE ATENDIMENTO</h3><p className="mt-1 text-sm text-muted-foreground">Configure abertura e fechamento. O intervalo é opcional e é salvo apenas pelos campos de início e fim.</p><div className="mt-5 space-y-4">{days.map((day) => { const row = currentRows.find((item) => item.dia_semana === day)!; return <div key={day} className="rounded-lg border border-border bg-background/40 p-4"><div className="flex items-center justify-between"><h4 className="font-display text-sm tracking-widest">{DIAS[day]?.toUpperCase()}</h4><span className="text-xs text-primary">☑ Atende</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm">Abre<input className={input + " mt-1"} type="time" value={row.hora_inicio} onChange={(e) => updateHour(day, "hora_inicio", e.target.value)} /></label><label className="text-sm">Fecha<input className={input + " mt-1"} type="time" value={row.hora_fim} onChange={(e) => updateHour(day, "hora_fim", e.target.value)} /></label></div><label className="mt-4 flex items-center gap-3 rounded-md border border-border p-3 text-sm"><input type="checkbox" checked={row.possui_intervalo} onChange={(e) => updateHour(day, "possui_intervalo", e.target.checked)} /> Possui intervalo</label>{row.possui_intervalo && <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-sm">Intervalo início<input className={input + " mt-1"} type="time" value={row.intervalo_inicio} onChange={(e) => updateHour(day, "intervalo_inicio", e.target.value)} /></label><label className="text-sm">Intervalo fim<input className={input + " mt-1"} type="time" value={row.intervalo_fim} onChange={(e) => updateHour(day, "intervalo_fim", e.target.value)} /></label></div>}{!validHourRow(row) && <p className="mt-3 flex items-center gap-2 text-xs text-primary"><AlertTriangle className="h-4 w-4" />Informe abertura e fechamento válidos. Se ativar intervalo, informe início e fim dentro do expediente.</p>}</div>; })}</div><div className="mt-5 flex gap-2"><button className={btnGhost} onClick={() => setStep(3)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={async () => { if (await saveDaysAndHours()) setStep(5); }}>Salvar e continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div></section>}
 
     {step === 5 && <section className="mt-8"><h3 className="text-xl">Meios de pagamento</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre pelo menos um meio de pagamento real. Nenhum meio é pré-selecionado.</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><label className="text-sm">Nome<input className={input + " mt-1"} value={payment.name} onChange={(e) => setPayment({ ...payment, name: e.target.value })} placeholder="Ex.: Pix" /></label><label className="text-sm">Descrição (opcional)<input className={input + " mt-1"} value={payment.description} onChange={(e) => setPayment({ ...payment, description: e.target.value })} /></label><label className="text-sm">Ícone (opcional)<input className={input + " mt-1"} value={payment.icon} onChange={(e) => setPayment({ ...payment, icon: e.target.value })} /></label></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={addPayment}><Plus className="mr-2 inline h-4 w-4" />Cadastrar pagamento</button><button className={btnGhost} onClick={() => setStep(4)}><ChevronLeft className="mr-1 inline h-4 w-4" />Voltar</button><button className={btn} onClick={finish}>Finalizar <Check className="ml-1 inline h-4 w-4" /></button></div><ExistingList title="Meios cadastrados" items={(current?.payments ?? []).map((item) => item.name)} /></section>}
 
     {step === 6 && <section className="mt-10 text-center"><Check className="mx-auto h-12 w-12 text-emerald-400" /><h3 className="mt-5 text-3xl">Configuração concluída!</h3><p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">Sua barbearia está pronta para usar o Meu Link, disponibilidade e agendamentos com os dados reais cadastrados.</p></section>}
   </div>;
+}
+
+function useQueryData(shopId: string) {
+  const { useQuery } = require("@tanstack/react-query") as typeof import("@tanstack/react-query");
+  return useQuery({
+    queryKey: ["setup-wizard-data", shopId],
+    enabled: Boolean(shopId),
+    queryFn: async () => {
+      const [services, barbers, bh, payments] = await Promise.all([
+        supabase.from("services").select("id,nome,descricao,preco,duracao_minutos,ativo").eq("barbershop_id", shopId).order("nome"),
+        supabase.from("barbers").select("id,nome,telefone,descricao,foto_url,ativo").eq("barbershop_id", shopId).order("nome"),
+        supabase.from("business_hours").select("*").eq("barbershop_id", shopId).order("dia_semana"),
+        supabase.from("payment_methods").select("id,name,description,icon,active,display_order").eq("barbershop_id", shopId).order("display_order"),
+      ]);
+      if (services.error) throw services.error;
+      if (barbers.error) throw barbers.error;
+      if (bh.error) throw bh.error;
+      if (payments.error) throw payments.error;
+      return { services: services.data ?? [], barbers: barbers.data ?? [], bh: bh.data ?? [], payments: payments.data ?? [] };
+    },
+  });
 }
 
 function ExistingList({ title, items }: { title: string; items: string[] }) {
