@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { PublicSetupGate } from "@/components/public/PublicSetupGate";
 import { supabase } from "@/integrations/supabase/client";
 import { accentStyle, DEFAULT_ACCENT_COLOR } from "@/lib/theme";
+import { formatBrlInput } from "@/lib/barber";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -71,7 +72,51 @@ function PublicAccentController() {
   return null;
 }
 
+function BrlInputController() {
+  useEffect(() => {
+    const handlers = new WeakMap<HTMLInputElement, { input: (event: Event) => void; focus: () => void }>();
+
+    const bind = () => {
+      document.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]').forEach((input) => {
+        if (handlers.has(input)) return;
+
+        const format = () => {
+          const formatted = formatBrlInput(input.value);
+          if (formatted !== input.value) {
+            input.value = formatted;
+            input.setSelectionRange(formatted.length, formatted.length);
+          }
+        };
+        const focus = () => {
+          format();
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        };
+
+        handlers.set(input, { input: format, focus });
+        input.addEventListener("input", format, true);
+        input.addEventListener("focus", focus);
+      });
+    };
+
+    bind();
+    const observer = new MutationObserver(bind);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      document.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]').forEach((input) => {
+        const handlersForInput = handlers.get(input);
+        if (!handlersForInput) return;
+        input.removeEventListener("input", handlersForInput.input, true);
+        input.removeEventListener("focus", handlersForInput.focus);
+      });
+    };
+  }, []);
+
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  return <QueryClientProvider client={queryClient}><PublicAccentController /><PublicSetupGate><Outlet /></PublicSetupGate><Toaster /></QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}><PublicAccentController /><BrlInputController /><PublicSetupGate><Outlet /></PublicSetupGate><Toaster /></QueryClientProvider>;
 }
