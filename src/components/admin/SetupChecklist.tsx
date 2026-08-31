@@ -14,14 +14,14 @@ export function SetupChecklist({ shopId }: { shopId: string | null | undefined }
           <AlertTriangle className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
           <div>
             <h2 className="font-display text-sm tracking-widest">CONFIGURAÇÃO INICIAL PENDENTE</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Complete os dados necessários para colocar sua barbearia em funcionamento.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Complete as informações da sua barbearia para começar a receber agendamentos.</p>
           </div>
         </div>
         <Link to="/admin/configurar" className="rounded-md bg-primary px-5 py-2.5 font-display text-xs tracking-widest text-primary-foreground hover:bg-primary/90">
           CONTINUAR CONFIGURAÇÃO
         </Link>
       </div>
-      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-border"><div className="h-full bg-primary transition-all" style={{ width: `${(feitos / 5) * 100}%` }} /></div>
+      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-border"><div className="h-full bg-primary transition-all duration-300" style={{ width: `${(feitos / 5) * 100}%` }} /></div>
       <p className="mt-2 text-xs text-muted-foreground">{feitos} de 5 etapas concluídas</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-5">
         {data.itens.map((item) => (
