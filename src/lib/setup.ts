@@ -13,7 +13,7 @@ type BusinessHour = {
   intervalo_fim: string | null;
 };
 
-function isValidHourRange(h: BusinessHour) {
+export function isValidHourRange(h: BusinessHour) {
   if (!h.aberto || !h.hora_inicio || !h.hora_fim) return false;
   if (h.hora_fim <= h.hora_inicio) return false;
   const hasIntervalStart = Boolean(h.intervalo_inicio);
@@ -46,10 +46,10 @@ export function useSetupStatus(shopId: string | null | undefined) {
       const abertos = businessHours.filter((h) => h.aberto);
       const horariosOk = abertos.length > 0 && abertos.every(isValidHourRange);
       const itens: SetupItem[] = [
-        { key: "servicos", label: "Serviço", descricao: "Cadastre pelo menos um serviço válido.", to: "/admin/configurar", ok: (servicos.count ?? 0) > 0 },
-        { key: "barbeiros", label: "Profissional", descricao: "Cadastre pelo menos um profissional ativo.", to: "/admin/configurar", ok: (barbeiros.count ?? 0) > 0 },
+        { key: "servicos", label: "Serviços", descricao: "Cadastre pelo menos um serviço válido.", to: "/admin/configurar", ok: (servicos.count ?? 0) > 0 },
+        { key: "barbeiros", label: "Profissionais", descricao: "Cadastre pelo menos um profissional ativo.", to: "/admin/configurar", ok: (barbeiros.count ?? 0) > 0 },
         { key: "dias", label: "Dias de atendimento", descricao: "Selecione pelo menos um dia de funcionamento.", to: "/admin/configurar", ok: abertos.length > 0 },
-        { key: "horarios", label: "Horários", descricao: "Defina horários e intervalos válidos para todos os dias selecionados.", to: "/admin/configurar", ok: horariosOk },
+        { key: "horarios", label: "Horários e intervalos", descricao: "Defina horários válidos e intervalos completos dentro do expediente para todos os dias abertos.", to: "/admin/configurar", ok: horariosOk },
         { key: "pagamentos", label: "Meios de pagamento", descricao: "Cadastre pelo menos um meio de pagamento ativo.", to: "/admin/configurar", ok: (pagamentos.count ?? 0) > 0 },
       ];
       const pendentes = itens.filter((item) => !item.ok);
