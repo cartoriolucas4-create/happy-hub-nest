@@ -755,6 +755,10 @@ export type Database = {
           valor: number
         }[]
       }
+      barbearia_operacional: {
+        Args: { p_barbershop_id: string }
+        Returns: boolean
+      }
       criar_agendamento_publico:
         | {
             Args: {
