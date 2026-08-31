@@ -1,5 +1,4 @@
--- External/presential sales and business costs.
--- Uses the existing barbershop ownership model and current_barbershop_id().
+-- Vendas presenciais e custos integrados ao financeiro existente.
 
 CREATE TABLE IF NOT EXISTS public.external_products (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -102,8 +101,6 @@ DECLARE
   v_item jsonb;
   v_service record;
   v_product record;
-  v_name text;
-  v_price numeric(10,2);
   v_qty integer;
   v_subtotal numeric(10,2) := 0;
   v_total numeric(10,2);
@@ -128,19 +125,14 @@ BEGIN
     IF NULLIF(v_item->>'service_id','') IS NOT NULL THEN
       SELECT id, nome, preco INTO v_service FROM public.services WHERE id = (v_item->>'service_id')::uuid AND barbershop_id = v_shop AND ativo;
       IF v_service.id IS NULL THEN RAISE EXCEPTION 'Serviço indisponível'; END IF;
-      v_name := v_service.nome; v_price := v_service.preco;
-      INSERT INTO public.external_sale_items (sale_id, service_id, name_snapshot, unit_price_snapshot, quantity, total)
-      VALUES (v_sale, v_service.id, v_name, v_price, v_qty, v_price * v_qty);
+      v_subtotal := v_subtotal + (v_service.preco * v_qty);
     ELSIF NULLIF(v_item->>'product_id','') IS NOT NULL THEN
       SELECT id, name, price INTO v_product FROM public.external_products WHERE id = (v_item->>'product_id')::uuid AND barbershop_id = v_shop AND active;
       IF v_product.id IS NULL THEN RAISE EXCEPTION 'Produto indisponível'; END IF;
-      v_name := v_product.name; v_price := v_product.price;
-      INSERT INTO public.external_sale_items (sale_id, product_id, name_snapshot, unit_price_snapshot, quantity, total)
-      VALUES (v_sale, v_product.id, v_name, v_price, v_qty, v_price * v_qty);
+      v_subtotal := v_subtotal + (v_product.price * v_qty);
     ELSE
       RAISE EXCEPTION 'Item de venda inválido';
     END IF;
-    v_subtotal := v_subtotal + (v_price * v_qty);
   END LOOP;
 
   IF p_discount > v_subtotal THEN RAISE EXCEPTION 'O desconto não pode superar o subtotal'; END IF;
@@ -148,59 +140,6 @@ BEGIN
   INSERT INTO public.external_sales (barbershop_id, barber_id, client_id, payment_method_id, payment_method, subtotal, discount, total)
   VALUES (v_shop, p_barber_id, p_client_id, p_payment_method_id, v_payment, v_subtotal, p_discount, v_total)
   RETURNING id INTO v_sale;
-
-  UPDATE public.external_sale_items SET sale_id = v_sale WHERE sale_id IS NULL;
-  RETURN v_sale;
-EXCEPTION WHEN OTHERS THEN
-  RAISE;
-END;
-$$;
-
--- The RPC above needs the sale id before inserting its items. Recreate it with
--- a temporary item payload flow so all writes remain atomic.
-CREATE OR REPLACE FUNCTION public.create_external_sale(
-  p_barber_id uuid DEFAULT NULL,
-  p_client_id uuid DEFAULT NULL,
-  p_payment_method text DEFAULT NULL,
-  p_payment_method_id uuid DEFAULT NULL,
-  p_discount numeric DEFAULT 0,
-  p_items jsonb DEFAULT '[]'::jsonb
-)
-RETURNS uuid
-LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
-DECLARE
-  v_shop uuid := public.current_barbershop_id(); v_sale uuid; v_item jsonb; v_service record; v_product record;
-  v_qty integer; v_subtotal numeric(10,2) := 0; v_total numeric(10,2); v_payment text; v_name text; v_price numeric(10,2);
-BEGIN
-  IF v_shop IS NULL THEN RAISE EXCEPTION 'Barbearia não identificada'; END IF;
-  IF jsonb_typeof(p_items) <> 'array' OR jsonb_array_length(p_items) = 0 THEN RAISE EXCEPTION 'Adicione pelo menos um item à venda'; END IF;
-  IF p_discount IS NULL OR p_discount < 0 THEN RAISE EXCEPTION 'Desconto inválido'; END IF;
-  IF p_barber_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.barbers WHERE id = p_barber_id AND barbershop_id = v_shop AND ativo) THEN RAISE EXCEPTION 'Barbeiro inválido'; END IF;
-  IF p_client_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.customers WHERE id = p_client_id AND barbershop_id = v_shop) THEN RAISE EXCEPTION 'Cliente inválido'; END IF;
-  IF p_payment_method_id IS NOT NULL THEN
-    SELECT name INTO v_payment FROM public.payment_methods WHERE id = p_payment_method_id AND barbershop_id = v_shop AND active;
-    IF v_payment IS NULL THEN RAISE EXCEPTION 'Forma de pagamento inválida'; END IF;
-  ELSE v_payment := NULLIF(trim(coalesce(p_payment_method, '')), ''); END IF;
-  IF v_payment IS NULL THEN RAISE EXCEPTION 'Informe a forma de pagamento'; END IF;
-
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
-    v_qty := COALESCE((v_item->>'quantity')::integer, 0);
-    IF v_qty <= 0 THEN RAISE EXCEPTION 'Quantidade inválida'; END IF;
-    IF NULLIF(v_item->>'service_id','') IS NOT NULL THEN
-      SELECT id, nome, preco INTO v_service FROM public.services WHERE id = (v_item->>'service_id')::uuid AND barbershop_id = v_shop AND ativo;
-      IF v_service.id IS NULL THEN RAISE EXCEPTION 'Serviço indisponível'; END IF;
-      v_name := v_service.nome; v_price := v_service.preco;
-    ELSIF NULLIF(v_item->>'product_id','') IS NOT NULL THEN
-      SELECT id, name, price INTO v_product FROM public.external_products WHERE id = (v_item->>'product_id')::uuid AND barbershop_id = v_shop AND active;
-      IF v_product.id IS NULL THEN RAISE EXCEPTION 'Produto indisponível'; END IF;
-      v_name := v_product.name; v_price := v_product.price;
-    ELSE RAISE EXCEPTION 'Item de venda inválido'; END IF;
-    v_subtotal := v_subtotal + (v_price * v_qty);
-  END LOOP;
-  IF p_discount > v_subtotal THEN RAISE EXCEPTION 'O desconto não pode superar o subtotal'; END IF;
-  v_total := v_subtotal - p_discount;
-  INSERT INTO public.external_sales (barbershop_id, barber_id, client_id, payment_method_id, payment_method, subtotal, discount, total)
-  VALUES (v_shop, p_barber_id, p_client_id, p_payment_method_id, v_payment, v_subtotal, p_discount, v_total) RETURNING id INTO v_sale;
 
   FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
     v_qty := (v_item->>'quantity')::integer;
@@ -219,7 +158,8 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.cancel_external_sale(p_sale_id uuid)
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.external_sales WHERE id = p_sale_id AND barbershop_id = public.current_barbershop_id()) THEN RAISE EXCEPTION 'Venda não encontrada'; END IF;
   UPDATE public.external_sales SET status = 'cancelada', updated_at = now() WHERE id = p_sale_id AND barbershop_id = public.current_barbershop_id();
@@ -245,6 +185,9 @@ LANGUAGE sql SECURITY DEFINER SET search_path TO 'public' AS $$
   SELECT online.total, external.total, expense.total, online.total + external.total, online.total + external.total - expense.total FROM online, external, expense;
 $$;
 
+REVOKE ALL ON FUNCTION public.create_external_sale(uuid, uuid, text, uuid, numeric, jsonb) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.cancel_external_sale(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.financial_summary(date, date) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.create_external_sale(uuid, uuid, text, uuid, numeric, jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.cancel_external_sale(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.financial_summary(date, date) TO authenticated;
