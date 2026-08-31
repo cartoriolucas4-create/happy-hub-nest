@@ -8,16 +8,7 @@ import { useShop } from "@/lib/shop";
 import { brl, hhmm, statusClass, STATUS_LABEL, todayIso, addDays } from "@/lib/barber";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
-  head: () => ({
-    meta: [
-      { title: "Dashboard | BarberFlow" },
-      { name: "description", content: "Indicadores e agenda do dia da sua barbearia." },
-      { property: "og:title", content: "Dashboard | BarberFlow" },
-      { property: "og:description", content: "Painel administrativo da barbearia." },
-      { property: "og:type", content: "website" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Dashboard | BarberFlow" }, { name: "description", content: "Indicadores e agenda do dia da sua barbearia." }, { property: "og:title", content: "Dashboard | BarberFlow" }, { property: "og:description", content: "Painel administrativo da barbearia." }, { property: "og:type", content: "website" }, { name: "robots", content: "noindex" }] }),
   component: Dashboard,
 });
 
@@ -34,19 +25,22 @@ function Dashboard() {
         supabase.from("customers").select("id", { count: "exact", head: true }),
       ]);
       if (hojeRes.error) throw hojeRes.error;
+      if (semanaRes.error) throw semanaRes.error;
       return { hoje: hojeRes.data ?? [], semana: semanaRes.data ?? [], clientes: clientesRes.count ?? 0 };
     },
   });
-  const ativosHoje = (data?.hoje ?? []).filter((a) => a.status !== "cancelado");
-  const faturamentoHoje = ativosHoje.filter((a) => a.status !== "nao_compareceu").reduce((s, a) => s + Number(a.valor), 0);
-  const faturamentoSemana = (data?.semana ?? []).filter((a) => a.status === "concluido" || a.status === "confirmado").reduce((s, a) => s + Number(a.valor), 0);
+  const ativosHoje = (data?.hoje ?? []).filter((a) => a.status !== "cancelado" && a.status !== "nao_compareceu");
+  const vendasHoje = (data?.hoje ?? []).filter((a) => a.status === "confirmado" || a.status === "concluido");
+  const faturamentoHoje = vendasHoje.reduce((s, a) => s + Number(a.valor), 0);
+  const vendasSemana = (data?.semana ?? []).filter((a) => a.status === "concluido" || a.status === "confirmado");
+  const faturamentoSemana = vendasSemana.reduce((s, a) => s + Number(a.valor), 0);
 
   return <AdminShell title={shop?.nome ?? "Dashboard"} subtitle="Visão geral de hoje" actions={shop ? <Link to="/admin/meu-link" className="rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary">/barbearia/{shop.slug}</Link> : null}>
     {shop && <SetupChecklist shopId={shop.id} />}
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <Card icon={CalendarDays} label="Agendamentos hoje" value={String(ativosHoje.length)} />
-      <Card icon={DollarSign} label="Faturamento hoje" value={brl(faturamentoHoje)} />
-      <Card icon={Clock} label="Faturamento 7 dias" value={brl(faturamentoSemana)} />
+      <Card icon={DollarSign} label="Vendas hoje" value={brl(faturamentoHoje)} />
+      <Card icon={Clock} label="Vendas 7 dias" value={brl(faturamentoSemana)} />
       <Card icon={Users} label="Clientes cadastrados" value={String(data?.clientes ?? 0)} />
     </div>
     <h2 className="mt-12 text-2xl">Agenda de hoje</h2>
