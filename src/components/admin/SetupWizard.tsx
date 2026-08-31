@@ -109,12 +109,14 @@ export function SetupWizard({ shopId }: { shopId: string }) {
     for (const row of existing) {
       const selected = days.includes(row.dia_semana);
       const edited = rows.find((item) => item.dia_semana === row.dia_semana);
-      const payload = selected && edited ? { aberto: true, hora_inicio: edited.hora_inicio, hora_fim: edited.hora_fim, intervalo_inicio: edited.intervalo_inicio || null, intervalo_fim: edited.intervalo_fim || null } : { aberto: false, intervalo_inicio: null, intervalo_fim: null };
+      const payload = selected && edited
+        ? { aberto: true, hora_inicio: edited.hora_inicio, hora_fim: edited.hora_fim, intervalo_inicio: edited.intervalo_inicio || null, intervalo_fim: edited.intervalo_fim || null, possui_intervalo: Boolean(edited.intervalo_inicio && edited.intervalo_fim) }
+        : { aberto: false, intervalo_inicio: null, intervalo_fim: null, possui_intervalo: false };
       const { error } = await supabase.from("business_hours").update(payload).eq("id", row.id).eq("barbershop_id", shopId);
       if (error) { toast.error(error.message); return false; }
     }
     for (const row of rows.filter((item) => !existing.some((old) => old.dia_semana === item.dia_semana))) {
-      const { error } = await supabase.from("business_hours").insert({ barbershop_id: shopId, dia_semana: row.dia_semana, aberto: true, hora_inicio: row.hora_inicio, hora_fim: row.hora_fim, intervalo_inicio: row.intervalo_inicio || null, intervalo_fim: row.intervalo_fim || null });
+      const { error } = await supabase.from("business_hours").insert({ barbershop_id: shopId, dia_semana: row.dia_semana, aberto: true, hora_inicio: row.hora_inicio, hora_fim: row.hora_fim, intervalo_inicio: row.intervalo_inicio || null, intervalo_fim: row.intervalo_fim || null, possui_intervalo: Boolean(row.intervalo_inicio && row.intervalo_fim) });
       if (error) { toast.error(error.message); return false; }
     }
     await refresh(); toast.success("Dias, horários e intervalos salvos."); return true;
