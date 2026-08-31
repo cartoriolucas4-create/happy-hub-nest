@@ -8,7 +8,6 @@ import {
   Users,
   UserCog,
   Scissors,
-  Clock,
   Ban,
   Settings,
   CreditCard,
@@ -29,7 +28,6 @@ export const MENU = [
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/barbeiros", label: "Barbeiros", icon: UserCog },
   { to: "/admin/servicos", label: "Serviços", icon: Scissors },
-  { to: "/admin/horarios", label: "Horários", icon: Clock },
   { to: "/admin/bloqueios", label: "Bloqueios", icon: Ban },
   { to: "/admin/pagamentos", label: "Meios de pagamento", icon: CreditCard },
   { to: "/admin/galeria", label: "Galeria", icon: Images },
@@ -40,7 +38,7 @@ export const MENU = [
 export const SIDEBAR_GROUPS = [
   { key: "agenda", label: "Agenda", icon: CalendarDays, items: MENU.filter((m) => ["/admin/agenda", "/admin/agendamentos", "/admin/bloqueios"].includes(m.to)) },
   { key: "pessoas", label: "Pessoas", icon: Users, items: MENU.filter((m) => ["/admin/clientes", "/admin/barbeiros"].includes(m.to)) },
-  { key: "operacao", label: "Operação", icon: Scissors, items: MENU.filter((m) => ["/admin/servicos", "/admin/horarios"].includes(m.to)) },
+  { key: "operacao", label: "Operação", icon: Scissors, items: MENU.filter((m) => m.to === "/admin/servicos") },
   { key: "configuracoes", label: "Configurações", icon: Settings, items: [...MENU.filter((m) => ["/admin/pagamentos", "/admin/galeria", "/admin/configuracoes"].includes(m.to)), { to: "/admin/configurar", label: "Configuração inicial", icon: Settings }] },
   { key: "negocio", label: "Meu negócio", icon: Link2, items: MENU.filter((m) => m.to === "/admin/meu-link") },
 ] as const;
