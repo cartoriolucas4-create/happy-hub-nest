@@ -84,8 +84,7 @@ BEGIN
 
       IF (p_data > v_today OR (p_data + v_slot) > v_now)
         AND NOT (
-          COALESCE(v_bh.possui_intervalo, false)
-          AND v_bh.intervalo_inicio IS NOT NULL
+          v_bh.intervalo_inicio IS NOT NULL
           AND v_bh.intervalo_fim IS NOT NULL
           AND v_slot < v_bh.intervalo_fim
           AND v_end > v_bh.intervalo_inicio
