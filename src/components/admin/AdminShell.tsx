@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
@@ -36,6 +37,43 @@ export const MENU = [
   { to: "/admin/meu-link", label: "Meu link", icon: Link2 },
 ] as const;
 
+export const SIDEBAR_GROUPS = [
+  { key: "agenda", label: "Agenda", icon: CalendarDays, items: MENU.filter((m) => ["/admin/agenda", "/admin/agendamentos", "/admin/bloqueios"].includes(m.to)) },
+  { key: "pessoas", label: "Pessoas", icon: Users, items: MENU.filter((m) => ["/admin/clientes", "/admin/barbeiros"].includes(m.to)) },
+  { key: "operacao", label: "Operação", icon: Scissors, items: MENU.filter((m) => ["/admin/servicos", "/admin/horarios"].includes(m.to)) },
+  { key: "configuracoes", label: "Configurações", icon: Settings, items: [...MENU.filter((m) => ["/admin/pagamentos", "/admin/galeria", "/admin/configuracoes"].includes(m.to)), { to: "/admin/configurar", label: "Configuração inicial", icon: Settings }] },
+  { key: "negocio", label: "Meu negócio", icon: Link2, items: MENU.filter((m) => m.to === "/admin/meu-link") },
+] as const;
+
+type SidebarGroupKey = (typeof SIDEBAR_GROUPS)[number]["key"];
+
+function isActive(pathname: string, to: string) {
+  return to === "/admin" ? pathname === to : pathname === to || pathname.startsWith(`${to}/`);
+}
+
+function groupForPath(pathname: string): SidebarGroupKey | null {
+  const group = SIDEBAR_GROUPS.find((g) => g.items.some((item) => isActive(pathname, item.to)));
+  return group?.key ?? null;
+}
+
+function readSavedGroups(): Partial<Record<SidebarGroupKey, boolean>> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem("barberflow:admin-sidebar-groups");
+    return raw ? (JSON.parse(raw) as Partial<Record<SidebarGroupKey, boolean>>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveGroups(groups: Record<SidebarGroupKey, boolean>) {
+  try {
+    window.localStorage.setItem("barberflow:admin-sidebar-groups", JSON.stringify(groups));
+  } catch {
+    // A navegação continua funcionando mesmo se o navegador bloquear storage.
+  }
+}
+
 export function AdminShell({
   title,
   subtitle,
@@ -48,9 +86,36 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [groups, setGroups] = useState<Record<SidebarGroupKey, boolean>>(() => ({
+    agenda: false,
+    pessoas: false,
+    operacao: false,
+    configuracoes: false,
+    negocio: false,
+    ...readSavedGroups(),
+  }));
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    const activeGroup = groupForPath(pathname);
+    if (!activeGroup) return;
+    setGroups((current) => {
+      if (current[activeGroup]) return current;
+      const next = { ...current, [activeGroup]: true };
+      saveGroups(next);
+      return next;
+    });
+  }, [pathname]);
+
+  function toggleGroup(key: SidebarGroupKey) {
+    setGroups((current) => {
+      const next = { ...current, [key]: !current[key] };
+      saveGroups(next);
+      return next;
+    });
+  }
 
   async function sair() {
     await queryClient.cancelQueries();
@@ -60,25 +125,67 @@ export function AdminShell({
   }
 
   const nav = (
-    <nav className="flex flex-col gap-1">
-      {MENU.map((m) => {
-        const active = m.to === "/admin" ? pathname === "/admin" : pathname.startsWith(m.to);
+    <nav className="flex flex-col gap-1" aria-label="Navegação da barbearia">
+      <Link
+        to="/admin"
+        onClick={() => setOpen(false)}
+        className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${
+          isActive(pathname, "/admin")
+            ? "bg-primary/15 text-primary"
+            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        }`}
+      >
+        <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
+        Dashboard
+      </Link>
+
+      {SIDEBAR_GROUPS.map((group) => {
+        const active = group.items.some((item) => isActive(pathname, item.to));
+        const expanded = groups[group.key];
         return (
-          <Link
-            key={m.to}
-            to={m.to}
-            onClick={() => setOpen(false)}
-            className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${
-              active
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-            }`}
-          >
-            <m.icon className="h-4 w-4" aria-hidden="true" />
-            {m.label}
-          </Link>
+          <div key={group.key}>
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={() => toggleGroup(group.key)}
+              className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${
+                active
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              <group.icon className="h-4 w-4" aria-hidden="true" />
+              <span className="flex-1 text-left">{group.label}</span>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
+            </button>
+            <div className={`grid transition-all duration-200 ease-out ${expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+              <div className="min-h-0 overflow-hidden">
+                <div className="ml-7 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
+                  {group.items.map((item) => {
+                    const itemActive = isActive(pathname, item.to);
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-[13px] transition-colors ${
+                          itemActive
+                            ? "bg-primary/15 text-primary"
+                            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        }`}
+                      >
+                        <item.icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
         );
       })}
+
       <button
         onClick={sair}
         className="mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-destructive"
@@ -107,7 +214,7 @@ export function AdminShell({
       </header>
 
       {open && (
-        <div className="fixed inset-0 z-50 bg-background/95 p-4 lg:hidden">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 p-4 lg:hidden">
           <div className="flex items-center justify-between px-3">
             <span className="font-display text-lg tracking-[0.2em]">MENU</span>
             <button onClick={() => setOpen(false)} aria-label="Fechar menu">
