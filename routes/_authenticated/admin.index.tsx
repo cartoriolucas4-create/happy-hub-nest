@@ -1,0 +1,121 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { CalendarDays, Users, DollarSign, Clock, FileText, TrendingDown, WalletCards } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { AdminShell, Empty, btn, btnGhost, input } from "@/components/admin/AdminShell";
+import { SetupChecklist } from "@/components/admin/SetupChecklist";
+import { useShop } from "@/lib/shop";
+import { brl, hhmm, statusClass, STATUS_LABEL, todayIso, addDays, brDate, type Status } from "@/lib/barber";
+
+export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => ({ meta: [{ title: "Dashboard | BarberFlow" }, { name: "description", content: "Indicadores e agenda do dia da sua barbearia." }, { property: "og:title", content: "Dashboard | BarberFlow" }, { property: "og:description", content: "Painel administrativo da barbearia." }, { property: "og:type", content: "website" }, { name: "robots", content: "noindex" }] }),
+  component: Dashboard,
+});
+
+type ReportAppointment = {
+  id: string; data: string; hora_inicio: string; hora_fim: string; cliente_nome: string; valor: number; status: Status;
+  services?: { nome?: string } | null; barbers?: { nome?: string } | null;
+};
+
+function escapeHtml(value: unknown) {
+  return String(value ?? "").replace(/[&<>\"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '\"': "&quot;", "'": "&#039;" })[char] ?? char);
+}
+function emitReportPdf(shopName: string, de: string, ate: string, vendas: ReportAppointment[]) {
+  const janela = `${brDate(de)} até ${brDate(ate)}`;
+  const total = vendas.reduce((sum, venda) => sum + Number(venda.valor), 0);
+  const rows = vendas.map((venda) => `<tr><td>${escapeHtml(brDate(venda.data))}</td><td>${escapeHtml(hhmm(venda.hora_inicio))}</td><td>${escapeHtml(venda.cliente_nome)}</td><td>${escapeHtml(venda.services?.nome ?? "Serviço")}</td><td>${escapeHtml(venda.barbers?.nome ?? "-")}</td><td>${escapeHtml(STATUS_LABEL[venda.status])}</td><td>${escapeHtml(brl(venda.valor))}</td></tr>`).join("");
+  const reportWindow = window.open("", "_blank", "width=1100,height=800");
+  if (!reportWindow) throw new Error("Permita pop-ups no navegador para emitir o relatório em PDF.");
+  reportWindow.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório de vendas - ${escapeHtml(shopName)}</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0;font-size:12px}header{border-bottom:2px solid #222;padding-bottom:14px;margin-bottom:18px}h1{margin:0 0 5px;font-size:22px}p{margin:4px 0}.summary{display:flex;gap:28px;margin:18px 0;padding:14px;border:1px solid #ddd;border-radius:8px}.summary strong{display:block;font-size:17px;margin-top:4px}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #ddd;padding:8px 5px;text-align:left}th{font-size:10px;text-transform:uppercase;background:#f3f3f3}td:last-child,th:last-child{text-align:right}.empty{padding:24px;text-align:center;border:1px dashed #bbb}.footer{margin-top:18px;font-size:10px;color:#666}@media print{.no-print{display:none}}</style></head><body><header><h1>Relatório de vendas</h1><p><strong>${escapeHtml(shopName)}</strong></p><p>Período: ${escapeHtml(janela)}</p></header><section class="summary"><div>Vendas<strong>${vendas.length}</strong></div><div>Faturamento<strong>${escapeHtml(brl(total))}</strong></div></section>${vendas.length ? `<table><thead><tr><th>Data</th><th>Hora</th><th>Cliente</th><th>Serviço</th><th>Barbeiro</th><th>Status</th><th>Valor</th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty">Nenhuma venda encontrada no período selecionado.</div>`}<p class="footer">Relatório gerado pelo painel administrativo.</p><script>window.onload=()=>{setTimeout(()=>window.print(),250)}</script></body></html>`);
+  reportWindow.document.close();
+}
+
+function Dashboard() {
+  const { data: shop, isLoading } = useShop();
+  const hoje = todayIso();
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportDe, setReportDe] = useState(addDays(hoje, -29));
+  const [reportAte, setReportAte] = useState(hoje);
+  const [reportStatus, setReportStatus] = useState<"" | "confirmado" | "concluido">("");
+  const [reportLoading, setReportLoading] = useState(false);
+  const [financePeriod, setFinancePeriod] = useState<"today" | "7d" | "30d" | "month">("month");
+
+  const { data } = useQuery({
+    queryKey: ["dashboard", shop?.id, hoje], enabled: Boolean(shop?.id),
+    queryFn: async () => {
+      const [hojeRes, semanaRes, mesRes, clientesRes] = await Promise.all([
+        supabase.from("appointments").select("*, barbers(nome), services(nome)").eq("data", hoje).order("hora_inicio"),
+        supabase.from("appointments").select("valor, status, data").gte("data", addDays(hoje, -6)).lte("data", hoje),
+        supabase.from("appointments").select("valor, status, data").gte("data", addDays(hoje, -29)).lte("data", hoje),
+        supabase.from("customers").select("id", { count: "exact", head: true }),
+      ]);
+      if (hojeRes.error) throw hojeRes.error; if (semanaRes.error) throw semanaRes.error; if (mesRes.error) throw mesRes.error; if (clientesRes.error) throw clientesRes.error;
+      return { hoje: hojeRes.data ?? [], semana: semanaRes.data ?? [], mes: mesRes.data ?? [], clientes: clientesRes.count ?? 0 };
+    },
+  });
+
+  const financeDates = (() => {
+    if (financePeriod === "today") return { from: hoje, to: hoje };
+    if (financePeriod === "7d") return { from: addDays(hoje, -6), to: hoje };
+    if (financePeriod === "30d") return { from: addDays(hoje, -29), to: hoje };
+    return { from: `${hoje.slice(0, 8)}01`, to: hoje };
+  })();
+  const { data: finance } = useQuery({
+    queryKey: ["financial-summary", shop?.id, financeDates.from, financeDates.to], enabled: Boolean(shop?.id),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("financial_summary", { p_from: financeDates.from, p_to: financeDates.to });
+      if (error) throw error;
+      return data?.[0] ?? { online_revenue: 0, external_revenue: 0, costs: 0, total_revenue: 0, net_profit: 0 };
+    },
+  });
+
+  const ativosHoje = (data?.hoje ?? []).filter((a) => a.status !== "cancelado" && a.status !== "nao_compareceu");
+  const vendasHoje = (data?.hoje ?? []).filter((a) => a.status === "confirmado" || a.status === "concluido");
+  const faturamentoHoje = vendasHoje.reduce((s, a) => s + Number(a.valor), 0);
+  const vendasSemana = (data?.semana ?? []).filter((a) => a.status === "concluido" || a.status === "confirmado");
+  const faturamentoSemana = vendasSemana.reduce((s, a) => s + Number(a.valor), 0);
+  const vendasMes = (data?.mes ?? []).filter((a) => a.status === "concluido" || a.status === "confirmado");
+  const faturamentoMes = vendasMes.reduce((s, a) => s + Number(a.valor), 0);
+  const online = Number(finance?.online_revenue ?? 0);
+  const external = Number(finance?.external_revenue ?? 0);
+  const costs = Number(finance?.costs ?? 0);
+  const revenue = Number(finance?.total_revenue ?? online + external);
+  const profit = Number(finance?.net_profit ?? revenue - costs);
+
+  const gerarRelatorio = async () => {
+    if (!shop || !reportDe || !reportAte || reportDe > reportAte) return;
+    setReportLoading(true);
+    try {
+      let query = supabase.from("appointments").select("*, barbers(nome), services(nome)").gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
+      if (reportStatus) query = query.eq("status", reportStatus as Status); else query = query.in("status", ["confirmado", "concluido"]);
+      const { data: vendas, error } = await query; if (error) throw error;
+      emitReportPdf(shop.nome, reportDe, reportAte, (vendas ?? []) as ReportAppointment[]); setReportOpen(false);
+    } catch (error) { window.alert(error instanceof Error ? error.message : "Não foi possível gerar o relatório."); } finally { setReportLoading(false); }
+  };
+
+  return <AdminShell title={shop?.nome ?? "Dashboard"} subtitle="Visão geral de hoje" actions={<div className="flex flex-wrap gap-2">{shop && <Link to="/admin/meu-link" className="rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary">/barbearia/{shop.slug}</Link>}<button className={`${btn} inline-flex items-center gap-2`} onClick={() => setReportOpen(true)}><FileText className="h-4 w-4" /> RELATÓRIO DE VENDAS</button></div>}>
+    {shop && <SetupChecklist shopId={shop.id} />}
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <Link to="/admin/agendamentos" className="block rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"><Card icon={CalendarDays} label="Agendamentos hoje" value={String(ativosHoje.length)} /></Link>
+      <Card icon={DollarSign} label="Vendas hoje" value={brl(faturamentoHoje)} />
+      <Card icon={Clock} label="Vendas 7 dias" value={brl(faturamentoSemana)} />
+      <Card icon={DollarSign} label="Vendas 30 dias" value={brl(faturamentoMes)} />
+      <Card icon={Users} label="Clientes cadastrados" value={String(data?.clientes ?? 0)} />
+    </div>
+
+    <section className="mt-10 rounded-lg border border-border bg-card p-5">
+      <div className="flex flex-wrap items-end justify-between gap-4"><div><h2 className="text-2xl">Resumo financeiro</h2><p className="mt-1 text-sm text-muted-foreground">Online + vendas presenciais − custos. Todos os valores vêm da mesma fonte financeira.</p></div><select className={`${input} w-auto min-w-40`} value={financePeriod} onChange={(e) => setFinancePeriod(e.target.value as typeof financePeriod)}><option value="today">Hoje</option><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="month">Este mês</option></select></div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"><FinanceCard icon={WalletCards} label="Faturamento total" value={brl(revenue)} /><FinanceCard icon={DollarSign} label="Online" value={brl(online)} /><FinanceCard icon={DollarSign} label="Vendas externas" value={brl(external)} /><FinanceCard icon={TrendingDown} label="Custos" value={brl(costs)} /><FinanceCard icon={DollarSign} label="Lucro líquido" value={brl(profit)} /></div>
+      <div className="mt-6"><div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Composição do faturamento</span><span>{brl(revenue)}</span></div><div className="flex h-3 overflow-hidden rounded-full bg-secondary">{revenue > 0 && <><div className="bg-primary" style={{ width: `${Math.min(100, Math.max(0, online / revenue * 100))}%` }} /><div className="bg-primary/40" style={{ width: `${Math.min(100, Math.max(0, external / revenue * 100))}%` }} /></>}</div><div className="mt-2 flex gap-4 text-xs text-muted-foreground"><span>● Online {brl(online)}</span><span>● Externa {brl(external)}</span></div></div>
+    </section>
+
+    <h2 className="mt-12 text-2xl">Agenda de hoje</h2>
+    <div className="mt-4 space-y-3">{isLoading && <Empty>Carregando...</Empty>}{data && data.hoje.length === 0 && <Empty>Nenhum agendamento para hoje.</Empty>}{(data?.hoje ?? []).map((a) => <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-4"><div><p className="font-display text-xl text-primary">{hhmm(a.hora_inicio)} – {hhmm(a.hora_fim)}</p><p className="mt-1 text-sm">{a.cliente_nome} · {a.services?.nome ?? "Serviço"} · {a.barbers?.nome}</p></div><span className={`rounded-full border px-3 py-1 text-xs ${statusClass(a.status)}`}>{STATUS_LABEL[a.status]}</span></div>)}</div>
+
+    {reportOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="report-title"><div className="w-full max-w-xl rounded-lg border border-border bg-card p-6 shadow-2xl"><div className="flex items-start justify-between gap-4"><div><h2 id="report-title" className="text-2xl">Relatório personalizado</h2><p className="mt-1 text-sm text-muted-foreground">Escolha o período e, se quiser, o status das vendas.</p></div><button className={btnGhost} onClick={() => setReportOpen(false)}>FECHAR</button></div><div className="mt-6 grid gap-4 sm:grid-cols-2"><label className="text-sm">De<input type="date" className={`${input} mt-1 w-full`} value={reportDe} onChange={(e) => setReportDe(e.target.value)} /></label><label className="text-sm">Até<input type="date" className={`${input} mt-1 w-full`} value={reportAte} onChange={(e) => setReportAte(e.target.value)} /></label><label className="text-sm sm:col-span-2">Status<select className={`${input} mt-1 w-full`} value={reportStatus} onChange={(e) => setReportStatus(e.target.value as "" | "confirmado" | "concluido")}><option value="">Confirmadas + concluídas</option><option value="confirmado">Somente confirmadas</option><option value="concluido">Somente concluídas</option></select></label></div>{reportDe > reportAte && <p className="mt-3 text-sm text-destructive">A data inicial não pode ser posterior à data final.</p>}<div className="mt-6 flex justify-end gap-2"><button className={btnGhost} onClick={() => setReportOpen(false)}>Cancelar</button><button className={`${btn} inline-flex items-center gap-2`} disabled={reportLoading || reportDe > reportAte} onClick={gerarRelatorio}><FileText className="h-4 w-4" />{reportLoading ? "GERANDO..." : "EMITIR PDF"}</button></div></div></div>}
+  </AdminShell>;
+}
+
+function Card({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) { return <div className="rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/60"><Icon className="h-5 w-5 text-primary" aria-hidden="true" /><p className="mt-3 text-xs uppercase tracking-widest text-muted-foreground">{label}</p><p className="mt-1 font-display text-3xl">{value}</p></div>; }
+function FinanceCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) { return <div className="rounded-lg border border-border p-4"><Icon className="h-4 w-4 text-primary" aria-hidden="true" /><p className="mt-2 text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-xl font-semibold">{value}</p></div>; }
