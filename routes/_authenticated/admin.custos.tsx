@@ -1,0 +1,61 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { AdminShell, Empty, btn, btnGhost, input } from "@/components/admin/AdminShell";
+import { useShop } from "@/lib/shop";
+import { brl } from "@/lib/barber";
+
+export const Route = createFileRoute("/_authenticated/admin/custos")({
+  head: () => ({ meta: [{ title: "Custos | BarberFlow" }, { name: "robots", content: "noindex" }] }),
+  component: Custos,
+});
+
+type CostForm = { id?: string; description: string; category: string; amount: string; cost_date: string; notes: string };
+const categories = ["Aluguel", "Água", "Energia", "Internet", "Telefone", "Produtos", "Manutenção", "Marketing", "Funcionários", "Impostos", "Equipamentos", "Outros"];
+const empty = (): CostForm => ({ description: "", category: "Outros", amount: "", cost_date: new Date().toISOString().slice(0, 10), notes: "" });
+
+function parseMoney(value: string) { const n = Number(value.replace(/\./g, "").replace(",", ".")); return Number.isFinite(n) ? n : NaN; }
+
+function Custos() {
+  const { data: shop } = useShop();
+  const db = supabase as any;
+  const qc = useQueryClient();
+  const [form, setForm] = useState<CostForm | null>(null);
+  const [from, setFrom] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10));
+  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const { data: costs = [], isLoading } = useQuery({
+    queryKey: ["business-costs", shop?.id, from, to, categoryFilter], enabled: Boolean(shop?.id),
+    queryFn: async () => {
+      let query = db.from("business_costs").select("*").eq("barbershop_id", shop!.id).gte("cost_date", from).lte("cost_date", to).order("cost_date", { ascending: false });
+      if (categoryFilter) query = query.eq("category", categoryFilter);
+      const { data, error } = await query; if (error) throw error; return data ?? [];
+    },
+  });
+  const total = (costs as any[]).reduce((sum, item) => sum + Number(item.amount), 0);
+
+  const save = useMutation({
+    mutationFn: async (f: CostForm) => {
+      if (!shop) throw new Error("Barbearia não identificada.");
+      const amount = parseMoney(f.amount);
+      if (!f.description.trim() || !f.category || !Number.isFinite(amount) || amount <= 0 || !f.cost_date) throw new Error("Preencha descrição, categoria, valor e data válidos.");
+      const payload = { barbershop_id: shop.id, description: f.description.trim(), category: f.category, amount, cost_date: f.cost_date, notes: f.notes.trim() || null, updated_at: new Date().toISOString() };
+      const result = f.id ? await db.from("business_costs").update(payload).eq("id", f.id).eq("barbershop_id", shop.id) : await db.from("business_costs").insert(payload);
+      if (result.error) throw result.error;
+    },
+    onSuccess: () => { toast.success(form?.id ? "Custo atualizado." : "Custo cadastrado com sucesso."); setForm(null); qc.invalidateQueries({ queryKey: ["business-costs"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const remove = useMutation({ mutationFn: async (id: string) => { const { error } = await db.from("business_costs").delete().eq("id", id).eq("barbershop_id", shop!.id); if (error) throw error; }, onSuccess: () => { toast.success("Custo excluído."); qc.invalidateQueries({ queryKey: ["business-costs"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }, onError: (e: Error) => toast.error(e.message) });
+
+  return <AdminShell title="Custos" subtitle="Registre as despesas da barbearia e acompanhe o impacto no resultado." actions={<button className={btn} onClick={() => setForm(empty())}><span className="flex items-center gap-2"><Plus className="h-4 w-4" /> NOVO CUSTO</span></button>}>
+    <div className="grid gap-4 sm:grid-cols-3"><Metric label="Custos no período" value={brl(total)} /><Metric label="Lançamentos" value={String((costs as any[]).length)} /><Metric label="Período" value={`${from.slice(8,10)}/${from.slice(5,7)} → ${to.slice(8,10)}/${to.slice(5,7)}`} /></div>
+    <section className="mt-8 rounded-lg border border-border bg-card p-5"><div className="grid gap-3 md:grid-cols-3"><label className="text-sm">De<input type="date" className={`${input} mt-1`} value={from} onChange={(e) => setFrom(e.target.value)} /></label><label className="text-sm">Até<input type="date" className={`${input} mt-1`} value={to} onChange={(e) => setTo(e.target.value)} /></label><label className="text-sm">Categoria<select className={`${input} mt-1`} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}><option value="">Todas</option>{categories.map((c) => <option key={c}>{c}</option>)}</select></label></div></section>
+    {form && <form onSubmit={(e) => { e.preventDefault(); save.mutate(form); }} className="mt-8 rounded-lg border border-border bg-card p-5"><h2 className="text-xl">{form.id ? "Editar custo" : "Novo custo"}</h2><div className="mt-5 grid gap-4 sm:grid-cols-2"><label className="text-sm sm:col-span-2">Descrição<input className={`${input} mt-1`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Ex.: Aluguel da barbearia" /></label><label className="text-sm">Categoria<select className={`${input} mt-1`} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((c) => <option key={c}>{c}</option>)}</select></label><label className="text-sm">Valor<input className={`${input} mt-1`} value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} inputMode="decimal" placeholder="R$ 0,00" /></label><label className="text-sm">Data<input type="date" className={`${input} mt-1`} value={form.cost_date} onChange={(e) => setForm({ ...form, cost_date: e.target.value })} /></label><label className="text-sm">Observação<input className={`${input} mt-1`} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label></div><div className="mt-5 flex gap-2"><button className={btn} disabled={save.isPending}>{save.isPending ? "SALVANDO..." : "SALVAR"}</button><button type="button" className={btnGhost} onClick={() => setForm(null)}>Cancelar</button></div></form>}
+    <section className="mt-10"><h2 className="text-2xl">Lançamentos</h2><div className="mt-4 overflow-x-auto rounded-lg border border-border"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-border bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="px-4 py-3">Data</th><th className="px-4 py-3">Descrição</th><th className="px-4 py-3">Categoria</th><th className="px-4 py-3">Valor</th><th className="px-4 py-3">Ações</th></tr></thead><tbody>{isLoading && <tr><td colSpan={5} className="p-5"><Empty>Carregando...</Empty></td></tr>}{!isLoading && !costs.length && <tr><td colSpan={5} className="p-5"><Empty>Nenhum custo encontrado.</Empty></td></tr>}{(costs as any[]).map((c) => <tr key={c.id} className="border-b border-border last:border-0"><td className="px-4 py-3">{new Date(`${c.cost_date}T12:00:00`).toLocaleDateString("pt-BR")}</td><td className="px-4 py-3">{c.description}</td><td className="px-4 py-3">{c.category}</td><td className="px-4 py-3 font-medium">{brl(c.amount)}</td><td className="px-4 py-3"><div className="flex gap-3"><button className="text-muted-foreground hover:text-primary" onClick={() => setForm({ id: c.id, description: c.description, category: c.category, amount: String(c.amount), cost_date: c.cost_date, notes: c.notes ?? "" })}><Pencil className="h-4 w-4" /></button><button className="text-muted-foreground hover:text-destructive" onClick={() => { if (confirm(`Excluir o custo "${c.description}"?`)) remove.mutate(c.id); }}><Trash2 className="h-4 w-4" /></button></div></td></tr>)}</tbody></table></div></section>
+  </AdminShell>;
+}
+function Metric({ label, value }: { label: string; value: string }) { return <div className="rounded-lg border border-border bg-card p-5"><p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p><p className="mt-2 font-display text-3xl">{value}</p></div>; }
