@@ -188,3 +188,7 @@
 @utility lux-rise {
   animation: lux-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+#lovable-badge {
+  display: none !important;
+}
