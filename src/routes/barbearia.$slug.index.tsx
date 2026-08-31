@@ -135,6 +135,10 @@ function PaginaPublica() {
     "Uma barbearia feita para quem valoriza o cuidado com a própria imagem: técnica apurada, produtos selecionados e um atendimento pensado nos mínimos detalhes.";
   const experiencia =
     shop.sobre_experiencia?.trim() || "Precisão, estilo e cuidado em cada atendimento.";
+  const enderecoCompleto = [linha1, linha2].filter(Boolean).join(", ");
+  const mapaUrl = enderecoCompleto
+    ? `https://www.google.com/maps?q=${encodeURIComponent(enderecoCompleto)}&output=embed`
+    : null;
 
   const cta = (rotulo: string, className: string) => (
     <Link to="/barbearia/$slug/agendar" params={{ slug }} className={className}>
@@ -149,7 +153,6 @@ function PaginaPublica() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* NAV */}
       <header className="fixed inset-x-0 top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 py-3 lg:px-10">
           <div className="flex items-center gap-3">
@@ -180,352 +183,98 @@ function PaginaPublica() {
         </div>
       </header>
 
-      {/* HERO CINEMATOGRÁFICO */}
       <section className="relative isolate flex min-h-[92svh] items-end overflow-hidden">
-        <img
-          src={heroImg}
-          alt=""
-          width={1920}
-          height={1280}
-          className="absolute inset-0 -z-20 h-full w-full scale-105 object-cover"
-        />
+        <img src={heroImg} alt="" width={1920} height={1280} className="absolute inset-0 -z-20 h-full w-full scale-105 object-cover" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/80 to-background/40" />
         <div className="absolute inset-0 -z-10 bg-noise opacity-[0.06] mix-blend-soft-light" />
-
         <div className="mx-auto w-full max-w-[1600px] px-5 pb-14 pt-32 lg:px-10 lg:pb-20">
           <div className="max-w-3xl lux-rise">
             <span className={eyebrow}>Barbearia · Agendamento online</span>
-            <h1 className="mt-6 font-serif-display text-5xl leading-[0.98] sm:text-7xl lg:text-8xl">
-              {shop.nome}
-            </h1>
-            <p className="mt-5 max-w-xl font-serif-display text-xl text-muted-foreground sm:text-2xl">
-              “{slogan}”
-            </p>
+            <h1 className="mt-6 font-serif-display text-5xl leading-[0.98] sm:text-7xl lg:text-8xl">{shop.nome}</h1>
+            <p className="mt-5 max-w-xl font-serif-display text-xl text-muted-foreground sm:text-2xl">“{slogan}”</p>
             <div className="mt-10 flex flex-wrap gap-3">
               {cta("Agendar horário", btnPrimario)}
-              {wa && (
-                <a href={wa} target="_blank" rel="noopener noreferrer" className={btnSecundario}>
-                  <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
-                </a>
-              )}
+              {wa && <a href={wa} target="_blank" rel="noopener noreferrer" className={btnSecundario}><MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp</a>}
             </div>
           </div>
-
-          {/* INDICADORES */}
           <dl className="mt-14 grid max-w-3xl grid-cols-3 divide-x divide-border border-y border-border">
-            {[
-              ["Serviços", String(services.length)],
-              ["Profissionais", String(barbers.length)],
-              ["Agendamento online", "24h"],
-            ].map(([rotulo, valor]) => (
+            {[["Serviços", String(services.length)], ["Profissionais", String(barbers.length)], ["Agendamento online", "24h"]].map(([rotulo, valor]) => (
               <div key={rotulo} className="px-4 py-5 text-center sm:px-6">
                 <dd className="font-serif-display text-2xl text-primary sm:text-3xl">{valor}</dd>
-                <dt className="mt-1 text-[0.6rem] uppercase tracking-[0.28em] text-muted-foreground">
-                  {rotulo}
-                </dt>
+                <dt className="mt-1 text-[0.6rem] uppercase tracking-[0.28em] text-muted-foreground">{rotulo}</dt>
               </div>
             ))}
           </dl>
         </div>
       </section>
 
-      {/* A ARTE DO CORTE */}
       <section className="border-t border-border/60 py-24 lg:py-32">
         <div className="mx-auto grid max-w-[1600px] items-center gap-12 px-5 lg:grid-cols-2 lg:gap-20 lg:px-10">
           <Reveal className="order-2 lg:order-1">
             <span className={eyebrow}>A arte do corte</span>
             <h2 className={`mt-5 ${titulo}`}>O detalhe faz toda a diferença.</h2>
             <Regua />
-            <p className="mt-8 max-w-xl text-[0.98rem] leading-relaxed text-muted-foreground">
-              {sobre}
-            </p>
+            <p className="mt-8 max-w-xl text-[0.98rem] leading-relaxed text-muted-foreground">{sobre}</p>
             <div className="mt-10">{cta("Agendar horário", btnPrimario)}</div>
           </Reveal>
           <Reveal delay={120} className="order-1 lg:order-2">
-            <div className="group relative overflow-hidden">
-              <img
-                src={artePadrao}
-                alt="Acabamento de barba com navalha"
-                loading="lazy"
-                width={1280}
-                height={1600}
-                className="h-[380px] w-full object-cover transition-transform duration-[1400ms] group-hover:scale-105 sm:h-[520px] lg:h-[680px]"
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
-            </div>
+            <div className="group relative overflow-hidden"><img src={artePadrao} alt="Acabamento de barba com navalha" loading="lazy" width={1280} height={1600} className="h-[380px] w-full object-cover transition-transform duration-[1400ms] group-hover:scale-105 sm:h-[520px] lg:h-[680px]" /><div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" /></div>
           </Reveal>
         </div>
       </section>
 
-      {/* SERVIÇOS */}
       <section id="servicos" className="border-t border-border/60 py-24 lg:py-32">
         <div className="mx-auto max-w-[1600px] px-5 lg:px-10">
-          <Reveal>
-            <span className={eyebrow}>Serviços</span>
-            <h2 className={`mt-5 ${titulo}`}>Escolha a sua experiência</h2>
-            <Regua />
-          </Reveal>
-          {services.length === 0 ? (
-            <p className="mt-10 text-muted-foreground">Serviços em breve.</p>
-          ) : (
-            <div className="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {services.map((s, i) => (
-                <Reveal key={s.id} delay={i * 70}>
-                  <article className="group relative flex h-full flex-col justify-between overflow-hidden border border-border bg-card p-8 transition-colors hover:border-primary/40">
-                    <span className="absolute inset-x-0 top-0 h-px w-0 bg-primary transition-all duration-700 group-hover:w-full" />
-                    <div>
-                      <div className="flex items-start justify-between gap-4">
-                        <h3 className="font-serif-display text-2xl leading-tight">{s.nome}</h3>
-                        <Sparkles className="h-4 w-4 shrink-0 text-primary/60" aria-hidden="true" />
-                      </div>
-                      {s.descricao && (
-                        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                          {s.descricao}
-                        </p>
-                      )}
-                    </div>
-                    <div className="mt-8">
-                      <div className="flex items-end justify-between border-t border-border pt-5">
-                        <span className="text-[0.62rem] uppercase tracking-[0.3em] text-muted-foreground">
-                          {s.duracao_minutos} min
-                        </span>
-                        <span className="font-serif-display text-3xl text-primary">
-                          {brl(s.preco)}
-                        </span>
-                      </div>
-                      {cta(
-                        "Agendar",
-                        "mt-6 flex w-full items-center justify-center gap-2 border border-border py-3.5 text-[0.68rem] uppercase tracking-[0.3em] transition hover:border-primary hover:bg-primary hover:text-primary-foreground",
-                      )}
-                    </div>
-                  </article>
-                </Reveal>
-              ))}
-            </div>
-          )}
+          <Reveal><span className={eyebrow}>Serviços</span><h2 className={`mt-5 ${titulo}`}>Escolha a sua experiência</h2><Regua /></Reveal>
+          {services.length === 0 ? <p className="mt-10 text-muted-foreground">Serviços em breve.</p> : <div className="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {services.map((s, i) => <Reveal key={s.id} delay={i * 70}><article className="group relative flex h-full flex-col justify-between overflow-hidden border border-border bg-card p-8 transition-colors hover:border-primary/40"><span className="absolute inset-x-0 top-0 h-px w-0 bg-primary transition-all duration-700 group-hover:w-full" /><div><div className="flex items-start justify-between gap-4"><h3 className="font-serif-display text-2xl leading-tight">{s.nome}</h3><Sparkles className="h-4 w-4 shrink-0 text-primary/60" aria-hidden="true" /></div>{s.descricao && <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{s.descricao}</p>}</div><div className="mt-8"><div className="flex items-end justify-between border-t border-border pt-5"><span className="text-[0.62rem] uppercase tracking-[0.3em] text-muted-foreground">{s.duracao_minutos} min</span><span className="font-serif-display text-3xl text-primary">{brl(s.preco)}</span></div>{cta("Agendar", "mt-6 flex w-full items-center justify-center gap-2 border border-border py-3.5 text-[0.68rem] uppercase tracking-[0.3em] transition hover:border-primary hover:bg-primary hover:text-primary-foreground")}</div></article></Reveal>)}
+          </div>}
         </div>
       </section>
 
-      {/* EQUIPE */}
-      {barbers.length > 0 && (
-        <section id="equipe" className="border-t border-border/60 py-24 lg:py-32">
-          <div className="mx-auto max-w-[1600px] px-5 lg:px-10">
-            <Reveal>
-              <span className={eyebrow}>Nossa equipe</span>
-              <h2 className={`mt-5 ${titulo}`}>Mestres da navalha</h2>
-              <Regua />
-            </Reveal>
-            <div className="mt-14 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {barbers.map((b, i) => (
-                <Reveal key={b.id} delay={i * 70}>
-                  <article className="group overflow-hidden border border-border bg-card">
-                    <div className="relative h-72 overflow-hidden sm:h-80">
-                      <img
-                        src={b.foto_url || GALERIA_PADRAO[i % GALERIA_PADRAO.length]!.url}
-                        alt={b.nome}
-                        loading="lazy"
-                        className="h-full w-full object-cover grayscale-[35%] transition-all duration-[1200ms] group-hover:scale-105 group-hover:grayscale-0"
-                      />
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
-                    </div>
-                    <div className="p-7">
-                      <h3 className="font-serif-display text-2xl">{b.nome}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        {b.descricao?.trim() || "Especialista em cortes, fade e barba."}
-                      </p>
-                      {cta(
-                        "Agendar",
-                        "mt-6 inline-flex items-center gap-2 border-b border-primary/50 pb-1 text-[0.68rem] uppercase tracking-[0.3em] text-primary transition hover:border-primary",
-                      )}
-                    </div>
-                  </article>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {barbers.length > 0 && <section id="equipe" className="border-t border-border/60 py-24 lg:py-32"><div className="mx-auto max-w-[1600px] px-5 lg:px-10"><Reveal><span className={eyebrow}>Nossa equipe</span><h2 className={`mt-5 ${titulo}`}>Mestres da navalha</h2><Regua /></Reveal><div className="mt-14 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{barbers.map((b, i) => <Reveal key={b.id} delay={i * 70}><article className="group overflow-hidden border border-border bg-card"><div className="relative h-72 overflow-hidden sm:h-80"><img src={b.foto_url || GALERIA_PADRAO[i % GALERIA_PADRAO.length]!.url} alt={b.nome} loading="lazy" className="h-full w-full object-cover grayscale-[35%] transition-all duration-[1200ms] group-hover:scale-105 group-hover:grayscale-0" /><div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" /></div><div className="p-7"><h3 className="font-serif-display text-2xl">{b.nome}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{b.descricao?.trim() || "Especialista em cortes, fade e barba."}</p>{cta("Agendar", "mt-6 inline-flex items-center gap-2 border-b border-primary/50 pb-1 text-[0.68rem] uppercase tracking-[0.3em] text-primary transition hover:border-primary")}</div></article></Reveal>)}</div></div></section>}
 
-      {/* GALERIA EDITORIAL */}
-      <section id="trabalho" className="border-t border-border/60 py-24 lg:py-32">
-        <div className="mx-auto max-w-[1600px] px-5 lg:px-10">
-          <Reveal>
-            <span className={eyebrow}>Nosso trabalho</span>
-            <h2 className={`mt-5 ${titulo}`}>Cada corte, uma assinatura</h2>
-            <Regua />
-          </Reveal>
-          <div className="mt-14 grid auto-rows-[190px] grid-cols-2 gap-3 sm:auto-rows-[240px] lg:grid-cols-4 lg:gap-4">
-            {fotos.slice(0, 8).map((f, i) => {
-              const span =
-                i % 5 === 0
-                  ? "col-span-2 row-span-2"
-                  : i % 5 === 3
-                    ? "col-span-2"
-                    : i % 5 === 4
-                      ? "row-span-2"
-                      : "";
-              return (
-                <Reveal key={f.id} delay={i * 60} className={span}>
-                  <figure className="group relative h-full w-full overflow-hidden">
-                    <img
-                      src={f.url}
-                      alt={f.descricao ?? `Trabalho da ${shop.nome}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-[1400ms] group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                    {f.descricao && (
-                      <figcaption className="absolute bottom-0 left-0 p-5 text-[0.62rem] uppercase tracking-[0.28em] text-foreground opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-                        {f.descricao}
-                      </figcaption>
-                    )}
-                  </figure>
-                </Reveal>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      <section id="trabalho" className="border-t border-border/60 py-24 lg:py-32"><div className="mx-auto max-w-[1600px] px-5 lg:px-10"><Reveal><span className={eyebrow}>Nosso trabalho</span><h2 className={`mt-5 ${titulo}`}>Cada corte, uma assinatura</h2><Regua /></Reveal><div className="mt-14 grid auto-rows-[190px] grid-cols-2 gap-3 sm:auto-rows-[240px] lg:grid-cols-4 lg:gap-4">{fotos.slice(0, 8).map((f, i) => { const span = i % 5 === 0 ? "col-span-2 row-span-2" : i % 5 === 3 ? "col-span-2" : i % 5 === 4 ? "row-span-2" : ""; return <Reveal key={f.id} delay={i * 60} className={span}><figure className="group relative h-full w-full overflow-hidden"><img src={f.url} alt={f.descricao ?? `Trabalho da ${shop.nome}`} loading="lazy" className="h-full w-full object-cover transition-transform duration-[1400ms] group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-background/85 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />{f.descricao && <figcaption className="absolute bottom-0 left-0 p-5 text-[0.62rem] uppercase tracking-[0.28em] text-foreground opacity-0 transition-opacity duration-500 group-hover:opacity-100">{f.descricao}</figcaption>}</figure></Reveal>; })}</div></div></section>
 
-      {/* EXPERIÊNCIA */}
-      <section className="relative isolate overflow-hidden border-t border-border/60">
-        <img
-          src={experienciaPadrao}
-          alt=""
-          loading="lazy"
-          className="absolute inset-0 -z-20 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 -z-10 bg-background/80" />
-        <div className="mx-auto max-w-[1600px] px-5 py-28 lg:px-10 lg:py-40">
-          <Reveal className="ml-auto max-w-xl">
-            <span className={eyebrow}>A experiência</span>
-            <h2 className={`mt-5 ${titulo}`}>Mais que um corte.</h2>
-            <Regua />
-            <p className="mt-8 font-serif-display text-2xl leading-snug text-foreground/90">
-              {experiencia}
-            </p>
-            <div className="mt-10">{cta("Agendar horário", btnPrimario)}</div>
-          </Reveal>
-        </div>
-      </section>
+      <section className="relative isolate overflow-hidden border-t border-border/60"><img src={experienciaPadrao} alt="" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-background/80" /><div className="mx-auto max-w-[1600px] px-5 py-28 lg:px-10 lg:py-40"><Reveal className="ml-auto max-w-xl"><span className={eyebrow}>A experiência</span><h2 className={`mt-5 ${titulo}`}>Mais que um corte.</h2><Regua /><p className="mt-8 font-serif-display text-2xl leading-snug text-foreground/90">{experiencia}</p><div className="mt-10">{cta("Agendar horário", btnPrimario)}</div></Reveal></div></section>
 
-      {/* HORÁRIOS + LOCALIZAÇÃO */}
       <section className="border-t border-border/60 py-24 lg:py-32">
         <div className="mx-auto grid max-w-[1600px] gap-16 px-5 lg:grid-cols-2 lg:gap-24 lg:px-10">
-          <Reveal id="horarios">
-            <span className={eyebrow}>Horário de funcionamento</span>
-            <h2 className={`mt-5 ${titulo}`}>Quando estamos abertos</h2>
-            <Regua />
-            <ul className="mt-10">
-              {DIAS.map((d, i) => {
-                const h = hours.find((x) => x.dia_semana === i);
-                const aberto = Boolean(h?.aberto);
-                return (
-                  <li
-                    key={d}
-                    className="flex items-baseline justify-between gap-6 border-b border-border/70 py-4"
-                  >
-                    <span className="text-[0.68rem] uppercase tracking-[0.3em] text-muted-foreground">
-                      {d}
-                    </span>
-                    <span
-                      className={`font-serif-display text-xl ${aberto ? "text-primary" : "text-muted-foreground/60"}`}
-                    >
-                      {aberto ? `${hhmm(h!.hora_inicio)} — ${hhmm(h!.hora_fim)}` : "Fechado"}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </Reveal>
-
+          <Reveal id="horarios"><span className={eyebrow}>Horário de funcionamento</span><h2 className={`mt-5 ${titulo}`}>Quando estamos abertos</h2><Regua /><ul className="mt-10">{DIAS.map((d, i) => { const h = hours.find((x) => x.dia_semana === i); const aberto = Boolean(h?.aberto); return <li key={d} className="flex items-baseline justify-between gap-6 border-b border-border/70 py-4"><span className="text-[0.68rem] uppercase tracking-[0.3em] text-muted-foreground">{d}</span><span className={`font-serif-display text-xl ${aberto ? "text-primary" : "text-muted-foreground/60"}`}>{aberto ? `${hhmm(h!.hora_inicio)} — ${hhmm(h!.hora_fim)}` : "Fechado"}</span></li>; })}</ul></Reveal>
           <Reveal delay={120} id="local">
             <span className={eyebrow}>Encontre a gente</span>
             <h2 className={`mt-5 ${titulo}`}>Localização e contato</h2>
             <Regua />
             <ul className="mt-10 space-y-4 text-sm text-muted-foreground">
-              {linha1 && (
-                <li className="flex gap-3">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                  <span>
-                    {linha1}
-                    {linha2 && <span className="block">{linha2}</span>}
-                  </span>
-                </li>
-              )}
-              {shop.telefone && (
-                <li className="flex gap-3">
-                  <Phone className="h-4 w-4 text-primary" aria-hidden="true" /> {shop.telefone}
-                </li>
-              )}
-              {shop.instagram && (
-                <li className="flex gap-3">
-                  <Instagram className="h-4 w-4 text-primary" aria-hidden="true" /> {shop.instagram}
-                </li>
-              )}
-              {shop.facebook && (
-                <li className="flex gap-3">
-                  <Facebook className="h-4 w-4 text-primary" aria-hidden="true" /> {shop.facebook}
-                </li>
-              )}
-              {shop.site_url && (
-                <li className="flex gap-3">
-                  <Globe className="h-4 w-4 text-primary" aria-hidden="true" /> {shop.site_url}
-                </li>
-              )}
+              {linha1 && <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span>{linha1}{linha2 && <span className="block">{linha2}</span>}</span></li>}
+              {shop.telefone && <li className="flex gap-3"><Phone className="h-4 w-4 text-primary" aria-hidden="true" /> {shop.telefone}</li>}
+              {shop.instagram && <li className="flex gap-3"><Instagram className="h-4 w-4 text-primary" aria-hidden="true" /> {shop.instagram}</li>}
+              {shop.facebook && <li className="flex gap-3"><Facebook className="h-4 w-4 text-primary" aria-hidden="true" /> {shop.facebook}</li>}
+              {shop.site_url && <li className="flex gap-3"><Globe className="h-4 w-4 text-primary" aria-hidden="true" /> {shop.site_url}</li>}
             </ul>
-            <div className="mt-8 flex h-48 items-center justify-center border border-border bg-card/60 bg-noise text-[0.62rem] uppercase tracking-[0.3em] text-muted-foreground">
-              {linha1 || "Endereço em breve"}
-            </div>
-            {maps && (
-              <a
-                href={maps}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`mt-6 ${btnSecundario}`}
-              >
-                <Navigation className="h-4 w-4" aria-hidden="true" /> Como chegar
-              </a>
+            {mapaUrl ? (
+              <div className="mt-8 overflow-hidden border border-border bg-card shadow-sm">
+                <iframe
+                  title={`Mapa de localização da ${shop.nome}`}
+                  src={mapaUrl}
+                  className="h-64 w-full sm:h-72"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div className="mt-8 flex h-48 items-center justify-center border border-border bg-card/60 bg-noise text-[0.62rem] uppercase tracking-[0.3em] text-muted-foreground">Endereço em breve</div>
             )}
+            {maps && <a href={maps} target="_blank" rel="noopener noreferrer" className={`mt-6 ${btnSecundario}`}><Navigation className="h-4 w-4" aria-hidden="true" /> Como chegar</a>}
           </Reveal>
         </div>
       </section>
 
-      {/* CTA FINAL */}
-      <section className="border-t border-border/60 py-24 text-center lg:py-32">
-        <Reveal className="mx-auto max-w-3xl px-5">
-          <span className={eyebrow}>Agendamento</span>
-          <h2 className={`mt-5 ${titulo}`}>Reserve o seu horário</h2>
-          <p className="mt-6 text-muted-foreground">
-            Serviço, profissional, data e hora em poucos cliques — confirmação direto no WhatsApp da{" "}
-            {shop.nome}.
-          </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            {cta("Agendar horário", btnPrimario)}
-            {wa && (
-              <a href={wa} target="_blank" rel="noopener noreferrer" className={btnSecundario}>
-                <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
-              </a>
-            )}
-          </div>
-        </Reveal>
-      </section>
+      <section className="border-t border-border/60 py-24 text-center lg:py-32"><Reveal className="mx-auto max-w-3xl px-5"><span className={eyebrow}>Agendamento</span><h2 className={`mt-5 ${titulo}`}>Reserve o seu horário</h2><p className="mt-6 text-muted-foreground">Serviço, profissional, data e hora em poucos cliques — confirmação direto no WhatsApp da{" "}{shop.nome}.</p><div className="mt-10 flex flex-wrap justify-center gap-3">{cta("Agendar horário", btnPrimario)}{wa && <a href={wa} target="_blank" rel="noopener noreferrer" className={btnSecundario}><MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp</a>}</div></Reveal></section>
 
-      <footer className="border-t border-border py-10 text-center text-[0.6rem] uppercase tracking-[0.32em] text-muted-foreground">
-        {shop.nome} · agendamento online por BarberFlow
-      </footer>
-
-      {/* CTA FIXO */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-primary/20 bg-background/90 p-3 backdrop-blur-xl sm:inset-x-auto sm:bottom-8 sm:left-8 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-        <Link
-          to="/barbearia/$slug/agendar"
-          params={{ slug }}
-          className="flex items-center justify-center gap-2 bg-primary px-8 py-4 text-[0.7rem] uppercase tracking-[0.32em] text-primary-foreground shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition hover:brightness-110 sm:border sm:border-primary"
-        >
-          Agendar horário <ChevronRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      </div>
-
+      <footer className="border-t border-border py-10 text-center text-[0.6rem] uppercase tracking-[0.32em] text-muted-foreground">{shop.nome} · agendamento online por BarberFlow</footer>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-primary/20 bg-background/90 p-3 backdrop-blur-xl sm:inset-x-auto sm:bottom-8 sm:left-8 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none"><Link to="/barbearia/$slug/agendar" params={{ slug }} className="flex items-center justify-center gap-2 bg-primary px-8 py-4 text-[0.7rem] uppercase tracking-[0.32em] text-primary-foreground shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition hover:brightness-110 sm:border sm:border-primary">Agendar horário <ChevronRight className="h-4 w-4" aria-hidden="true" /></Link></div>
       <WhatsAppFloat shop={shop} />
       <div className="h-20 sm:h-0" />
     </div>
