@@ -9,7 +9,7 @@ export type AccentOption = {
 
 export const ACCENT_OPTIONS: AccentOption[] = [
   { id: "default", name: "Padrão", value: DEFAULT_ACCENT_DB_VALUE },
-  { id: "gold", name: "Dourado", value: "#c8963e" },
+  { id: "gold", name: "Dourado", value: "#d4a64a" },
   { id: "red", name: "Vermelho", value: "#dc2626" },
   { id: "blue", name: "Azul", value: "#2563eb" },
   { id: "green", name: "Verde", value: "#16a34a" },
