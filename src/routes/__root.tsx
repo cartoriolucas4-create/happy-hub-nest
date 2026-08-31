@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, Link, createRootRouteWithContext, useRouter, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRouteWithContext, useRouter, useRouterState, HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { PublicSetupGate } from "@/components/public/PublicSetupGate";
+import { supabase } from "@/integrations/supabase/client";
+import { accentStyle, DEFAULT_ACCENT_COLOR } from "@/lib/theme";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -29,4 +31,41 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) { return <html lang="pt-BR"><head><HeadContent /></head><body>{children}<Scripts /></body></html>; }
-function RootComponent() { const { queryClient } = Route.useRouteContext(); return <QueryClientProvider client={queryClient}><PublicSetupGate><Outlet /></PublicSetupGate><Toaster /></QueryClientProvider>; }
+
+function PublicAccentController() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  useEffect(() => {
+    const match = pathname.match(/^\/barbearia\/([^/]+)(?:\/agendar)?\/?$/);
+    if (!match) {
+      Object.assign(document.documentElement.style, accentStyle(DEFAULT_ACCENT_COLOR));
+      return;
+    }
+
+    let active = true;
+    const slug = decodeURIComponent(match[1]!);
+    void supabase
+      .from("barbershops")
+      .select("cor_primaria")
+      .eq("slug", slug)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        Object.assign(document.documentElement.style, accentStyle(data?.cor_primaria));
+      })
+      .catch(() => {
+        if (active) Object.assign(document.documentElement.style, accentStyle(DEFAULT_ACCENT_COLOR));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
+  return null;
+}
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+  return <QueryClientProvider client={queryClient}><PublicAccentController /><PublicSetupGate><Outlet /></PublicSetupGate><Toaster /></QueryClientProvider>;
+}
