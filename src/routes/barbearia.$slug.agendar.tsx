@@ -42,6 +42,13 @@ function horaValida(h: BusinessHour) {
   return Boolean(h.aberto && h.hora_inicio && h.hora_fim && h.hora_fim > h.hora_inicio);
 }
 
+function formatarTelefone(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits.length ? `(${digits}` : "";
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 function Agendar() {
   const { slug } = Route.useParams();
   const [step, setStep] = useState(1);
@@ -218,7 +225,6 @@ function Agendar() {
         {step === 3 && <section className="mt-8">
           <h1 className="text-3xl">Data e horário</h1>
           <p className="mt-2 text-sm text-muted-foreground">Escolha um dia que esteja aberto. Os horários abaixo respeitam a abertura e o fechamento cadastrados pela barbearia.</p>
-
           <div className="mt-6 grid grid-cols-7 gap-1.5 sm:gap-2">
             {semana.map((item) => {
               const aberto = horaValida(item.horario ?? { dia_semana: item.dia, aberto: false, hora_inicio: null, hora_fim: null, intervalo_inicio: null, intervalo_fim: null });
@@ -226,40 +232,22 @@ function Agendar() {
               return <button key={item.iso} type="button" disabled={!aberto} onClick={() => selecionarData(item.iso)} className={`min-w-0 rounded-lg border px-1 py-3 text-center transition ${selecionado ? "border-primary bg-primary/15 text-primary" : aberto ? "border-border bg-card hover:border-primary" : "cursor-not-allowed border-border/50 bg-secondary/30 opacity-40"}`}><span className="block truncate text-[10px] uppercase tracking-wider">{item.nome.slice(0, 3)}</span><span className="mt-1 block text-lg font-semibold">{item.iso.slice(8, 10)}</span></button>;
             })}
           </div>
-
           <input type="date" className={`${inputCls} mt-4`} min={todayIso()} max={addDays(todayIso(), 60)} value={data} onChange={(e) => selecionarData(e.target.value)} />
-
           {horarioDoDia && horaValida(horarioDoDia) && <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4"><p className="text-xs uppercase tracking-wider text-muted-foreground">Horário de funcionamento</p><p className="mt-1 text-lg font-medium text-primary">{hhmm(horarioDoDia.hora_inicio!)} às {hhmm(horarioDoDia.hora_fim!)}</p>{horarioDoDia.intervalo_inicio && horarioDoDia.intervalo_fim && <p className="mt-1 text-xs text-muted-foreground">Intervalo: {hhmm(horarioDoDia.intervalo_inicio)} às {hhmm(horarioDoDia.intervalo_fim)}</p>}</div>}
-
           {!base.businessHours.some(horaValida) && <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-muted-foreground">A barbearia ainda não cadastrou dias e horários de funcionamento.</p>}
-
           <div className="mt-5 rounded-lg border border-border bg-card/40 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Clock3 className="h-4 w-4 text-primary" aria-hidden="true" />
-                  <h2 className="text-base font-semibold">Horários disponíveis</h2>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">Selecione um horário livre para continuar.</p>
-              </div>
-              {!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).length > 0 && <span className="text-xs text-muted-foreground">{(horarios ?? []).length} disponível{(horarios ?? []).length === 1 ? "" : "eis"}</span>}
-            </div>
-
+            <div className="flex items-center justify-between gap-3"><div><div className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-primary" aria-hidden="true" /><h2 className="text-base font-semibold">Horários disponíveis</h2></div><p className="mt-1 text-xs text-muted-foreground">Selecione um horário livre para continuar.</p></div>{!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).length > 0 && <span className="text-xs text-muted-foreground">{(horarios ?? []).length} disponível{(horarios ?? []).length === 1 ? "" : "eis"}</span>}</div>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {buscandoHorarios && <div className="col-span-full flex items-center gap-2 py-3 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4 animate-pulse" /> Carregando horários disponíveis...</div>}
-
               {!buscandoHorarios && erroAoBuscarHorarios && <div className="col-span-full rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><div className="flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Não foi possível carregar os horários.</div><button type="button" onClick={() => recarregarHorarios()} className="mt-2 text-xs underline hover:text-primary">Tentar novamente</button></div>}
-
               {!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).length === 0 && <div className="col-span-full flex items-center gap-2 py-3 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" /> Não há horários livres nesta data.</div>}
-
               {!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).map((h) => <button key={`${h.barber_id}-${h.hora}`} type="button" onClick={() => { setHora(hhmm(h.hora)); setStep(4); }} className="rounded-md border border-border bg-card px-4 py-3 text-center font-display text-lg transition hover:border-primary hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/50">{hhmm(h.hora)}</button>)}
             </div>
           </div>
-
           <button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(2)}>Voltar</button>
         </section>}
 
-        {step === 4 && <section className="mt-8"><h1 className="text-3xl">Seus dados</h1><p className="mt-2 text-sm text-muted-foreground">{servico?.nome} · {brDate(data)} às {hora} · {brl(servico?.preco ?? 0)}</p><form className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); const erro = validarDados(); if (erro) { toast.error(erro); return; } setStep(5); }}><input className={inputCls} placeholder="Nome completo" maxLength={120} value={nome} onChange={(e) => setNome(e.target.value)} required /><input className={inputCls} placeholder="Telefone / WhatsApp" maxLength={20} value={telefone} onChange={(e) => setTelefone(e.target.value)} required /><textarea className={inputCls} rows={3} maxLength={500} placeholder="Observação (opcional)" value={observacao} onChange={(e) => setObservacao(e.target.value)} /><button className="w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90">CONTINUAR</button></form><button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(3)}>Voltar</button></section>}
+        {step === 4 && <section className="mt-8"><h1 className="text-3xl">Seus dados</h1><p className="mt-2 text-sm text-muted-foreground">{servico?.nome} · {brDate(data)} às {hora} · {brl(servico?.preco ?? 0)}</p><form className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); const erro = validarDados(); if (erro) { toast.error(erro); return; } setStep(5); }}><input className={`${inputCls} uppercase`} placeholder="Nome completo" maxLength={120} value={nome} onChange={(e) => setNome(e.target.value.toUpperCase())} required /><input className={inputCls} placeholder="Telefone / WhatsApp" type="tel" inputMode="numeric" maxLength={15} value={telefone} onChange={(e) => setTelefone(formatarTelefone(e.target.value))} required /><textarea className={`${inputCls} uppercase`} rows={3} maxLength={500} placeholder="Observação (opcional)" value={observacao} onChange={(e) => setObservacao(e.target.value.toUpperCase())} /><button className="w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90">CONTINUAR</button></form><button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(3)}>Voltar</button></section>}
 
         {step === 5 && <section className="mt-8"><h1 className="text-3xl">Como você pretende pagar?</h1><p className="mt-2 text-sm text-muted-foreground">Selecione uma forma de pagamento.</p><div className="mt-6 space-y-3">{metodos.length === 0 && <p className="text-sm text-muted-foreground">Esta barbearia ainda não cadastrou meios de pagamento. Combine o pagamento diretamente com ela.</p>}{metodos.map((m) => <button key={m.id} onClick={() => setPaymentMethodId(m.id)} className={`flex w-full items-center gap-3 rounded-lg border bg-card p-4 text-left ${paymentMethodId === m.id ? "border-primary" : "border-border hover:border-primary/60"}`}><span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${paymentMethodId === m.id ? "border-primary" : "border-muted-foreground"}`}>{paymentMethodId === m.id && <span className="h-2 w-2 rounded-full bg-primary" />}</span><span><span className="text-lg">{m.icon ? `${m.icon} ` : ""}{m.name}</span>{m.description && <span className="block text-sm text-muted-foreground">{m.description}</span>}</span></button>)}</div><button onClick={() => { const erro = validarPagamento(); if (erro) { toast.error(erro); return; } setStep(6); }} className="mt-6 w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90">REVISAR AGENDAMENTO</button><button className="mt-6 text-sm text-muted-foreground underline" onClick={() => setStep(4)}>Voltar</button></section>}
 
