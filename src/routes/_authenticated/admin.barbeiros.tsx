@@ -43,14 +43,17 @@ function Barbeiros() {
     queryKey: ["barbeiros", shop?.id],
     enabled: Boolean(shop?.id),
     queryFn: async () => {
+      if (!shop?.id) throw new Error("Barbearia não identificada.");
       const [barbers, services, links] = await Promise.all([
-        supabase.from("barbers").select("*").order("nome"),
-        supabase.from("services").select("id, nome").eq("ativo", true).order("nome"),
-        supabase.from("barber_services").select("barber_id, service_id"),
+        supabase.from("barbers").select("*").eq("barbershop_id", shop.id).order("nome"),
+        supabase.from("services").select("id, nome").eq("barbershop_id", shop.id).eq("ativo", true).order("nome"),
+        supabase.from("barber_services").select("barber_id, service_id").eq("barbershop_id", shop.id),
       ]);
       if (barbers.error) throw barbers.error;
+      if (services.error) throw services.error;
+      if (links.error) throw links.error;
       return {
-        barbers: barbers.data,
+        barbers: barbers.data ?? [],
         services: services.data ?? [],
         links: links.data ?? [],
       };
@@ -59,8 +62,9 @@ function Barbeiros() {
 
   const salvar = useMutation({
     mutationFn: async (f: Form) => {
+      if (!shop?.id) throw new Error("Barbearia não identificada.");
       const payload = {
-        barbershop_id: shop!.id,
+        barbershop_id: shop.id,
         nome: f.nome.trim(),
         telefone: f.telefone.trim() || null,
         descricao: f.descricao.trim() || null,
@@ -69,40 +73,66 @@ function Barbeiros() {
       };
       let id = f.id;
       if (id) {
-        const res = await supabase.from("barbers").update(payload).eq("id", id);
+        const res = await supabase.from("barbers").update(payload).eq("id", id).eq("barbershop_id", shop.id);
         if (res.error) throw res.error;
       } else {
         const res = await supabase.from("barbers").insert(payload).select("id").single();
         if (res.error) throw res.error;
         id = res.data.id;
       }
-      const del = await supabase.from("barber_services").delete().eq("barber_id", id!);
+
+      const del = await supabase.from("barber_services").delete().eq("barber_id", id!).eq("barbershop_id", shop.id);
       if (del.error) throw del.error;
       if (f.servicos.length) {
         const ins = await supabase.from("barber_services").insert(
-          f.servicos.map((service_id) => ({ barbershop_id: shop!.id, barber_id: id!, service_id })),
+          f.servicos.map((service_id) => ({ barbershop_id: shop.id, barber_id: id!, service_id })),
         );
         if (ins.error) throw ins.error;
       }
+
+      const verify = await supabase.from("barbers").select("id,nome,telefone,descricao,foto_url,ativo").eq("id", id!).eq("barbershop_id", shop.id).single();
+      if (verify.error) throw verify.error;
+      return verify.data;
     },
     onSuccess: () => {
       toast.success("Barbeiro salvo!");
       setForm(null);
-      qc.invalidateQueries({ queryKey: ["barbeiros"] });
+      qc.invalidateQueries({ queryKey: ["barbeiros", shop?.id] });
+      qc.invalidateQueries({ queryKey: ["agendar-base"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const excluir = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("barbers").delete().eq("id", id);
+    mutationFn: async (barber: { id: string; nome: string }) => {
+      if (!shop?.id) throw new Error("Barbearia não identificada.");
+      const appointments = await supabase
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("barbershop_id", shop.id)
+        .eq("barber_id", barber.id);
+      if (appointments.error) throw appointments.error;
+
+      if ((appointments.count ?? 0) > 0) {
+        const { error } = await supabase
+          .from("barbers")
+          .update({ ativo: false })
+          .eq("id", barber.id)
+          .eq("barbershop_id", shop.id);
+        if (error) throw error;
+        return "inativado" as const;
+      }
+
+      const { error } = await supabase.from("barbers").delete().eq("id", barber.id).eq("barbershop_id", shop.id);
       if (error) throw error;
+      return "excluido" as const;
     },
-    onSuccess: () => {
-      toast.success("Barbeiro excluído.");
-      qc.invalidateQueries({ queryKey: ["barbeiros"] });
+    onSuccess: (result) => {
+      toast.success(result === "inativado" ? "Barbeiro inativado para preservar o histórico." : "Barbeiro excluído.");
+      qc.invalidateQueries({ queryKey: ["barbeiros", shop?.id] });
+      qc.invalidateQueries({ queryKey: ["agendar-base"] });
     },
-    onError: () => toast.error("Não foi possível excluir. Desative o barbeiro se ele já possui agendamentos."),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   function submit(e: React.FormEvent) {
@@ -135,27 +165,15 @@ function Barbeiros() {
           </label>
           <label>
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Telefone</span>
-            <input
-              className={input}
-              value={form.telefone}
-              onChange={(e) => setForm({ ...form, telefone: e.target.value })}
-            />
+            <input className={input} value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
           </label>
           <label className="sm:col-span-2">
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Especialidade</span>
-            <input
-              className={input}
-              value={form.descricao}
-              onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-            />
+            <input className={input} value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} />
           </label>
           <label className="sm:col-span-2">
             <span className="text-xs uppercase tracking-widest text-muted-foreground">URL da foto</span>
-            <input
-              className={input}
-              value={form.foto_url}
-              onChange={(e) => setForm({ ...form, foto_url: e.target.value })}
-            />
+            <input className={input} value={form.foto_url} onChange={(e) => setForm({ ...form, foto_url: e.target.value })} />
           </label>
           <fieldset className="sm:col-span-2">
             <legend className="text-xs uppercase tracking-widest text-muted-foreground">Serviços que executa</legend>
@@ -163,26 +181,12 @@ function Barbeiros() {
               {(data?.services ?? []).map((s) => {
                 const on = form.servicos.includes(s.id);
                 return (
-                  <button
-                    type="button"
-                    key={s.id}
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        servicos: on ? form.servicos.filter((x) => x !== s.id) : [...form.servicos, s.id],
-                      })
-                    }
-                    className={`rounded-full border px-3 py-1.5 text-sm ${
-                      on ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"
-                    }`}
-                  >
+                  <button type="button" key={s.id} onClick={() => setForm({ ...form, servicos: on ? form.servicos.filter((x) => x !== s.id) : [...form.servicos, s.id] })} className={`rounded-full border px-3 py-1.5 text-sm ${on ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"}`}>
                     {s.nome}
                   </button>
                 );
               })}
-              {data?.services.length === 0 && (
-                <span className="text-sm text-muted-foreground">Cadastre serviços primeiro.</span>
-              )}
+              {data?.services.length === 0 && <span className="text-sm text-muted-foreground">Cadastre serviços primeiro.</span>}
             </div>
           </fieldset>
           <label className="flex items-center gap-2 text-sm">
@@ -190,57 +194,29 @@ function Barbeiros() {
             Barbeiro ativo
           </label>
           <div className="flex gap-2 sm:col-span-2">
-            <button className={btn} disabled={salvar.isPending}>
-              {salvar.isPending ? "SALVANDO..." : "SALVAR"}
-            </button>
-            <button type="button" className={btnGhost} onClick={() => setForm(null)}>
-              Cancelar
-            </button>
+            <button className={btn} disabled={salvar.isPending}>{salvar.isPending ? "SALVANDO..." : "SALVAR"}</button>
+            <button type="button" className={btnGhost} onClick={() => setForm(null)}>Cancelar</button>
           </div>
         </form>
       )}
 
       {isLoading && <Empty>Carregando...</Empty>}
-      {data?.barbers.length === 0 && <Empty>Nenhum barbeiro cadastrado ainda.</Empty>}
+      {!isLoading && data?.barbers.length === 0 && <Empty>Nenhum barbeiro cadastrado.</Empty>}
       <div className="grid gap-3 sm:grid-cols-2">
         {(data?.barbers ?? []).map((b) => {
           const servicos = (data?.links ?? []).filter((l) => l.barber_id === b.id).map((l) => l.service_id);
           return (
             <div key={b.id} className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-5">
               <div>
-                <h3 className="text-xl">
-                  {b.nome} {b.ativo ? "" : <span className="text-sm text-muted-foreground">· inativo</span>}
-                </h3>
+                <h3 className="text-xl">{b.nome} {b.ativo ? "" : <span className="text-sm text-muted-foreground">· inativo</span>}</h3>
                 {b.descricao && <p className="text-sm text-muted-foreground">{b.descricao}</p>}
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {servicos.length} serviço(s) vinculado(s)
-                </p>
+                <p className="mt-2 text-xs text-muted-foreground">{servicos.length} serviço(s) vinculado(s)</p>
               </div>
               <div className="flex gap-2">
-                <button
-                  aria-label="Editar"
-                  className="text-muted-foreground hover:text-primary"
-                  onClick={() =>
-                    setForm({
-                      id: b.id,
-                      nome: b.nome,
-                      telefone: b.telefone ?? "",
-                      descricao: b.descricao ?? "",
-                      foto_url: b.foto_url ?? "",
-                      ativo: b.ativo,
-                      servicos,
-                    })
-                  }
-                >
+                <button aria-label="Editar" className="text-muted-foreground hover:text-primary" onClick={() => setForm({ id: b.id, nome: b.nome, telefone: b.telefone ?? "", descricao: b.descricao ?? "", foto_url: b.foto_url ?? "", ativo: b.ativo, servicos })}>
                   <Pencil className="h-4 w-4" />
                 </button>
-                <button
-                  aria-label="Excluir"
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={() => {
-                    if (confirm(`Excluir o barbeiro "${b.nome}"?`)) excluir.mutate(b.id);
-                  }}
-                >
+                <button aria-label="Excluir" disabled={excluir.isPending} className="text-muted-foreground hover:text-destructive disabled:opacity-50" onClick={() => { if (confirm(`Excluir o barbeiro "${b.nome}"?`)) excluir.mutate({ id: b.id, nome: b.nome }); }}>
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
