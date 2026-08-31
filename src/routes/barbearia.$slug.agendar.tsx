@@ -93,11 +93,15 @@ function Agendar() {
     return vinculos.length === 0 ? true : vinculos.some((l) => l.barber_id === b.id);
   });
 
-  const { data: horarios, isFetching: buscandoHorarios } = useQuery({
-    queryKey: ["horarios", slug, barberId, serviceId, data],
+  const {
+    data: horarios,
+    isFetching: buscandoHorarios,
+    isError: erroAoBuscarHorarios,
+  } = useQuery({
+    queryKey: ["horarios-publicos", slug, barberId, serviceId, data],
     enabled: step === 3 && Boolean(barberId && serviceId && data),
     queryFn: async () => {
-      const { data: res, error } = await supabase.rpc("horarios_disponiveis", {
+      const { data: res, error } = await supabase.rpc("horarios_disponiveis_publico", {
         p_slug: slug,
         p_barber_id: barberId,
         p_service_id: serviceId,
@@ -124,7 +128,6 @@ function Agendar() {
     mutationFn: async () => {
       const erro = validarDados() ?? validarPagamento();
       if (erro) throw new Error(erro);
-      // 1) salva o agendamento na barbearia correta (barbershop_id vem do slug)
       const { error } = await supabase.rpc("criar_agendamento_publico", {
         p_slug: slug,
         p_barber_id: barberId,
@@ -138,7 +141,6 @@ function Agendar() {
       });
       if (error) throw new Error(error.message);
 
-      // 2) monta o link do WhatsApp DA BARBEARIA com o resumo completo
       return waLink(
         base!.shop,
         mensagemAgendamento({
@@ -318,15 +320,20 @@ function Agendar() {
               }}
             />
             <div className="mt-6 flex flex-wrap gap-2">
-              {buscandoHorarios && <p className="text-sm text-muted-foreground">Buscando horários...</p>}
-              {!buscandoHorarios && (horarios ?? []).length === 0 && (
+              {buscandoHorarios && <p className="text-sm text-muted-foreground">Carregando horários...</p>}
+              {!buscandoHorarios && erroAoBuscarHorarios && (
+                <p className="flex items-center gap-2 text-sm text-destructive">
+                  <CalendarDays className="h-4 w-4" /> Não foi possível carregar os horários. Tente novamente.
+                </p>
+              )}
+              {!buscandoHorarios && !erroAoBuscarHorarios && (horarios ?? []).length === 0 && (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CalendarDays className="h-4 w-4" /> Nenhum horário disponível nesta data.
                 </p>
               )}
               {(horarios ?? []).map((h) => (
                 <button
-                  key={h.hora}
+                  key={`${h.barber_id}-${h.hora}`}
                   onClick={() => {
                     setHora(hhmm(h.hora));
                     setStep(4);
