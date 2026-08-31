@@ -67,19 +67,15 @@ function Servicos() {
   const excluir = useMutation({
     mutationFn: async (id: string) => {
       if (!shop?.id) throw new Error("Barbearia não identificada.");
-      const appointments = await supabase.from("appointments").select("id", { count: "exact", head: true }).eq("barbershop_id", shop.id).eq("service_id", id);
-      if (appointments.error) throw appointments.error;
-      if ((appointments.count ?? 0) > 0) {
-        const { error } = await supabase.from("services").update({ ativo: false }).eq("id", id).eq("barbershop_id", shop.id);
-        if (error) throw error;
-        return "inativado" as const;
-      }
-      const { error } = await supabase.from("services").delete().eq("id", id).eq("barbershop_id", shop.id);
+      const { error } = await supabase
+        .from("services")
+        .delete()
+        .eq("id", id)
+        .eq("barbershop_id", shop.id);
       if (error) throw error;
-      return "excluido" as const;
     },
-    onSuccess: (result) => {
-      toast.success(result === "inativado" ? "Serviço inativado para preservar o histórico." : "Serviço excluído.");
+    onSuccess: () => {
+      toast.success("Serviço excluído definitivamente.");
       qc.invalidateQueries({ queryKey: ["servicos", shop?.id] });
       qc.invalidateQueries({ queryKey: ["barbeiros", shop?.id] });
       qc.invalidateQueries({ queryKey: ["agendar-base"] });
@@ -105,7 +101,7 @@ function Servicos() {
       </form>}
       {isLoading && <Empty>Carregando...</Empty>}
       {!isLoading && servicos?.length === 0 && <Empty>Nenhum serviço cadastrado.</Empty>}
-      <div className="grid gap-3 sm:grid-cols-2">{(servicos ?? []).map((s) => <div key={s.id} className="rounded-lg border border-border bg-card p-5"><div className="flex items-start justify-between gap-3"><div><h3 className="text-xl">{s.nome}</h3><p className="text-sm text-muted-foreground">{brl(s.preco)} · {s.duracao_minutos} min {s.ativo ? "" : "· inativo"}</p>{s.descricao && <p className="mt-2 text-sm text-muted-foreground">{s.descricao}</p>}</div><div className="flex gap-2"><button aria-label="Editar" onClick={() => setForm({ id: s.id, nome: s.nome, descricao: s.descricao ?? "", preco: String(s.preco), duracao_minutos: String(s.duracao_minutos), ativo: s.ativo })} className="text-muted-foreground hover:text-primary"><Pencil className="h-4 w-4" /></button><button aria-label="Excluir" disabled={excluir.isPending} onClick={() => { if (confirm(`Excluir o serviço \"${s.nome}\"?`)) excluir.mutate(s.id); }} className="text-muted-foreground hover:text-destructive disabled:opacity-50"><Trash2 className="h-4 w-4" /></button></div></div></div>)}</div>
+      <div className="grid gap-3 sm:grid-cols-2">{(servicos ?? []).map((s) => <div key={s.id} className="rounded-lg border border-border bg-card p-5"><div className="flex items-start justify-between gap-3"><div><h3 className="text-xl">{s.nome}</h3><p className="text-sm text-muted-foreground">{brl(s.preco)} · {s.duracao_minutos} min {s.ativo ? "" : "· inativo"}</p>{s.descricao && <p className="mt-2 text-sm text-muted-foreground">{s.descricao}</p>}</div><div className="flex gap-2"><button aria-label="Editar" onClick={() => setForm({ id: s.id, nome: s.nome, descricao: s.descricao ?? "", preco: String(s.preco), duracao_minutos: String(s.duracao_minutos), ativo: s.ativo })} className="text-muted-foreground hover:text-primary"><Pencil className="h-4 w-4" /></button><button aria-label="Excluir" disabled={excluir.isPending} onClick={() => { if (confirm(`Excluir definitivamente o serviço \"${s.nome}\"? Esta ação não pode ser desfeita.`)) excluir.mutate(s.id); }} className="text-muted-foreground hover:text-destructive disabled:opacity-50"><Trash2 className="h-4 w-4" /></button></div></div></div>)}</div>
     </AdminShell>
   );
 }
