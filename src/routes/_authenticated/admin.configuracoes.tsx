@@ -306,11 +306,13 @@ function Configuracoes() {
 
           <button
             type="button"
-            className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary"
+            disabled={salvar.isPending}
+            className="mt-5 inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary disabled:opacity-60"
             onClick={() => {
               if (!window.confirm("Deseja restaurar a cor padrão?")) return;
-              setForm({ ...form, cor_primaria: DEFAULT_ACCENT_DB_VALUE });
-              toast.success("Cor padrão selecionada. Clique em salvar para publicar.");
+              const next = { ...form, cor_primaria: DEFAULT_ACCENT_DB_VALUE };
+              setForm(next);
+              salvar.mutate(next);
             }}
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
