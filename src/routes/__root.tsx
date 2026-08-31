@@ -72,29 +72,56 @@ function PublicAccentController() {
   return null;
 }
 
+/**
+ * Applies the Brazilian currency mask to financial inputs marked with inputmode="decimal".
+ * It intentionally uses the native input value setter before dispatching a fresh input event,
+ * so React controlled inputs receive the formatted value instead of reverting to the raw digits.
+ * Typing 1999 => 19,99 and 150099 => 1.500,99. Paste, backspace and delete are supported too.
+ */
 function BrlInputController() {
   useEffect(() => {
-    const handlers = new WeakMap<HTMLInputElement, { input: (event: Event) => void; focus: () => void }>();
+    const bound = new WeakSet<HTMLInputElement>();
+    const syntheticEvents = new WeakSet<Event>();
+
+    const setNativeValue = (input: HTMLInputElement, value: string) => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      if (setter) setter.call(input, value);
+      else input.value = value;
+    };
+
+    const format = (input: HTMLInputElement, notifyReact = true) => {
+      const formatted = formatBrlInput(input.value);
+      if (formatted === input.value) return;
+
+      setNativeValue(input, formatted);
+      const end = formatted.length;
+      try { input.setSelectionRange(end, end); } catch { /* non-text input fallback */ }
+
+      if (notifyReact) {
+        const event = new Event("input", { bubbles: true });
+        syntheticEvents.add(event);
+        input.dispatchEvent(event);
+      }
+    };
 
     const bind = () => {
       document.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]').forEach((input) => {
-        if (handlers.has(input)) return;
+        if (bound.has(input)) return;
+        bound.add(input);
 
-        const format = () => {
-          const formatted = formatBrlInput(input.value);
-          if (formatted !== input.value) {
-            input.value = formatted;
-            input.setSelectionRange(formatted.length, formatted.length);
-          }
+        const onInput = (event: Event) => {
+          if (syntheticEvents.has(event)) return;
+          format(input, true);
         };
-        const focus = () => {
-          format();
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-        };
+        const onFocus = () => format(input, true);
 
-        handlers.set(input, { input: format, focus });
-        input.addEventListener("input", format, true);
-        input.addEventListener("focus", focus);
+        input.addEventListener("input", onInput, true);
+        input.addEventListener("focus", onFocus);
+        (input as HTMLInputElement & { __brlCleanup?: () => void }).__brlCleanup = () => {
+          input.removeEventListener("input", onInput, true);
+          input.removeEventListener("focus", onFocus);
+          bound.delete(input);
+        };
       });
     };
 
@@ -105,10 +132,7 @@ function BrlInputController() {
     return () => {
       observer.disconnect();
       document.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]').forEach((input) => {
-        const handlersForInput = handlers.get(input);
-        if (!handlersForInput) return;
-        input.removeEventListener("input", handlersForInput.input, true);
-        input.removeEventListener("focus", handlersForInput.focus);
+        (input as HTMLInputElement & { __brlCleanup?: () => void }).__brlCleanup?.();
       });
     };
   }, []);
