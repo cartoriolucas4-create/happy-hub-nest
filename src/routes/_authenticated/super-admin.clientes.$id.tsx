@@ -115,6 +115,10 @@ function ClienteDetalhe() {
   const carregandoBloqueio = bloquear.isPending || desbloquear.isPending;
   const status = cliente?.status as LicenseStatus | undefined;
   const telefoneDigits = (cliente?.telefone ?? "").replace(/\D/g, "");
+  const whatsappMessage = `Oi! Vi que seu período de teste/plano da ${cliente?.barbearia ? `barbearia ${cliente.barbearia}` : "barbearia"} chegou ao fim. Queria saber se ficou alguma dúvida ou algo que te impediu de renovar — posso te ajudar a resolver e já deixar seu site ativo novamente. 🚀`;
+  const whatsappHref = telefoneDigits.length >= 10
+    ? `https://wa.me/55${telefoneDigits}?text=${encodeURIComponent(whatsappMessage)}`
+    : null;
 
   return (
     <SuperShell
@@ -143,7 +147,7 @@ function ClienteDetalhe() {
             </dl>
             <div className="mt-5 flex flex-wrap gap-3">
               {telefoneDigits.length >= 10 && (
-                <a href={`https://wa.me/55${telefoneDigits}`} target="_blank" rel="noopener noreferrer" className={sBtnGhost}>
+                <a href={whatsappHref ?? undefined} target="_blank" rel="noopener noreferrer" className={sBtnGhost}>
                   <MessageCircle className="mr-1 inline h-4 w-4" /> WhatsApp
                 </a>
               )}
