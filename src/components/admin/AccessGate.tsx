@@ -1,13 +1,25 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Lock, MessageCircle, ShieldCheck } from "lucide-react";
-import { dataHoraBr, formatarRestante, montarMensagemSuporte, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useSupportMessageTemplate, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
+import { dataHoraBr, formatarRestante, montarMensagemSuporte, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useSupportIdentity, useSupportMessageTemplate, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
 import { useShop } from "@/lib/shop";
+
+function dadosSuporte(shop: any, identity: { nome?: string; email?: string; telefone?: string } | undefined) {
+  return {
+    id: shop?.id,
+    slug: shop?.slug,
+    barbearia: shop?.nome,
+    nome: identity?.nome,
+    telefone: shop?.whatsapp || shop?.telefone || identity?.telefone,
+    email: identity?.email || shop?.email,
+  };
+}
 
 export function LicenseBanner() {
   const { data: licenca } = useLicense();
   const { data: supportWhatsapp } = useSupportWhatsapp();
   const { data: supportTemplate } = useSupportMessageTemplate();
   const { data: shop } = useShop();
+  const { data: identity } = useSupportIdentity();
   const offset = serverOffset(licenca);
   const ms = useCountdown(licenca?.expires_at, offset);
 
@@ -16,7 +28,7 @@ export function LicenseBanner() {
   const trial = licenca.status === "trial";
   const urgente = trial && ms < 2 * 60 * 60 * 1000;
   const aviso = !trial ? null : ms < 30 * 60 * 1000 ? "Seu período de teste termina em menos de 30 minutos." : ms < 2 * 60 * 60 * 1000 ? "Seu período de teste termina em menos de 2 horas." : "Entre em contato para continuar utilizando depois do teste.";
-  const mensagem = montarMensagemSuporte(supportTemplate, { id: shop?.slug, barbearia: shop?.nome });
+  const mensagem = montarMensagemSuporte(supportTemplate, dadosSuporte(shop, identity));
 
   return (
     <div className={`mb-8 flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4 ${urgente ? "border-destructive/40 bg-destructive/10" : trial ? "border-primary/40 bg-primary/10" : "border-emerald-500/30 bg-emerald-500/10"}`}>
@@ -35,6 +47,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const { data: supportWhatsapp } = useSupportWhatsapp();
   const { data: supportTemplate } = useSupportMessageTemplate();
   const { data: shop } = useShop();
+  const { data: identity } = useSupportIdentity();
   const queryClient = useQueryClient();
 
   // O Super Admin nunca deve ficar preso pelo bloqueio/licença de uma barbearia.
@@ -47,7 +60,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const bloqueado = licenca.status === "blocked" || licenca.status === "suspended";
   const expirado = licenca.status === "expired";
   if (!bloqueado && !expirado) return <>{children}</>;
-  const mensagem = montarMensagemSuporte(supportTemplate, { id: shop?.slug, barbearia: shop?.nome });
+  const mensagem = montarMensagemSuporte(supportTemplate, dadosSuporte(shop, identity));
 
   return (
     <div className="mx-auto max-w-xl rounded-lg border border-border bg-card p-8 text-center">
