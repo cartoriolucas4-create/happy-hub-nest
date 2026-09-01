@@ -20,7 +20,7 @@ const MENU = [
   { to: "/super-admin/clientes", label: "Clientes", icon: Users },
   { to: "/super-admin/acessos", label: "Acessos expirando", icon: KeyRound },
   { to: "/super-admin/historico", label: "Histórico", icon: History },
-  { to: "/admin/geral", label: "WhatsApp da equipe", icon: MessageCircle },
+  { to: "/super-admin/whatsapp", label: "WhatsApp da equipe", icon: MessageCircle },
 ] as const;
 
 export function SuperShell({
