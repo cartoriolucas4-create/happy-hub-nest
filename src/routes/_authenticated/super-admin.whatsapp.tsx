@@ -46,7 +46,7 @@ function WhatsAppEquipe() {
         .select("support_whatsapp, support_message_template")
         .eq("id", "default")
         .maybeSingle();
-      if (error) toast.error(error.message);
+      if (error) toast.error(`Não foi possível carregar a configuração: ${error.message}`);
       else {
         setWhatsapp(data?.support_whatsapp ?? "");
         setMensagem(data?.support_message_template || SUPORTE_MENSAGEM_PADRAO);
@@ -61,15 +61,22 @@ function WhatsAppEquipe() {
     if (!digits || digits.length < 10) return void toast.error("Informe um WhatsApp válido com DDD e código do país.");
     if (!texto) return void toast.error("Informe a mensagem automática.");
     if (texto.length > 1024) return void toast.error("A mensagem deve ter no máximo 1024 caracteres.");
+
     setSaving(true);
-    const { error } = await (supabase as any).from("platform_settings").update({ support_whatsapp: digits, support_message_template: texto, updated_at: new Date().toISOString() }).eq("id", "default");
+    const { data, error } = await (supabase as any).rpc("salvar_configuracao_suporte", {
+      _whatsapp: digits,
+      _mensagem: texto,
+    });
     setSaving(false);
-    if (error) return void toast.error(error.message);
+
+    if (error) return void toast.error(`Não foi possível salvar: ${error.message}`);
+    if (data !== true) return void toast.error("A configuração não foi confirmada pelo servidor.");
+
     setWhatsapp(digits);
     setMensagem(texto);
     await queryClient.invalidateQueries({ queryKey: ["platform-support-whatsapp"] });
     await queryClient.invalidateQueries({ queryKey: ["platform-support-message-template"] });
-    toast.success("WhatsApp e mensagem da equipe salvos com sucesso.");
+    toast.success("Mensagem personalizada salva com sucesso.");
   }
 
   function inserirCampo(campo: string) { setMensagem((atual) => `${atual}${atual && !/\s$/.test(atual) ? " " : ""}${campo}`); }
