@@ -17,20 +17,57 @@ function Autorizacao() {
   useEffect(() => {
     if (!shop) return;
     (async () => {
-      const { data } = await (supabase as any).from("public_booking_auth_settings").select("enabled").eq("barbershop_id", shop.id).maybeSingle();
-      setEnabled(Boolean(data?.enabled));
+      const { data, error } = await (supabase as any)
+        .from("public_booking_auth_settings")
+        .select("enabled")
+        .eq("barbershop_id", shop.id)
+        .maybeSingle();
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        setEnabled(Boolean(data?.enabled));
+      }
       setLoading(false);
     })();
   }, [shop]);
 
   async function salvar(value: boolean) {
-    if (!shop) return;
+    if (!shop || saving) return;
     setSaving(true);
-    const { error } = await (supabase as any).from("public_booking_auth_settings").upsert({ barbershop_id: shop.id, enabled: value });
-    setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    setEnabled(value);
-    toast.success(value ? "Autenticação obrigatória ativada." : "Autenticação obrigatória desativada.");
+
+    try {
+      // A tabela possui uma chave única por barbearia. Primeiro tentamos
+      // atualizar o registro existente; somente criamos quando ele não existe.
+      const { data: existing, error: findError } = await (supabase as any)
+        .from("public_booking_auth_settings")
+        .select("barbershop_id")
+        .eq("barbershop_id", shop.id)
+        .maybeSingle();
+
+      if (findError) throw findError;
+
+      let error;
+      if (existing) {
+        ({ error } = await (supabase as any)
+          .from("public_booking_auth_settings")
+          .update({ enabled: value })
+          .eq("barbershop_id", shop.id));
+      } else {
+        ({ error } = await (supabase as any)
+          .from("public_booking_auth_settings")
+          .insert({ barbershop_id: shop.id, enabled: value }));
+      }
+
+      if (error) throw error;
+
+      setEnabled(value);
+      toast.success(value ? "Autenticação obrigatória ativada." : "Autenticação obrigatória desativada.");
+    } catch (error: any) {
+      toast.error(error?.message || "Não foi possível salvar a configuração.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return <AdminShell title="Autorização" subtitle="Defina se o cliente precisa se autenticar antes de agendar.">
