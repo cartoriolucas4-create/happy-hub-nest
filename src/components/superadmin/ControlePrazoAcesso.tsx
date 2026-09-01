@@ -20,10 +20,24 @@ type ClienteAcesso = {
   vencimento: string;
 };
 
-const rpc = supabase.rpc as unknown as (
+/**
+ * Chama o RPC mantendo o cliente Supabase como `this`. Extrair `supabase.rpc`
+ * para uma constante quebra o binding interno (erro "reading 'rest'").
+ */
+async function rpc(
   fn: string,
   args: Record<string, unknown>,
-) => Promise<{ data: unknown; error: { message: string } | null }>;
+): Promise<{ data: unknown; error: { message: string } | null }> {
+  const client = supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{
+      data: unknown;
+      error: { message: string } | null;
+    }>;
+  };
+  const response = await client.rpc(fn, args);
+  if (!response) throw new Error("Não foi possível concluir a alteração de acesso.");
+  return response;
+}
 
 export function ControlePrazoAcesso({ cliente, onChanged }: { cliente: ClienteAcesso; onChanged: () => void }) {
   const [acao, setAcao] = useState<Acao>(null);
@@ -44,8 +58,10 @@ export function ControlePrazoAcesso({ cliente, onChanged }: { cliente: ClienteAc
         args = { ...args, p_quantidade: quantidade, p_unidade: unidade, ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}) };
       } else if (acao === "definir") {
         if (!vencimento) throw new Error("Informe a data e o horário de vencimento.");
+        const escolhido = new Date(vencimento);
+        if (Number.isNaN(escolhido.getTime())) throw new Error("Data de vencimento inválida.");
         fn = "sa_definir_vencimento";
-        args = { ...args, p_vencimento: new Date(vencimento).toISOString(), ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}) };
+        args = { ...args, p_vencimento: escolhido.toISOString(), ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}) };
       } else if (acao === "encerrar") {
         fn = "sa_encerrar_acesso";
         args = { ...args, ...(observacao.trim() ? { p_observacao: observacao.trim() } : {}) };

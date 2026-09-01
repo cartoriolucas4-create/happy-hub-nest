@@ -14,9 +14,9 @@ export const Route = createFileRoute("/_authenticated/admin/agendamentos")({
 });
 
 function addMinutes(hora: string, minutos: number) { const [h, m] = hora.split(":").map(Number); const total = (h ?? 0) * 60 + (m ?? 0) + minutos; return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`; }
-function addDaysIso(iso: string, amount: number) { const [y, m, d] = iso.split("-").map(Number); const date = new Date(y, (m ?? 1) - 1, d ?? 1); date.setDate(date.getDate() + amount); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
-function dayLabel(iso: string) { const [y, m, d] = iso.split("-").map(Number); return new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(new Date(y, (m ?? 1) - 1, d ?? 1)).replace(".", "").slice(0, 3).toUpperCase(); }
-function monthLabel(iso: string) { const [y, m] = iso.split("-").map(Number); return new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(y, (m ?? 1) - 1, 1)).replace(".", "").toUpperCase(); }
+function addDaysIso(iso: string, amount: number) { const [y, m, d] = iso.split("-").map(Number); const date = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1); date.setDate(date.getDate() + amount); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
+function dayLabel(iso: string) { const [y, m, d] = iso.split("-").map(Number); return new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1)).replace(".", "").slice(0, 3).toUpperCase(); }
+function monthLabel(iso: string) { const [y, m] = iso.split("-").map(Number); return new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(y ?? 1970, (m ?? 1) - 1, 1)).replace(".", "").toUpperCase(); }
 
 function Agendamentos() {
   const { data: shop } = useShop();
@@ -39,7 +39,7 @@ function Agendamentos() {
 
     <section className="rounded-lg border border-border bg-card p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <div><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">SEMANA DE</p><p className="font-display text-sm text-primary">{brDate(dias[0])} — {brDate(dias[6])}</p></div>
+        <div><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">SEMANA DE</p><p className="font-display text-sm text-primary">{brDate(dias[0] ?? de)} — {brDate(dias[6] ?? de)}</p></div>
         <div className="flex gap-2"><button type="button" aria-label="Semana anterior" className={`${btnGhost} h-9 w-9 p-0`} onClick={() => moverFaixa(-7)}><ChevronLeft className="mx-auto h-4 w-4" /></button><button type="button" aria-label="Próxima semana" className={`${btnGhost} h-9 w-9 p-0`} onClick={() => moverFaixa(7)}><ChevronRight className="mx-auto h-4 w-4" /></button></div>
       </div>
       <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
