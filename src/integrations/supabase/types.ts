@@ -1153,6 +1153,10 @@ export type Database = {
           vencimento: string
         }[]
       }
+      sa_definir_vencimento: {
+        Args: { p_observacao?: string; p_user_id: string; p_vencimento: string }
+        Returns: string
+      }
       sa_desbloquear_acesso: {
         Args: { p_observacao?: string; p_user_id: string }
         Returns: string
@@ -1160,6 +1164,10 @@ export type Database = {
       sa_desbloquear_clientes_massa: {
         Args: { p_user_ids: string[] }
         Returns: number
+      }
+      sa_encerrar_acesso: {
+        Args: { p_observacao?: string; p_user_id: string }
+        Returns: string
       }
       sa_excluir_cliente: { Args: { p_user_id: string }; Returns: undefined }
       sa_expirando: {
@@ -1211,6 +1219,15 @@ export type Database = {
       sa_registrar_alteracao_senha: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      sa_remover_tempo_acesso: {
+        Args: {
+          p_observacao?: string
+          p_quantidade: number
+          p_unidade: string
+          p_user_id: string
+        }
+        Returns: string
       }
       sa_require: { Args: never; Returns: string }
       sa_stats: {
