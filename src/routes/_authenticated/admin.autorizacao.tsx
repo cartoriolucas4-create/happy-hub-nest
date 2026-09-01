@@ -17,7 +17,7 @@ function Autorizacao() {
   useEffect(() => {
     if (!shop) return;
     (async () => {
-      const { data } = await supabase.from("public_booking_auth_settings").select("enabled").eq("barbershop_id", shop.id).maybeSingle();
+      const { data } = await (supabase as any).from("public_booking_auth_settings").select("enabled").eq("barbershop_id", shop.id).maybeSingle();
       setEnabled(Boolean(data?.enabled));
       setLoading(false);
     })();
@@ -26,7 +26,7 @@ function Autorizacao() {
   async function salvar(value: boolean) {
     if (!shop) return;
     setSaving(true);
-    const { error } = await supabase.from("public_booking_auth_settings").upsert({ barbershop_id: shop.id, enabled: value });
+    const { error } = await (supabase as any).from("public_booking_auth_settings").upsert({ barbershop_id: shop.id, enabled: value });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     setEnabled(value);
