@@ -22,12 +22,17 @@ export async function loadOrCreateShop() {
 
   const meta = (user.user_metadata ?? {}) as Record<string, string>;
   const nome = meta["barbershop_nome"] || "Minha Barbearia";
-  let slug = slugify(meta["barbershop_slug"] || nome) || "barbearia";
+  const baseSlug = slugify(meta["barbershop_slug"] || nome) || "barbearia";
+  let slug = baseSlug;
 
+  // Reserve the requested slug when available. If another account wins the
+  // race between this check and the insert, retry with a deterministic suffix.
   const livre = await supabase.rpc("slug_disponivel", { p_slug: slug });
-  if (!livre.data) slug = `${slug}-${user.id.slice(0, 6)}`;
+  if (!livre.error && livre.data === false) {
+    slug = `${baseSlug}-${user.id.slice(0, 8)}`;
+  }
 
-  const created = await supabase
+  let created = await supabase
     .from("barbershops")
     .insert({
       owner_id: user.id,
@@ -39,6 +44,25 @@ export async function loadOrCreateShop() {
     })
     .select("*")
     .single();
+
+  // The database unique index is the final authority. If a concurrent signup
+  // still claimed the same slug, retry once with the full user id suffix.
+  if (created.error && (created.error.code === "23505" || /duplicate key|unique/i.test(created.error.message))) {
+    const fallbackSlug = `${baseSlug}-${user.id}`;
+    created = await supabase
+      .from("barbershops")
+      .insert({
+        owner_id: user.id,
+        nome,
+        slug: fallbackSlug,
+        telefone: meta["telefone"] ?? null,
+        whatsapp: meta["telefone"] ?? null,
+        email: user.email ?? null,
+      })
+      .select("*")
+      .single();
+  }
+
   if (created.error) throw created.error;
   return created.data;
 }
