@@ -4,52 +4,27 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const MP_API = "https://api.mercadopago.com";
 const MP_AUTH = "https://auth.mercadopago.com.br/authorization";
 const FEE = 0.49;
+const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 
-const supabaseAdmin = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  { auth: { persistSession: false } },
-);
-
-function cors() {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  };
-}
-
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...cors(), "Content-Type": "application/json" },
-  });
-}
+function cors() { return { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "GET,POST,OPTIONS" }; }
+function json(data: unknown, status = 200) { return new Response(JSON.stringify(data), { status, headers: { ...cors(), "Content-Type": "application/json" } }); }
 
 async function requireUser(req: Request) {
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) throw new Error("Não autenticado.");
-  const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!, {
-    auth: { persistSession: false },
-  });
+  const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!, { auth: { persistSession: false } });
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) throw new Error("Sessão inválida.");
   return data.user;
 }
-
 async function getOwnedShop(userId: string) {
   const { data, error } = await supabaseAdmin.from("barbershops").select("id,slug,nome,owner_id").eq("owner_id", userId).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("Barbearia não encontrada para este usuário.");
   return data;
 }
-
 async function mpToken(body: Record<string, string>) {
-  const response = await fetch(`${MP_API}/oauth/token`, {
-    method: "POST",
-    headers: { accept: "application/json", "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(body),
-  });
+  const response = await fetch(`${MP_API}/oauth/token`, { method: "POST", headers: { accept: "application/json", "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body) });
   const data = await response.json();
   if (!response.ok) throw new Error(data?.message || "Mercado Pago recusou a autorização.");
   return data;
@@ -61,67 +36,32 @@ async function startConnect(req: Request) {
   const clientId = Deno.env.get("MERCADOPAGO_CLIENT_ID");
   const redirectUri = Deno.env.get("MERCADOPAGO_REDIRECT_URI");
   if (!clientId || !redirectUri) throw new Error("Mercado Pago ainda não está configurado no ambiente.");
-
   const state = crypto.randomUUID();
-  const { error } = await supabaseAdmin.from("mercado_pago_connections").upsert({
-    barbershop_id: shop.id,
-    mp_user_id: "pending",
-    access_token: "pending",
-    oauth_state: state,
-    oauth_state_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-  }, { onConflict: "barbershop_id" });
+  const { error } = await supabaseAdmin.from("mercado_pago_connections").upsert({ barbershop_id: shop.id, mp_user_id: "pending", access_token: "pending", oauth_state: state, oauth_state_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() }, { onConflict: "barbershop_id" });
   if (error) throw error;
-
   const url = new URL(MP_AUTH);
-  url.searchParams.set("client_id", clientId);
-  url.searchParams.set("response_type", "code");
-  url.searchParams.set("platform_id", "mp");
-  url.searchParams.set("state", state);
-  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("client_id", clientId); url.searchParams.set("response_type", "code"); url.searchParams.set("platform_id", "mp"); url.searchParams.set("state", state); url.searchParams.set("redirect_uri", redirectUri);
   return json({ url: url.toString() });
 }
 
 async function oauthCallback(req: Request) {
-  const url = new URL(req.url);
-  const code = url.searchParams.get("code");
-  const state = url.searchParams.get("state");
+  const url = new URL(req.url); const code = url.searchParams.get("code"); const state = url.searchParams.get("state");
   if (!code || !state) return new Response("Autorização incompleta.", { status: 400, headers: cors() });
-
-  const { data: connection, error: findError } = await supabaseAdmin
-    .from("mercado_pago_connections")
-    .select("barbershop_id,oauth_state,oauth_state_expires_at")
-    .eq("oauth_state", state)
-    .maybeSingle();
+  const { data: connection, error: findError } = await supabaseAdmin.from("mercado_pago_connections").select("barbershop_id,oauth_state,oauth_state_expires_at").eq("oauth_state", state).maybeSingle();
   if (findError) throw findError;
-  if (!connection || !connection.oauth_state_expires_at || new Date(connection.oauth_state_expires_at) < new Date()) {
-    return new Response("Estado OAuth inválido ou expirado.", { status: 400, headers: cors() });
-  }
-
-  const clientId = Deno.env.get("MERCADOPAGO_CLIENT_ID");
-  const clientSecret = Deno.env.get("MERCADOPAGO_CLIENT_SECRET");
-  const redirectUri = Deno.env.get("MERCADOPAGO_REDIRECT_URI");
+  if (!connection || !connection.oauth_state_expires_at || new Date(connection.oauth_state_expires_at) < new Date()) return new Response("Estado OAuth inválido ou expirado.", { status: 400, headers: cors() });
+  const clientId = Deno.env.get("MERCADOPAGO_CLIENT_ID"); const clientSecret = Deno.env.get("MERCADOPAGO_CLIENT_SECRET"); const redirectUri = Deno.env.get("MERCADOPAGO_REDIRECT_URI");
   if (!clientId || !clientSecret || !redirectUri) throw new Error("Mercado Pago ainda não está configurado no ambiente.");
-
   const token = await mpToken({ client_id: clientId, client_secret: clientSecret, code, grant_type: "authorization_code", redirect_uri: redirectUri, state });
-  const { error } = await supabaseAdmin.from("mercado_pago_connections").update({
-    mp_user_id: String(token.user_id),
-    public_key: token.public_key ?? null,
-    access_token: token.access_token,
-    refresh_token: token.refresh_token ?? null,
-    token_expires_at: new Date(Date.now() + Number(token.expires_in ?? 15552000) * 1000).toISOString(),
-    live_mode: Boolean(token.live_mode),
-    oauth_state: null,
-    oauth_state_expires_at: null,
-  }).eq("barbershop_id", connection.barbershop_id);
+  const { error } = await supabaseAdmin.from("mercado_pago_connections").update({ mp_user_id: String(token.user_id), public_key: token.public_key ?? null, access_token: token.access_token, refresh_token: token.refresh_token ?? null, token_expires_at: new Date(Date.now() + Number(token.expires_in ?? 15552000) * 1000).toISOString(), live_mode: Boolean(token.live_mode), oauth_state: null, oauth_state_expires_at: null }).eq("barbershop_id", connection.barbershop_id);
   if (error) throw error;
-
-  const appUrl = Deno.env.get("MERCADOPAGO_APP_URL") || new URL(req.url).origin;
+  const appUrl = Deno.env.get("MERCADOPAGO_APP_URL");
+  if (!appUrl) throw new Error("MERCADOPAGO_APP_URL não configurada.");
   return Response.redirect(`${appUrl}/admin/pagamentos?mercado_pago=connected`, 302);
 }
 
 async function status(req: Request) {
-  const user = await requireUser(req);
-  const shop = await getOwnedShop(user.id);
+  const user = await requireUser(req); const shop = await getOwnedShop(user.id);
   const { data, error } = await supabaseAdmin.from("mercado_pago_connections").select("mp_user_id,public_key,live_mode,token_expires_at").eq("barbershop_id", shop.id).maybeSingle();
   if (error) throw error;
   return json({ connected: Boolean(data?.mp_user_id && data.mp_user_id !== "pending" && data.token_expires_at), accountId: data?.mp_user_id ?? null, liveMode: data?.live_mode ?? false, expiresAt: data?.token_expires_at ?? null, fee: FEE });
@@ -130,110 +70,51 @@ async function status(req: Request) {
 async function createCheckout(body: any) {
   const { slug, barberId, serviceId, data, hora, nome, telefone, observacao } = body ?? {};
   if (!slug || !barberId || !serviceId || !data || !hora || !nome || !telefone) throw new Error("Dados do agendamento incompletos.");
-
   const { data: shop, error: shopError } = await supabaseAdmin.from("barbershops").select("id,slug,nome").eq("slug", slug).maybeSingle();
-  if (shopError) throw shopError;
-  if (!shop) throw new Error("Barbearia não encontrada.");
-
+  if (shopError) throw shopError; if (!shop) throw new Error("Barbearia não encontrada.");
   const { data: connection, error: connectionError } = await supabaseAdmin.from("mercado_pago_connections").select("access_token").eq("barbershop_id", shop.id).maybeSingle();
-  if (connectionError) throw connectionError;
-  if (!connection?.access_token || connection.access_token === "pending") throw new Error("Esta barbearia ainda não conectou o Mercado Pago.");
-
+  if (connectionError) throw connectionError; if (!connection?.access_token || connection.access_token === "pending") throw new Error("Esta barbearia ainda não conectou o Mercado Pago.");
   const { data: service, error: serviceError } = await supabaseAdmin.from("services").select("id,nome,preco,duracao_minutos").eq("id", serviceId).eq("barbershop_id", shop.id).eq("ativo", true).maybeSingle();
-  if (serviceError) throw serviceError;
-  if (!service) throw new Error("Serviço indisponível.");
-
-  const { data: appointmentId, error: appointmentError } = await supabaseAdmin.rpc("criar_agendamento_publico", {
-    p_slug: slug,
-    p_barber_id: barberId,
-    p_service_id: serviceId,
-    p_data: data,
-    p_hora: hora,
-    p_nome: String(nome).trim(),
-    p_telefone: String(telefone).trim(),
-    ...(observacao?.trim() ? { p_observacao: String(observacao).trim() } : {}),
-  });
-  if (appointmentError) throw new Error(appointmentError.message);
-  if (!appointmentId) throw new Error("Não foi possível criar a reserva.");
-
-  const appUrl = Deno.env.get("MERCADOPAGO_APP_URL") || new URL(req.url).origin;
-  const functionUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercado-pago`;
-  const preferenceResponse = await fetch(`${MP_API}/checkout/preferences`, {
-    method: "POST",
-    headers: { accept: "application/json", "content-type": "application/json", Authorization: `Bearer ${connection.access_token}` },
-    body: JSON.stringify({
-      items: [{ id: service.id, title: `${service.nome} - ${shop.nome}`, quantity: 1, currency_id: "BRL", unit_price: Number(service.preco) }],
-      payer: { name: String(nome).trim(), phone: { number: String(telefone).replace(/\D/g, "") } },
-      marketplace_fee: FEE,
-      external_reference: String(appointmentId),
-      notification_url: `${functionUrl}?action=webhook`,
-      back_urls: {
-        success: `${appUrl}/${slug}/agendar?payment=success&appointment=${appointmentId}`,
-        pending: `${appUrl}/${slug}/agendar?payment=pending&appointment=${appointmentId}`,
-        failure: `${appUrl}/${slug}/agendar?payment=failure&appointment=${appointmentId}`,
-      },
-      auto_return: "approved",
-    }),
-  });
+  if (serviceError) throw serviceError; if (!service) throw new Error("Serviço indisponível.");
+  const { data: appointmentId, error: appointmentError } = await supabaseAdmin.rpc("criar_agendamento_publico", { p_slug: slug, p_barber_id: barberId, p_service_id: serviceId, p_data: data, p_hora: hora, p_nome: String(nome).trim(), p_telefone: String(telefone).trim(), ...(observacao?.trim() ? { p_observacao: String(observacao).trim() } : {}) });
+  if (appointmentError) throw new Error(appointmentError.message); if (!appointmentId) throw new Error("Não foi possível criar a reserva.");
+  const appUrl = Deno.env.get("MERCADOPAGO_APP_URL"); const functionUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercado-pago`;
+  if (!appUrl) throw new Error("MERCADOPAGO_APP_URL não configurada.");
+  const preferenceResponse = await fetch(`${MP_API}/checkout/preferences`, { method: "POST", headers: { accept: "application/json", "content-type": "application/json", Authorization: `Bearer ${connection.access_token}` }, body: JSON.stringify({
+    items: [{ id: service.id, title: `${service.nome} - ${shop.nome}`, quantity: 1, currency_id: "BRL", unit_price: Number(service.preco) }],
+    payer: { name: String(nome).trim(), phone: { number: String(telefone).replace(/\D/g, "") } },
+    marketplace_fee: FEE, external_reference: String(appointmentId), notification_url: `${functionUrl}?action=webhook`,
+    back_urls: { success: `${appUrl}/${slug}/agendar?payment=success&appointment=${appointmentId}`, pending: `${appUrl}/${slug}/agendar?payment=pending&appointment=${appointmentId}`, failure: `${appUrl}/${slug}/agendar?payment=failure&appointment=${appointmentId}` }, auto_return: "approved",
+  }) });
   const preference = await preferenceResponse.json();
-  if (!preferenceResponse.ok) {
-    await supabaseAdmin.from("appointments").update({ status: "cancelado" }).eq("id", appointmentId);
-    throw new Error(preference?.message || "Não foi possível criar o checkout.");
-  }
-
-  const { error: paymentError } = await supabaseAdmin.from("online_payments").insert({
-    appointment_id: appointmentId,
-    barbershop_id: shop.id,
-    preference_id: preference.id,
-    amount: Number(service.preco),
-    marketplace_fee: FEE,
-    checkout_url: preference.init_point ?? null,
-    status: "pending",
-  });
+  if (!preferenceResponse.ok) { await supabaseAdmin.from("appointments").update({ status: "cancelado" }).eq("id", appointmentId); throw new Error(preference?.message || "Não foi possível criar o checkout."); }
+  const { error: paymentError } = await supabaseAdmin.from("online_payments").insert({ appointment_id: appointmentId, barbershop_id: shop.id, preference_id: preference.id, amount: Number(service.preco), marketplace_fee: FEE, checkout_url: preference.init_point ?? null, status: "pending" });
   if (paymentError) throw paymentError;
-
   return json({ appointmentId, preferenceId: preference.id, checkoutUrl: preference.init_point ?? preference.sandbox_init_point, marketplaceFee: FEE });
 }
 
 async function verifyWebhook(req: Request) {
-  const secret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
-  if (!secret) return true;
-  const signature = req.headers.get("x-signature") ?? "";
-  const requestId = req.headers.get("x-request-id") ?? "";
-  const dataId = new URL(req.url).searchParams.get("data.id") ?? "";
-  const ts = signature.match(/(?:^|,)\s*ts=([^,]+)/)?.[1] ?? "";
-  const v1 = signature.match(/(?:^|,)\s*v1=([^,]+)/)?.[1] ?? "";
+  const secret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET"); if (!secret) return true;
+  const signature = req.headers.get("x-signature") ?? ""; const requestId = req.headers.get("x-request-id") ?? ""; const dataId = new URL(req.url).searchParams.get("data.id") ?? "";
+  const ts = signature.match(/(?:^|,)\s*ts=([^,]+)/)?.[1] ?? ""; const v1 = signature.match(/(?:^|,)\s*v1=([^,]+)/)?.[1] ?? "";
   const manifest = [dataId && `id:${dataId}`, requestId && `request-id:${requestId}`, ts && `ts:${ts}`].filter(Boolean).join(";") + ";";
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(manifest));
-  const expected = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return expected === v1;
+  const expected = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join(""); return expected === v1;
 }
 
 async function webhook(req: Request) {
   if (!(await verifyWebhook(req))) return json({ error: "Assinatura inválida." }, 401);
   const payload = await req.json().catch(() => ({}));
   if (payload?.type !== "payment" && payload?.action !== "payment.created" && payload?.action !== "payment.updated") return json({ ok: true });
-  const paymentId = String(payload?.data?.id ?? new URL(req.url).searchParams.get("data.id") ?? "");
-  const sellerId = String(payload?.user_id ?? "");
-  if (!paymentId || !sellerId) return json({ ok: true });
-
-  const { data: connection } = await supabaseAdmin.from("mercado_pago_connections").select("access_token,barbershop_id").eq("mp_user_id", sellerId).maybeSingle();
-  if (!connection) return json({ ok: true });
-  const paymentResponse = await fetch(`${MP_API}/v1/payments/${paymentId}`, { headers: { Authorization: `Bearer ${connection.access_token}` } });
-  if (!paymentResponse.ok) return json({ ok: true });
-  const payment = await paymentResponse.json();
-  const appointmentId = String(payment.external_reference ?? "");
-  if (!appointmentId) return json({ ok: true });
-
-  const statusMap: Record<string, string> = { approved: "approved", pending: "pending", in_process: "pending", rejected: "rejected", cancelled: "cancelled", refunded: "refunded", charged_back: "charged_back" };
-  const status = statusMap[payment.status] ?? "pending";
+  const paymentId = String(payload?.data?.id ?? new URL(req.url).searchParams.get("data.id") ?? ""); const sellerId = String(payload?.user_id ?? ""); if (!paymentId || !sellerId) return json({ ok: true });
+  const { data: connection } = await supabaseAdmin.from("mercado_pago_connections").select("access_token,barbershop_id").eq("mp_user_id", sellerId).maybeSingle(); if (!connection) return json({ ok: true });
+  const paymentResponse = await fetch(`${MP_API}/v1/payments/${paymentId}`, { headers: { Authorization: `Bearer ${connection.access_token}` } }); if (!paymentResponse.ok) return json({ ok: true });
+  const payment = await paymentResponse.json(); const appointmentId = String(payment.external_reference ?? ""); if (!appointmentId) return json({ ok: true });
+  const statusMap: Record<string, string> = { approved: "approved", pending: "pending", in_process: "pending", rejected: "rejected", cancelled: "cancelled", refunded: "refunded", charged_back: "charged_back" }; const status = statusMap[payment.status] ?? "pending";
   await supabaseAdmin.from("online_payments").update({ payment_id: paymentId, status }).eq("appointment_id", appointmentId);
-  if (status === "approved") {
-    await supabaseAdmin.from("appointments").update({ status: "confirmado" }).eq("id", appointmentId);
-  } else if (["rejected", "cancelled", "refunded", "charged_back"].includes(status)) {
-    await supabaseAdmin.from("appointments").update({ status: "cancelado" }).eq("id", appointmentId);
-  }
+  if (status === "approved") await supabaseAdmin.from("appointments").update({ status: "confirmado" }).eq("id", appointmentId);
+  else if (["rejected", "cancelled", "refunded", "charged_back"].includes(status)) await supabaseAdmin.from("appointments").update({ status: "cancelado" }).eq("id", appointmentId);
   return json({ ok: true });
 }
 
@@ -241,14 +122,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors() });
   try {
     const action = new URL(req.url).searchParams.get("action") || (req.method === "POST" ? "status" : "oauth-callback");
-    if (action === "connect") return await startConnect(req);
-    if (action === "oauth-callback") return await oauthCallback(req);
-    if (action === "status") return await status(req);
-    if (action === "checkout") return await createCheckout(await req.json());
-    if (action === "webhook") return await webhook(req);
+    if (action === "connect") return await startConnect(req); if (action === "oauth-callback") return await oauthCallback(req); if (action === "status") return await status(req); if (action === "checkout") return await createCheckout(await req.json()); if (action === "webhook") return await webhook(req);
     return json({ error: "Ação inválida." }, 400);
-  } catch (error) {
-    console.error(error);
-    return json({ error: error instanceof Error ? error.message : "Erro inesperado." }, 500);
-  }
+  } catch (error) { console.error(error); return json({ error: error instanceof Error ? error.message : "Erro inesperado." }, 500); }
 });
