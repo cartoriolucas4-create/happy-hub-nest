@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Lock, MessageCircle, ShieldCheck } from "lucide-react";
-import { dataHoraBr, formatarRestante, serverOffset, useCountdown, useLicense, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
+import { dataHoraBr, formatarRestante, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
 import { useShop } from "@/lib/shop";
 
 export function LicenseBanner() {
@@ -29,12 +29,19 @@ export function LicenseBanner() {
 }
 
 export function AccessGate({ children }: { children: React.ReactNode }) {
-  const { data: licenca, isLoading } = useLicense();
+  const { data: licenca, isLoading: licenseLoading } = useLicense();
+  const { data: isSuperAdmin, isLoading: roleLoading } = useIsSuperAdmin();
   const { data: supportWhatsapp } = useSupportWhatsapp();
   const { data: shop } = useShop();
   const queryClient = useQueryClient();
-  if (isLoading) return <p className="text-sm text-muted-foreground">Verificando seu acesso...</p>;
+
+  // O Super Admin nunca deve ficar preso pelo bloqueio/licença de uma barbearia.
+  // Isso também garante acesso ao Admin Geral para corrigir configurações da plataforma.
+  if (roleLoading) return <p className="text-sm text-muted-foreground">Verificando permissões...</p>;
+  if (isSuperAdmin) return <>{children}</>;
+  if (licenseLoading) return <p className="text-sm text-muted-foreground">Verificando seu acesso...</p>;
   if (!licenca) return <>{children}</>;
+
   const bloqueado = licenca.status === "blocked" || licenca.status === "suspended";
   const expirado = licenca.status === "expired";
   if (!bloqueado && !expirado) return <>{children}</>;
