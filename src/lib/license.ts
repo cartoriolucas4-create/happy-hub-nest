@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /** WhatsApp comercial da plataforma usado como fallback até o Admin Geral definir o número. */
 export const SUPORTE_WHATSAPP = "5511999999999";
-export const SUPORTE_MENSAGEM_PADRAO = "Olá, sou /{id}, e tenho uma dúvida.";
+export const SUPORTE_MENSAGEM_PADRAO = "Olá, sou da barbearia {barbearia}. Meu ID é {id}. Preciso de ajuda.";
 
 export type LicenseStatus = "trial" | "active" | "expired" | "blocked" | "suspended";
 
@@ -89,23 +89,45 @@ export function useSupportMessageTemplate() {
   });
 }
 
+/** Dados do responsável logado usados para preencher a mensagem de suporte. */
+export function useSupportIdentity() {
+  return useQuery({
+    queryKey: ["platform-support-identity"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      const user = data.user;
+      if (!user) return { nome: "", email: "", telefone: "" };
+      const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+      const nome = String(metadata.full_name || metadata.name || metadata.nome || "").trim();
+      const telefone = String(metadata.telefone || metadata.phone || "").trim();
+      return { nome, email: user.email || "", telefone };
+    },
+  });
+}
+
 export type SupportMessageData = {
   id?: string | null;
+  slug?: string | null;
   barbearia?: string | null;
   nome?: string | null;
   telefone?: string | null;
+  email?: string | null;
 };
 
 /** Substitui os campos disponíveis na mensagem sem deixar placeholders quebrados. */
 export function montarMensagemSuporte(template: string | null | undefined, data: SupportMessageData) {
   const texto = template || SUPORTE_MENSAGEM_PADRAO;
   const valores: Record<string, string> = {
-    id: data.id || "ID-DO-SITE",
+    id: data.id || "ID-DA-BARBEARIA",
+    slug: data.slug || data.id || "SLUG-DA-BARBEARIA",
     barbearia: data.barbearia || "Barbearia",
     nome: data.nome || "",
     telefone: data.telefone || "",
+    email: data.email || "",
   };
-  return texto.replace(/\{(id|barbearia|nome|telefone)\}/gi, (_, chave: string) => valores[chave.toLowerCase()] ?? "");
+  return texto.replace(/\{(id|slug|barbearia|nome|telefone|email)\}/gi, (_, chave: string) => valores[chave.toLowerCase()] ?? "");
 }
 
 export function serverOffset(licenca: Licenca | null | undefined) {
