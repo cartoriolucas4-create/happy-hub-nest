@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Lock, MessageCircle, ShieldCheck } from "lucide-react";
-import { dataHoraBr, formatarRestante, montarMensagemSuporte, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useShop, useSupportMessageTemplate, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
+import { dataHoraBr, formatarRestante, montarMensagemSuporte, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useSupportMessageTemplate, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
+import { useShop } from "@/lib/shop";
 
 export function LicenseBanner() {
   const { data: licenca } = useLicense();
