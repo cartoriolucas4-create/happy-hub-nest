@@ -24,6 +24,7 @@ import {
   mapsLink,
   waLink,
 } from "@/lib/barber";
+import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/lib/media";
 import { fetchGaleria, GALERIA_PADRAO } from "@/lib/gallery";
 import { WhatsAppFloat } from "@/components/public/WhatsAppFloat";
@@ -158,14 +159,19 @@ function PaginaPublica() {
 
   return (
     <div className="min-h-screen bg-background text-foreground" style={pageStyle}>
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 py-3 lg:px-10">
+      <header
+        className={cn(
+          "fixed inset-x-0 top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl",
+          logo ? "py-3 sm:py-4 lg:py-5" : "py-3",
+        )}
+      >
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 lg:px-10">
           <div className="flex items-center gap-3">
             {logo ? (
               <img
                 src={logo}
                 alt={`Logo da ${shop.nome}`}
-                className="h-11 w-11 rounded-full border border-primary/30 object-cover"
+                className="h-11 w-11 rounded-full border border-primary/30 object-cover sm:h-12 sm:w-12 lg:h-14 lg:w-14"
               />
             ) : (
               <span className="flex h-11 w-11 items-center justify-center rounded-full border border-primary/30 bg-card text-primary">
