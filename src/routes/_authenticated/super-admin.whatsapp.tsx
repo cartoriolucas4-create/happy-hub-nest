@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MessageCircle, Save } from "lucide-react";
+import { MessageCircle, Save, Shield } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SuperShell, sBtn, sInput } from "@/components/superadmin/SuperShell";
-import { useIsSuperAdmin } from "@/lib/license";
+import { montarMensagemSuporte, SUPORTE_MENSAGEM_PADRAO, useIsSuperAdmin } from "@/lib/license";
 
 export const Route = createFileRoute("/_authenticated/super-admin/whatsapp")({
-  head: () => ({ meta: [{ title: "WhatsApp da equipe | Super Admin" }, { name: "description", content: "Configuração do WhatsApp da equipe da plataforma." }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "WhatsApp da equipe | Super Admin" }, { name: "description", content: "Configuração do WhatsApp e mensagem de atendimento da plataforma." }, { name: "robots", content: "noindex" }] }),
   component: WhatsAppEquipe,
 });
 
@@ -20,9 +21,20 @@ function formatarWhatsapp(value: string) {
   return `+${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7, 11)} ${digits.slice(11)}`;
 }
 
+const CAMPOS = [
+  ["{id}", "ID interno da barbearia"],
+  ["{slug}", "Slug/link público da barbearia"],
+  ["{barbearia}", "Nome da barbearia"],
+  ["{nome}", "Nome do responsável"],
+  ["{telefone}", "WhatsApp/telefone cadastrado"],
+  ["{email}", "E-mail do responsável"],
+] as const;
+
 function WhatsAppEquipe() {
   const { data: isSuperAdmin, isLoading: checkingRole } = useIsSuperAdmin();
+  const queryClient = useQueryClient();
   const [whatsapp, setWhatsapp] = useState("");
+  const [mensagem, setMensagem] = useState(SUPORTE_MENSAGEM_PADRAO);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -31,13 +43,14 @@ function WhatsAppEquipe() {
     void (async () => {
       const { data, error } = await (supabase as any)
         .from("platform_settings")
-        .select("support_whatsapp")
+        .select("support_whatsapp, support_message_template")
         .eq("id", "default")
         .maybeSingle();
       if (error) {
         toast.error(error.message);
       } else {
         setWhatsapp(data?.support_whatsapp ?? "");
+        setMensagem(data?.support_message_template || SUPORTE_MENSAGEM_PADRAO);
       }
       setLoading(false);
     })();
@@ -49,11 +62,24 @@ function WhatsAppEquipe() {
       toast.error("Informe um WhatsApp válido com DDD e código do país.");
       return;
     }
+    const texto = mensagem.trim();
+    if (!texto) {
+      toast.error("Informe a mensagem automática.");
+      return;
+    }
+    if (texto.length > 1024) {
+      toast.error("A mensagem deve ter no máximo 1024 caracteres.");
+      return;
+    }
 
     setSaving(true);
     const { error } = await (supabase as any)
       .from("platform_settings")
-      .update({ support_whatsapp: digits, updated_at: new Date().toISOString() })
+      .update({
+        support_whatsapp: digits,
+        support_message_template: texto,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", "default");
     setSaving(false);
 
@@ -63,8 +89,24 @@ function WhatsAppEquipe() {
     }
 
     setWhatsapp(digits);
-    toast.success("WhatsApp da equipe salvo com sucesso.");
+    setMensagem(texto);
+    await queryClient.invalidateQueries({ queryKey: ["platform-support-whatsapp"] });
+    await queryClient.invalidateQueries({ queryKey: ["platform-support-message-template"] });
+    toast.success("WhatsApp e mensagem da equipe salvos com sucesso.");
   }
+
+  function inserirCampo(campo: string) {
+    setMensagem((atual) => `${atual}${atual && !/\s$/.test(atual) ? " " : ""}${campo}`);
+  }
+
+  const preview = montarMensagemSuporte(mensagem, {
+    id: "9c3e7a11-EXEMPLO",
+    slug: "lucas-rodrigues10",
+    barbearia: "Barbearia Exemplo",
+    nome: "Lucas Rodrigues",
+    telefone: "5582999999999",
+    email: "lucas@exemplo.com",
+  });
 
   const content = checkingRole ? (
     <p className="text-sm text-muted-foreground">Verificando permissões...</p>
@@ -74,14 +116,14 @@ function WhatsAppEquipe() {
       <p className="mt-2 text-sm text-muted-foreground">Somente o Super Admin pode alterar as configurações gerais da plataforma.</p>
     </div>
   ) : (
-    <div className="max-w-3xl">
+    <div className="max-w-4xl space-y-6">
       <section className="rounded-xl border border-slate-700 bg-[#101923] p-6 sm:p-8">
         <div className="flex items-start gap-4">
           <div className="rounded-lg bg-primary/10 p-3 text-primary"><MessageCircle className="h-6 w-6" /></div>
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-sky-300">Suporte da plataforma</p>
             <h2 className="mt-1 text-2xl">WhatsApp da equipe</h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">Defina o número central que será usado para contato com a equipe da plataforma.</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">Defina o número central e personalize a mensagem enviada automaticamente quando uma barbearia falar com a equipe.</p>
           </div>
         </div>
 
@@ -98,9 +140,52 @@ function WhatsAppEquipe() {
           <span className="mt-2 block text-xs text-slate-400">Use código do país + DDD + número. Ex.: +55 82 99999-9999.</span>
         </label>
 
+        <label className="mt-7 block">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs uppercase tracking-widest text-slate-400">Mensagem personalizada</span>
+            <span className="text-xs text-slate-500">{mensagem.length}/1024</span>
+          </div>
+          <textarea
+            className={`${sInput} mt-2 min-h-36 resize-y`}
+            value={mensagem}
+            onChange={(e) => setMensagem(e.target.value)}
+            maxLength={1024}
+            disabled={loading || saving}
+            placeholder="Olá, sou da barbearia {barbearia}. Meu ID é {id}. Preciso de ajuda."
+          />
+          <span className="mt-2 block text-xs text-slate-400">Você escreve a mensagem como quiser e os campos abaixo são preenchidos automaticamente pela barbearia que estiver entrando em contato.</span>
+        </label>
+
+        <div className="mt-5 rounded-lg border border-slate-700 bg-[#14202b] p-4">
+          <p className="text-xs uppercase tracking-widest text-sky-300">Campos automáticos</p>
+          <p className="mt-1 text-xs text-slate-500">Clique em um campo para adicioná-lo ao final da mensagem.</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {CAMPOS.map(([campo, descricao]) => (
+              <button
+                key={campo}
+                type="button"
+                className="flex items-center justify-between gap-3 rounded-md border border-slate-700 bg-slate-800/70 px-3 py-2 text-left transition hover:border-primary"
+                onClick={() => inserirCampo(campo)}
+                disabled={loading || saving}
+              >
+                <code className="text-sm text-sky-300">{campo}</code>
+                <span className="text-xs text-slate-400">{descricao}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-start gap-3 rounded-lg border border-slate-700 bg-[#14202b] p-4">
+          <Shield className="mt-0.5 h-5 w-5 shrink-0 text-sky-300" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Prévia da mensagem</p>
+            <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-400">{preview}</p>
+          </div>
+        </div>
+
         <button type="button" className={`${sBtn} mt-6 inline-flex items-center gap-2`} onClick={salvar} disabled={loading || saving}>
           <Save className="h-4 w-4" />
-          {saving ? "SALVANDO..." : "SALVAR WHATSAPP"}
+          {saving ? "SALVANDO..." : "SALVAR CONFIGURAÇÃO"}
         </button>
       </section>
     </div>
