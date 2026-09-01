@@ -1,11 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Lock, MessageCircle, ShieldCheck } from "lucide-react";
-import { dataHoraBr, formatarRestante, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
-import { useShop } from "@/lib/shop";
+import { dataHoraBr, formatarRestante, montarMensagemSuporte, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useShop, useSupportMessageTemplate, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
 
 export function LicenseBanner() {
   const { data: licenca } = useLicense();
   const { data: supportWhatsapp } = useSupportWhatsapp();
+  const { data: supportTemplate } = useSupportMessageTemplate();
   const { data: shop } = useShop();
   const offset = serverOffset(licenca);
   const ms = useCountdown(licenca?.expires_at, offset);
@@ -15,7 +15,7 @@ export function LicenseBanner() {
   const trial = licenca.status === "trial";
   const urgente = trial && ms < 2 * 60 * 60 * 1000;
   const aviso = !trial ? null : ms < 30 * 60 * 1000 ? "Seu período de teste termina em menos de 30 minutos." : ms < 2 * 60 * 60 * 1000 ? "Seu período de teste termina em menos de 2 horas." : "Entre em contato para continuar utilizando depois do teste.";
-  const mensagem = `Olá, sou /${shop?.slug ?? "ID-DO-SITE"}, e tenho uma dúvida.`;
+  const mensagem = montarMensagemSuporte(supportTemplate, { id: shop?.slug, barbearia: shop?.nome });
 
   return (
     <div className={`mb-8 flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4 ${urgente ? "border-destructive/40 bg-destructive/10" : trial ? "border-primary/40 bg-primary/10" : "border-emerald-500/30 bg-emerald-500/10"}`}>
@@ -32,11 +32,12 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const { data: licenca, isLoading: licenseLoading } = useLicense();
   const { data: isSuperAdmin, isLoading: roleLoading } = useIsSuperAdmin();
   const { data: supportWhatsapp } = useSupportWhatsapp();
+  const { data: supportTemplate } = useSupportMessageTemplate();
   const { data: shop } = useShop();
   const queryClient = useQueryClient();
 
   // O Super Admin nunca deve ficar preso pelo bloqueio/licença de uma barbearia.
-  // Isso também garante acesso ao Admin Geral para corrigir configurações da plataforma.
+  // Isso garante acesso ao Admin Geral para corrigir configurações da plataforma.
   if (roleLoading) return <p className="text-sm text-muted-foreground">Verificando permissões...</p>;
   if (isSuperAdmin) return <>{children}</>;
   if (licenseLoading) return <p className="text-sm text-muted-foreground">Verificando seu acesso...</p>;
@@ -45,7 +46,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const bloqueado = licenca.status === "blocked" || licenca.status === "suspended";
   const expirado = licenca.status === "expired";
   if (!bloqueado && !expirado) return <>{children}</>;
-  const mensagem = `Olá, sou /${shop?.slug ?? "ID-DO-SITE"}, e tenho uma dúvida.`;
+  const mensagem = montarMensagemSuporte(supportTemplate, { id: shop?.slug, barbearia: shop?.nome });
 
   return (
     <div className="mx-auto max-w-xl rounded-lg border border-border bg-card p-8 text-center">
