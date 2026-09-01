@@ -24,6 +24,7 @@ import {
   mapsLink,
   waLink,
 } from "@/lib/barber";
+import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/lib/media";
 import { fetchGaleria, GALERIA_PADRAO } from "@/lib/gallery";
 import { WhatsAppFloat } from "@/components/public/WhatsAppFloat";
