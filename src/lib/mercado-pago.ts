@@ -1,38 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type MercadoPagoStatus = {
-  connected: boolean;
-  accountId: string | null;
-  liveMode: boolean;
-  expiresAt: string | null;
-  fee: number;
-};
-
-export async function mercadoPagoStatus() {
-  const { data, error } = await supabase.functions.invoke<MercadoPagoStatus>("mercado-pago?action=status", { body: {} });
-  if (error) throw error;
-  return data;
-}
-
-export async function conectarMercadoPago() {
-  const { data, error } = await supabase.functions.invoke<{ url: string }>("mercado-pago?action=connect", { body: {} });
-  if (error) throw error;
-  if (!data?.url) throw new Error("Não foi possível iniciar a conexão com o Mercado Pago.");
-  window.location.assign(data.url);
-}
-
-export async function criarCheckoutMercadoPago(payload: {
-  slug: string;
-  barberId: string;
-  serviceId: string;
-  data: string;
-  hora: string;
-  nome: string;
-  telefone: string;
-  observacao?: string;
-}) {
-  const { data, error } = await supabase.functions.invoke<{ appointmentId: string; preferenceId: string; checkoutUrl: string; marketplaceFee: number }>("mercado-pago?action=checkout", { body: payload });
-  if (error) throw error;
-  if (!data?.checkoutUrl) throw new Error("O checkout do Mercado Pago não foi criado.");
-  return data;
-}
+export type MercadoPagoStatus = { connected: boolean; accountId: string | null; liveMode: boolean; expiresAt: string | null; fee: number };
+export async function mercadoPagoStatus() { const { data, error } = await supabase.functions.invoke<MercadoPagoStatus>("mercado-pago?action=status", { body: {} }); if (error) throw error; return data; }
+export async function mercadoPagoPublicStatus(slug: string) { const { data, error } = await supabase.functions.invoke<{ connected: boolean; fee: number }>("mercado-pago?action=public-status", { body: { slug } }); if (error) throw error; return data; }
+export async function conectarMercadoPago() { const { data, error } = await supabase.functions.invoke<{ url: string }>("mercado-pago?action=connect", { body: {} }); if (error) throw error; if (!data?.url) throw new Error("Não foi possível iniciar a conexão com o Mercado Pago."); window.location.assign(data.url); }
+export async function criarCheckoutMercadoPago(payload: { slug: string; barberId: string; serviceId: string; data: string; hora: string; nome: string; telefone: string; observacao?: string }) { const { data, error } = await supabase.functions.invoke<{ appointmentId: string; preferenceId: string; checkoutUrl: string; marketplaceFee: number }>("mercado-pago?action=checkout", { body: payload }); if (error) throw error; if (!data?.checkoutUrl) throw new Error("O checkout do Mercado Pago não foi criado."); return data; }
+export async function statusPagamentoMercadoPago(appointmentId: string) { const { data, error } = await supabase.functions.invoke<{ status: string; amount?: number; marketplace_fee?: number; payment_id?: string }>("mercado-pago?action=payment-status", { body: { appointmentId } }); if (error) throw error; return data; }
