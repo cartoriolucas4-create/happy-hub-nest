@@ -29,6 +29,7 @@ import { Route as AuthenticatedAdminVendasExternasRouteImport } from './routes/_
 import { Route as AuthenticatedSuperAdminIndexRouteImport } from './routes/_authenticated/super-admin.index'
 import { Route as AuthenticatedSuperAdminAcessosRouteImport } from './routes/_authenticated/super-admin.acessos'
 import { Route as AuthenticatedSuperAdminHistoricoRouteImport } from './routes/_authenticated/super-admin.historico'
+import { Route as AuthenticatedSuperAdminWhatsappRouteImport } from './routes/_authenticated/super-admin.whatsapp'
 import { Route as BarbeariaSlugIndexRouteImport } from './routes/barbearia.$slug.index'
 import { Route as BarbeariaSlugAgendarRouteImport } from './routes/barbearia.$slug.agendar'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
@@ -58,6 +59,7 @@ const AuthenticatedAdminVendasExternasRoute = AuthenticatedAdminVendasExternasRo
 const AuthenticatedSuperAdminIndexRoute = AuthenticatedSuperAdminIndexRouteImport.update({ id: '/super-admin/', path: '/super-admin/', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const AuthenticatedSuperAdminAcessosRoute = AuthenticatedSuperAdminAcessosRouteImport.update({ id: '/super-admin/acessos', path: '/super-admin/acessos', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const AuthenticatedSuperAdminHistoricoRoute = AuthenticatedSuperAdminHistoricoRouteImport.update({ id: '/super-admin/historico', path: '/super-admin/historico', getParentRoute: () => AuthenticatedRouteRoute } as any)
+const AuthenticatedSuperAdminWhatsappRoute = AuthenticatedSuperAdminWhatsappRouteImport.update({ id: '/super-admin/whatsapp', path: '/super-admin/whatsapp', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const BarbeariaSlugIndexRoute = BarbeariaSlugIndexRouteImport.update({ id: '/barbearia/$slug/', path: '/barbearia/$slug/', getParentRoute: () => rootRouteImport } as any)
 const BarbeariaSlugAgendarRoute = BarbeariaSlugAgendarRouteImport.update({ id: '/barbearia/$slug/agendar', path: '/barbearia/$slug/agendar', getParentRoute: () => rootRouteImport } as any)
 const SlugIndexRoute = SlugIndexRouteImport.update({ id: '/$slug/', path: '/$slug/', getParentRoute: () => rootRouteImport } as any)
@@ -85,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/admin/vendas-externas': typeof AuthenticatedAdminVendasExternasRoute
   '/super-admin/acessos': typeof AuthenticatedSuperAdminAcessosRoute
   '/super-admin/historico': typeof AuthenticatedSuperAdminHistoricoRoute
+  '/super-admin/whatsapp': typeof AuthenticatedSuperAdminWhatsappRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/$slug/agendar': typeof SlugAgendarRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -114,6 +117,7 @@ export interface FileRoutesByTo {
   '/admin/vendas-externas': typeof AuthenticatedAdminVendasExternasRoute
   '/super-admin/acessos': typeof AuthenticatedSuperAdminAcessosRoute
   '/super-admin/historico': typeof AuthenticatedSuperAdminHistoricoRoute
+  '/super-admin/whatsapp': typeof AuthenticatedSuperAdminWhatsappRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/$slug/agendar': typeof SlugAgendarRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -145,6 +149,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/vendas-externas': typeof AuthenticatedAdminVendasExternasRoute
   '/_authenticated/super-admin/acessos': typeof AuthenticatedSuperAdminAcessosRoute
   '/_authenticated/super-admin/historico': typeof AuthenticatedSuperAdminHistoricoRoute
+  '/_authenticated/super-admin/whatsapp': typeof AuthenticatedSuperAdminWhatsappRoute
   '/barbearia/$slug/agendar': typeof BarbeariaSlugAgendarRoute
   '/$slug/agendar': typeof SlugAgendarRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -176,6 +181,7 @@ export interface FileRouteTypes {
     | '/admin/vendas-externas'
     | '/super-admin/acessos'
     | '/super-admin/historico'
+    | '/super-admin/whatsapp'
     | '/barbearia/$slug/agendar'
     | '/$slug/agendar'
     | '/admin/'
@@ -205,6 +211,7 @@ export interface FileRouteTypes {
     | '/admin/vendas-externas'
     | '/super-admin/acessos'
     | '/super-admin/historico'
+    | '/super-admin/whatsapp'
     | '/barbearia/$slug/agendar'
     | '/$slug/agendar'
     | '/admin'
@@ -235,6 +242,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/vendas-externas'
     | '/_authenticated/super-admin/acessos'
     | '/_authenticated/super-admin/historico'
+    | '/_authenticated/super-admin/whatsapp'
     | '/barbearia/$slug/agendar'
     | '/$slug/agendar'
     | '/_authenticated/admin/'
@@ -281,6 +289,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated/super-admin/': { id: '/_authenticated/super-admin/'; path: '/super-admin'; fullPath: '/super-admin/'; preLoaderRoute: typeof AuthenticatedSuperAdminIndexRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
     '/_authenticated/super-admin/acessos': { id: '/_authenticated/super-admin/acessos'; path: '/super-admin/acessos'; fullPath: '/super-admin/acessos'; preLoaderRoute: typeof AuthenticatedSuperAdminAcessosRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
     '/_authenticated/super-admin/historico': { id: '/_authenticated/super-admin/historico'; path: '/super-admin/historico'; fullPath: '/super-admin/historico'; preLoaderRoute: typeof AuthenticatedSuperAdminHistoricoRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
+    '/_authenticated/super-admin/whatsapp': { id: '/_authenticated/super-admin/whatsapp'; path: '/super-admin/whatsapp'; fullPath: '/super-admin/whatsapp'; preLoaderRoute: typeof AuthenticatedSuperAdminWhatsappRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
     '/barbearia/$slug/': { id: '/barbearia/$slug/'; path: '/barbearia/$slug'; fullPath: '/barbearia/$slug/'; preLoaderRoute: typeof BarbeariaSlugIndexRouteImport; parentRoute: typeof rootRouteImport }
     '/barbearia/$slug/agendar': { id: '/barbearia/$slug/agendar'; path: '/barbearia/$slug/agendar'; fullPath: '/barbearia/$slug/agendar'; preLoaderRoute: typeof BarbeariaSlugAgendarRouteImport; parentRoute: typeof rootRouteImport }
     '/$slug/': { id: '/$slug/'; path: '/$slug'; fullPath: '/$slug/'; preLoaderRoute: typeof SlugIndexRouteImport; parentRoute: typeof rootRouteImport }
@@ -306,6 +315,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminVendasExternasRoute: typeof AuthenticatedAdminVendasExternasRoute
   AuthenticatedSuperAdminAcessosRoute: typeof AuthenticatedSuperAdminAcessosRoute
   AuthenticatedSuperAdminHistoricoRoute: typeof AuthenticatedSuperAdminHistoricoRoute
+  AuthenticatedSuperAdminWhatsappRoute: typeof AuthenticatedSuperAdminWhatsappRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedSuperAdminIndexRoute: typeof AuthenticatedSuperAdminIndexRoute
   AuthenticatedSuperAdminClientesIdRoute: typeof AuthenticatedSuperAdminClientesIdRoute
@@ -328,6 +338,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminVendasExternasRoute,
   AuthenticatedSuperAdminAcessosRoute,
   AuthenticatedSuperAdminHistoricoRoute,
+  AuthenticatedSuperAdminWhatsappRoute,
   AuthenticatedAdminIndexRoute,
   AuthenticatedSuperAdminIndexRoute,
   AuthenticatedSuperAdminClientesIdRoute,
