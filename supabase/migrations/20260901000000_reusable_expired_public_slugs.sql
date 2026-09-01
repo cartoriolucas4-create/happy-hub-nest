@@ -2,6 +2,7 @@
 -- The barbershop record is kept, but its old public slug is archived when
 -- another account claims the same slug.
 
+ALTER TABLE public.barbershops DROP CONSTRAINT IF EXISTS barbershops_slug_key;
 DROP INDEX IF EXISTS public.barbershops_slug_lower_unique_idx;
 
 CREATE OR REPLACE FUNCTION public.slug_disponivel(p_slug text)
