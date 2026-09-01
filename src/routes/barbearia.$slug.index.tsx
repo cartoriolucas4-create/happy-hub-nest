@@ -171,7 +171,7 @@ function PaginaPublica() {
               <img
                 src={logo}
                 alt={`Logo da ${shop.nome}`}
-                className="h-11 w-11 rounded-full border border-primary/30 object-cover sm:h-12 sm:w-12 lg:h-14 lg:w-14"
+                className="h-[52px] w-[52px] -my-2 rounded-full border border-primary/30 object-cover sm:h-[60px] sm:w-[60px] sm:-my-3 lg:h-[68px] lg:w-[68px] lg:-my-3"
               />
             ) : (
               <span className="flex h-11 w-11 items-center justify-center rounded-full border border-primary/30 bg-card text-primary">
