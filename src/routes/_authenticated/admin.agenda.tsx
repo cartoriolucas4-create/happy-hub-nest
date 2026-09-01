@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, Empty, btnGhost, input } from "@/components/admin/AdminShell";
 import { useShop } from "@/lib/shop";
@@ -76,6 +76,13 @@ function Agenda() {
     if (d === addDays(hoje, 1)) return "AMANHÃ";
     if (d === addDays(hoje, 2)) return "DEPOIS";
     return curto;
+  };
+
+  const abrirConversa = (telefone: string) => {
+    const numeros = telefone.replace(/\D/g, "");
+    if (!numeros) return;
+    const numeroWhatsApp = numeros.startsWith("55") ? numeros : `55${numeros}`;
+    window.open(`https://wa.me/${numeroWhatsApp}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -180,7 +187,20 @@ function Agenda() {
                   <div key={a.id} className="rounded-md border border-border/70 bg-background p-3">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-display text-lg text-primary">{hhmm(a.hora_inicio)}–{hhmm(a.hora_fim)}</p>
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] ${statusClass(a.status)}`}>{STATUS_LABEL[a.status]}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] ${statusClass(a.status)}`}>{STATUS_LABEL[a.status]}</span>
+                        <button
+                          type="button"
+                          onClick={() => abrirConversa(a.cliente_telefone)}
+                          disabled={!a.cliente_telefone}
+                          title="Falar com cliente no WhatsApp"
+                          aria-label={`Falar com ${a.cliente_nome} no WhatsApp`}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:pointer-events-none disabled:opacity-40"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          Falar com cliente
+                        </button>
+                      </div>
                     </div>
                     <p className="mt-1 text-sm">{a.cliente_nome}</p>
                     <p className="text-xs text-muted-foreground">{a.services?.nome ?? "Serviço"} · {a.barbers?.nome} · {brl(a.valor)}</p>
