@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Check, AlertTriangle, Share2, ShieldCheck } from "lucide-react";
+import { Copy, ExternalLink, Check, AlertTriangle, Share2 } from "lucide-react";
 import { AdminShell, btn, btnGhost } from "@/components/admin/AdminShell";
 import { useShop } from "@/lib/shop";
 import { useSetupStatus } from "@/lib/setup";
@@ -59,14 +59,6 @@ function MeuLink() {
             <Link to="/$slug" params={{ slug: shop.slug }} target="_blank" className={btnGhost}><span className="flex items-center gap-2"><ExternalLink className="h-4 w-4" />ABRIR SITE</span></Link>
           </div>
         </div>
-
-        <Link to="/admin/autorizacao" className="block rounded-lg border border-border bg-card p-6 transition hover:border-primary">
-          <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-primary/10 p-3 text-primary"><ShieldCheck className="h-5 w-5" /></div>
-            <div className="min-w-0 flex-1"><p className="text-xs uppercase tracking-widest text-primary">Autorização</p><h2 className="mt-1 text-xl">Autenticação para agendamentos</h2><p className="mt-1 text-sm text-muted-foreground">Escolha se seus clientes precisam se autenticar antes de agendar.</p></div>
-            <span className="text-sm text-primary">Configurar →</span>
-          </div>
-        </Link>
 
         {status && !status.completo && (
           <div className="rounded-lg border border-primary/40 bg-primary/5 p-6">
