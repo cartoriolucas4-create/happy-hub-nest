@@ -6,9 +6,9 @@ import { PublicBookingAuthGate } from "@/components/public/PublicBookingAuthGate
 
 export function PublicSetupGate({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const bookingMatch = pathname.match(/^\/(?:barbearia\/)?([^/]+)\/agendar\/?$/);
   const legacyMatch = pathname.match(/^\/barbearia\/([^/]+)/);
-  const bookingMatch = pathname.match(/^\/([^/]+)\/agendar\/?$/);
-  const slug = legacyMatch?.[1] ? decodeURIComponent(legacyMatch[1]) : bookingMatch?.[1] ? decodeURIComponent(bookingMatch[1]) : "";
+  const slug = bookingMatch?.[1] ? decodeURIComponent(bookingMatch[1]) : legacyMatch?.[1] ? decodeURIComponent(legacyMatch[1]) : "";
   const isPublicShop = Boolean(slug);
   const isBooking = Boolean(bookingMatch?.[1]);
 
