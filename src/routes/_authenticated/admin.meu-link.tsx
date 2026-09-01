@@ -5,6 +5,7 @@ import { Copy, ExternalLink, Check, AlertTriangle, Share2 } from "lucide-react";
 import { AdminShell, btn, btnGhost } from "@/components/admin/AdminShell";
 import { useShop } from "@/lib/shop";
 import { useSetupStatus } from "@/lib/setup";
+import { publicShopUrl } from "@/lib/public-links";
 
 export const Route = createFileRoute("/_authenticated/admin/meu-link")({
   head: () => ({
@@ -21,7 +22,7 @@ function MeuLink() {
   const { data: shop } = useShop();
   const { data: status } = useSetupStatus(shop?.id);
   const [origin] = useState(() => (typeof window === "undefined" ? "" : window.location.origin));
-  const url = shop ? `${origin}/barbearia/${shop.slug}` : "";
+  const url = shop ? publicShopUrl(origin, shop.slug) : "";
 
   async function copiar() {
     if (!shop || !url) return;
@@ -59,7 +60,7 @@ function MeuLink() {
             <button className={btnGhost} onClick={compartilhar}>
               <span className="flex items-center gap-2"><Share2 className="h-4 w-4" />COMPARTILHAR</span>
             </button>
-            <Link to="/barbearia/$slug" params={{ slug: shop.slug }} target="_blank" className={btnGhost}>
+            <Link to="/$slug" params={{ slug: shop.slug }} target="_blank" className={btnGhost}>
               <span className="flex items-center gap-2"><ExternalLink className="h-4 w-4" />ABRIR SITE</span>
             </Link>
           </div>
