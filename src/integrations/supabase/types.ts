@@ -492,6 +492,50 @@ export type Database = {
           },
         ]
       }
+      business_costs: {
+        Row: {
+          amount: number
+          barbershop_id: string
+          category: string
+          cost_date: string
+          created_at: string
+          description: string
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          barbershop_id: string
+          category: string
+          cost_date?: string
+          created_at?: string
+          description: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          barbershop_id?: string
+          category?: string
+          cost_date?: string
+          created_at?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_costs_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_hours: {
         Row: {
           aberto: boolean
@@ -568,6 +612,182 @@ export type Database = {
           },
         ]
       }
+      external_products: {
+        Row: {
+          active: boolean
+          barbershop_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          barbershop_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          barbershop_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_products_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      external_sale_items: {
+        Row: {
+          created_at: string
+          id: string
+          name_snapshot: string
+          product_id: string | null
+          quantity: number
+          sale_id: string
+          service_id: string | null
+          total: number
+          unit_price_snapshot: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_snapshot: string
+          product_id?: string | null
+          quantity: number
+          sale_id: string
+          service_id?: string | null
+          total: number
+          unit_price_snapshot: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_snapshot?: string
+          product_id?: string | null
+          quantity?: number
+          sale_id?: string
+          service_id?: string | null
+          total?: number
+          unit_price_snapshot?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "external_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "external_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_sale_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      external_sales: {
+        Row: {
+          barber_id: string | null
+          barbershop_id: string
+          client_id: string | null
+          created_at: string
+          discount: number
+          id: string
+          payment_method: string
+          payment_method_id: string | null
+          sold_at: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          barber_id?: string | null
+          barbershop_id: string
+          client_id?: string | null
+          created_at?: string
+          discount?: number
+          id?: string
+          payment_method: string
+          payment_method_id?: string | null
+          sold_at?: string
+          status?: string
+          subtotal: number
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          barber_id?: string | null
+          barbershop_id?: string
+          client_id?: string | null
+          created_at?: string
+          discount?: number
+          id?: string
+          payment_method?: string
+          payment_method_id?: string | null
+          sold_at?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_sales_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_sales_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_sales_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_sales_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gallery_images: {
         Row: {
           barbershop_id: string
@@ -613,6 +833,8 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          pix_beneficiary: string | null
+          pix_key: string | null
           updated_at: string
         }
         Insert: {
@@ -624,6 +846,8 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          pix_beneficiary?: string | null
+          pix_key?: string | null
           updated_at?: string
         }
         Update: {
@@ -635,6 +859,8 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          pix_beneficiary?: string | null
+          pix_key?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -759,6 +985,18 @@ export type Database = {
         Args: { p_barbershop_id: string }
         Returns: boolean
       }
+      cancel_external_sale: { Args: { p_sale_id: string }; Returns: undefined }
+      create_external_sale: {
+        Args: {
+          p_barber_id?: string
+          p_client_id?: string
+          p_discount?: number
+          p_items?: Json
+          p_payment_method?: string
+          p_payment_method_id?: string
+        }
+        Returns: string
+      }
       criar_agendamento_publico:
         | {
             Args: {
@@ -793,6 +1031,16 @@ export type Database = {
       effective_license_status: {
         Args: { p_user_id: string }
         Returns: Database["public"]["Enums"]["license_status"]
+      }
+      financial_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          costs: number
+          external_revenue: number
+          net_profit: number
+          online_revenue: number
+          total_revenue: number
+        }[]
       }
       has_active_access: { Args: { p_user_id: string }; Returns: boolean }
       has_role: {
