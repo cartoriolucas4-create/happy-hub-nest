@@ -41,7 +41,15 @@ export function PublicBookingAuthGate({ slug, children }: { slug: string; childr
   async function oauth(provider: "google" | "facebook" | "apple") {
     setError(""); setBusy(true);
     const { error: authError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.href } });
-    if (authError) { setError(authError.message); setBusy(false); }
+    if (authError) {
+      const message = authError.message.toLowerCase();
+      if (message.includes("unsupported provider") || message.includes("provider is not enabled")) {
+        setError(`O login com ${provider === "google" ? "Google" : provider === "facebook" ? "Facebook" : "Apple"} ainda não foi habilitado no servidor. A configuração precisa ser concluída no Supabase e no respectivo provedor OAuth.`);
+      } else {
+        setError(authError.message);
+      }
+      setBusy(false);
+    }
   }
 
   async function sendCode() {
