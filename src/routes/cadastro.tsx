@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isEmail, isPhone, slugify } from "@/lib/barber";
+import { isReservedPublicSlug } from "@/lib/public-links";
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({
@@ -38,10 +39,12 @@ function Cadastro() {
   const [enviado, setEnviado] = useState(false);
 
   const slugFinal = slugify(slugEditado ? slug : nomeBarbearia);
+  const slugReservado = isReservedPublicSlug(slugFinal);
 
   useEffect(() => {
-    if (slugFinal.length < 3) {
-      setDisponivel(null);
+    if (slugFinal.length < 3 || slugReservado) {
+      setChecando(false);
+      setDisponivel(slugReservado ? false : null);
       return;
     }
     setChecando(true);
@@ -51,7 +54,7 @@ function Cadastro() {
       setDisponivel(error ? null : Boolean(data));
     }, 450);
     return () => clearTimeout(t);
-  }, [slugFinal]);
+  }, [slugFinal, slugReservado]);
 
   async function cadastrar(e: React.FormEvent) {
     e.preventDefault();
@@ -59,8 +62,8 @@ function Cadastro() {
       toast.error("Informe o nome da barbearia.");
       return;
     }
-    if (slugFinal.length < 3 || disponivel === false) {
-      toast.error("Escolha um link disponível para sua barbearia.");
+    if (slugFinal.length < 3 || slugReservado || disponivel === false) {
+      toast.error(slugReservado ? "Esse link é reservado pelo sistema. Escolha outro." : "Escolha um link disponível para sua barbearia.");
       return;
     }
     if (responsavel.trim().length < 3) {
@@ -154,7 +157,7 @@ function Cadastro() {
 
           <Field label="Seu link público">
             <div className="mt-2 flex items-center overflow-hidden rounded-md border border-input bg-card">
-              <span className="px-3 text-sm text-muted-foreground">/barbearia/</span>
+              <span className="px-3 text-sm text-muted-foreground">/</span>
               <input
                 value={slugEditado ? slug : slugFinal}
                 onChange={(e) => {
@@ -174,7 +177,9 @@ function Cadastro() {
               </span>
             </div>
             {disponivel === false && (
-              <span className="mt-1 block text-xs text-destructive">Esse link já está em uso.</span>
+              <span className="mt-1 block text-xs text-destructive">
+                {slugReservado ? "Esse link é reservado pelo sistema." : "Esse link já está em uso."}
+              </span>
             )}
           </Field>
 
