@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Apple, Facebook, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,16 +12,18 @@ export function PublicBookingAuthGate({ slug, children }: { slug: string; childr
   const [codeSent, setCodeSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const ownerIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
     (async () => {
       const { data: shop } = await supabase.from("barbershops").select("id,owner_id").eq("slug", slug).maybeSingle();
       if (!shop) { if (active) setLoading(false); return; }
+      ownerIdRef.current = shop.owner_id ?? null;
       const { data: setting } = await (supabase as any).from("public_booking_auth_settings").select("enabled").eq("barbershop_id", shop.id).maybeSingle();
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData.session;
-      const ownerSession = Boolean(session?.user?.id && shop.owner_id && session.user.id === shop.owner_id);
+      const ownerSession = Boolean(session?.user?.id && ownerIdRef.current && session.user.id === ownerIdRef.current);
       if (active) {
         setRequired(Boolean(setting?.enabled));
         // A logged-in barbershop owner/admin session must not count as the public customer's authentication.
@@ -29,7 +31,10 @@ export function PublicBookingAuthGate({ slug, children }: { slug: string; childr
         setLoading(false);
       }
     })();
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setAuthenticated(Boolean(session)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const ownerSession = Boolean(session?.user?.id && ownerIdRef.current && session.user.id === ownerIdRef.current);
+      setAuthenticated(Boolean(session) && !ownerSession);
+    });
     return () => { active = false; listener.subscription.unsubscribe(); };
   }, [slug]);
 
