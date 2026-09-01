@@ -18,7 +18,7 @@ export function PublicBookingAuthGate({ slug, children }: { slug: string; childr
     (async () => {
       const { data: shop } = await supabase.from("barbershops").select("id").eq("slug", slug).maybeSingle();
       if (!shop) { if (active) setLoading(false); return; }
-      const { data: setting } = await supabase.from("public_booking_auth_settings").select("enabled").eq("barbershop_id", shop.id).maybeSingle();
+      const { data: setting } = await (supabase as any).from("public_booking_auth_settings").select("enabled").eq("barbershop_id", shop.id).maybeSingle();
       const { data: session } = await supabase.auth.getSession();
       if (active) { setRequired(Boolean(setting?.enabled)); setAuthenticated(Boolean(session.session)); setLoading(false); }
     })();
