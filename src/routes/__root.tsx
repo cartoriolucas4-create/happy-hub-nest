@@ -51,11 +51,9 @@ function PublicAccentController() {
 
     let active = true;
     const slug = decodeURIComponent(match[1]!);
-    void supabase
-      .from("barbershops")
-      .select("cor_primaria")
-      .eq("slug", slug)
-      .maybeSingle()
+    void Promise.resolve(
+      supabase.from("barbershops").select("cor_primaria").eq("slug", slug).maybeSingle(),
+    )
       .then(({ data }) => {
         if (!active) return;
         applyAccentStyle(data?.cor_primaria);
