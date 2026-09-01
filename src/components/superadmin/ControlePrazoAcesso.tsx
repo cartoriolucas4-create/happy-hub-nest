@@ -20,10 +20,24 @@ type ClienteAcesso = {
   vencimento: string;
 };
 
-const rpc = supabase.rpc as unknown as (
+/**
+ * Chama o RPC mantendo o cliente Supabase como `this`. Extrair `supabase.rpc`
+ * para uma constante quebra o binding interno (erro "reading 'rest'").
+ */
+async function rpc(
   fn: string,
   args: Record<string, unknown>,
-) => Promise<{ data: unknown; error: { message: string } | null }>;
+): Promise<{ data: unknown; error: { message: string } | null }> {
+  const client = supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{
+      data: unknown;
+      error: { message: string } | null;
+    }>;
+  };
+  const response = await client.rpc(fn, args);
+  if (!response) throw new Error("Não foi possível concluir a alteração de acesso.");
+  return response;
+}
 
 export function ControlePrazoAcesso({ cliente, onChanged }: { cliente: ClienteAcesso; onChanged: () => void }) {
   const [acao, setAcao] = useState<Acao>(null);
