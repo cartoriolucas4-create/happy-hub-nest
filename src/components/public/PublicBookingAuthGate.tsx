@@ -16,11 +16,18 @@ export function PublicBookingAuthGate({ slug, children }: { slug: string; childr
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data: shop } = await supabase.from("barbershops").select("id").eq("slug", slug).maybeSingle();
+      const { data: shop } = await supabase.from("barbershops").select("id,owner_id").eq("slug", slug).maybeSingle();
       if (!shop) { if (active) setLoading(false); return; }
       const { data: setting } = await (supabase as any).from("public_booking_auth_settings").select("enabled").eq("barbershop_id", shop.id).maybeSingle();
-      const { data: session } = await supabase.auth.getSession();
-      if (active) { setRequired(Boolean(setting?.enabled)); setAuthenticated(Boolean(session.session)); setLoading(false); }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
+      const ownerSession = Boolean(session?.user?.id && shop.owner_id && session.user.id === shop.owner_id);
+      if (active) {
+        setRequired(Boolean(setting?.enabled));
+        // A logged-in barbershop owner/admin session must not count as the public customer's authentication.
+        setAuthenticated(Boolean(session) && !ownerSession);
+        setLoading(false);
+      }
     })();
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setAuthenticated(Boolean(session)));
     return () => { active = false; listener.subscription.unsubscribe(); };
