@@ -8,6 +8,7 @@ import { AdminShell, btn, input } from "@/components/admin/AdminShell";
 import { useShop } from "@/lib/shop";
 import { ACCENT_OPTIONS, DEFAULT_ACCENT_DB_VALUE, DEFAULT_ACCENT_COLOR, accentForeground } from "@/lib/theme";
 import { isEmail, slugify } from "@/lib/barber";
+import { isReservedPublicSlug } from "@/lib/public-links";
 import { mediaUrl, uploadMedia } from "@/lib/media";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
@@ -66,6 +67,7 @@ function Configuracoes() {
       const slug = slugify(f.slug);
       if (f.nome.trim().length < 2) throw new Error("Informe o nome da barbearia.");
       if (slug.length < 3) throw new Error("O link deve ter ao menos 3 caracteres.");
+      if (isReservedPublicSlug(slug)) throw new Error("Esse link é reservado pelo sistema. Escolha outro.");
       if (slug !== shop!.slug) { const { data } = await supabase.rpc("slug_disponivel", { p_slug: slug }); if (!data) throw new Error("Esse link já está em uso por outra barbearia."); }
       if (f.email && !isEmail(f.email)) throw new Error("E-mail inválido.");
       const corPrimaria = f.cor_primaria === DEFAULT_ACCENT_DB_VALUE ? DEFAULT_ACCENT_DB_VALUE : normalizeHex(f.cor_primaria, DEFAULT_ACCENT_COLOR);
@@ -103,7 +105,7 @@ function Configuracoes() {
 
   if (!form) return <AdminShell title="Configurações">Carregando...</AdminShell>;
   const grupos: { titulo: string; campos: [keyof Form, string][] }[] = [
-    { titulo: "Identificação", campos: [["nome", "Nome da barbearia"], ["slug", "Link público (/barbearia/...)"] , ["responsavel", "Responsável"]] },
+    { titulo: "Identificação", campos: [["nome", "Nome da barbearia"], ["slug", "Link público (/...)"] , ["responsavel", "Responsável"]] },
     { titulo: "Contato", campos: [["telefone", "Telefone"], ["whatsapp", "WhatsApp (com DDD)"], ["email", "E-mail"], ["instagram", "Instagram"], ["facebook", "Facebook"], ["site_url", "Site"]] },
     { titulo: "Endereço", campos: [["endereco", "Rua / Avenida"], ["numero", "Número"], ["complemento", "Complemento"], ["bairro", "Bairro"], ["cidade", "Cidade"], ["estado", "Estado"], ["cep", "CEP"]] },
   ];
