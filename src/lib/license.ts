@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-/** WhatsApp comercial da plataforma (somente dígitos, com DDI). */
+/** WhatsApp comercial da plataforma usado como fallback até o Admin Geral definir o número. */
 export const SUPORTE_WHATSAPP = "5511999999999";
 
 export type LicenseStatus = "trial" | "active" | "expired" | "blocked" | "suspended";
@@ -40,7 +40,6 @@ export function statusLicencaClass(status: LicenseStatus) {
   }
 }
 
-/** Licença do usuário logado — status e horário calculados pelo servidor. */
 export function useLicense() {
   return useQuery({
     queryKey: ["minha-licenca"],
@@ -55,7 +54,23 @@ export function useLicense() {
   });
 }
 
-/** Diferença entre o relógio do servidor e o do navegador (ms). */
+/** WhatsApp atual da equipe, configurado no Admin Geral. */
+export function useSupportWhatsapp() {
+  return useQuery({
+    queryKey: ["platform-support-whatsapp"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("support_whatsapp")
+        .eq("id", "default")
+        .maybeSingle();
+      if (error) throw error;
+      return data?.support_whatsapp || SUPORTE_WHATSAPP;
+    },
+  });
+}
+
 export function serverOffset(licenca: Licenca | null | undefined) {
   if (!licenca) return 0;
   return new Date(licenca.server_now).getTime() - Date.now();
@@ -77,14 +92,12 @@ export function partes(ms: number) {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/** Ex.: "2d 04:31:12" ou "23:41:32". */
 export function formatarRestante(ms: number) {
   const p = partes(ms);
   const relogio = `${pad(p.horas)}:${pad(p.minutos)}:${pad(p.segundos)}`;
   return p.dias > 0 ? `${p.dias}d ${relogio}` : relogio;
 }
 
-/** Contador regressivo em tempo real, ancorado no horário do servidor. */
 export function useCountdown(expiresAt: string | null | undefined, offset = 0) {
   const [ms, setMs] = useState(() => (expiresAt ? restanteMs(expiresAt, offset) : 0));
 
@@ -115,11 +128,11 @@ export function dataBr(iso: string | null | undefined) {
   return new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
-export function whatsappSuporte(mensagem: string) {
-  return `https://wa.me/${SUPORTE_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+export function whatsappSuporte(mensagem: string, numero = SUPORTE_WHATSAPP) {
+  const digits = numero.replace(/\D/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(mensagem)}`;
 }
 
-/** Verifica se o usuário logado é Super Admin. */
 export function useIsSuperAdmin() {
   return useQuery({
     queryKey: ["is-super-admin"],
