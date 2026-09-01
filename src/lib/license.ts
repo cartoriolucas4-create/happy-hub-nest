@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /** WhatsApp comercial da plataforma usado como fallback até o Admin Geral definir o número. */
 export const SUPORTE_WHATSAPP = "5511999999999";
+export const SUPORTE_MENSAGEM_PADRAO = "Olá, sou /{id}, e tenho uma dúvida.";
 
 export type LicenseStatus = "trial" | "active" | "expired" | "blocked" | "suspended";
 
@@ -60,7 +61,7 @@ export function useSupportWhatsapp() {
     queryKey: ["platform-support-whatsapp"],
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("platform_settings")
         .select("support_whatsapp")
         .eq("id", "default")
@@ -69,6 +70,42 @@ export function useSupportWhatsapp() {
       return data?.support_whatsapp || SUPORTE_WHATSAPP;
     },
   });
+}
+
+/** Mensagem configurada no Admin Geral. Aceita placeholders dinâmicos. */
+export function useSupportMessageTemplate() {
+  return useQuery({
+    queryKey: ["platform-support-message-template"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("platform_settings")
+        .select("support_message_template")
+        .eq("id", "default")
+        .maybeSingle();
+      if (error) throw error;
+      return data?.support_message_template || SUPORTE_MENSAGEM_PADRAO;
+    },
+  });
+}
+
+export type SupportMessageData = {
+  id?: string | null;
+  barbearia?: string | null;
+  nome?: string | null;
+  telefone?: string | null;
+};
+
+/** Substitui os campos disponíveis na mensagem sem deixar placeholders quebrados. */
+export function montarMensagemSuporte(template: string | null | undefined, data: SupportMessageData) {
+  const texto = template || SUPORTE_MENSAGEM_PADRAO;
+  const valores: Record<string, string> = {
+    id: data.id || "ID-DO-SITE",
+    barbearia: data.barbearia || "Barbearia",
+    nome: data.nome || "",
+    telefone: data.telefone || "",
+  };
+  return texto.replace(/\{(id|barbearia|nome|telefone)\}/gi, (_, chave: string) => valores[chave.toLowerCase()] ?? "");
 }
 
 export function serverOffset(licenca: Licenca | null | undefined) {
