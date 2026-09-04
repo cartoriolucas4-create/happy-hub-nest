@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Apple, Facebook, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function PublicBookingAuthGate({ slug, children }: { slug: string; children: React.ReactNode }) {
@@ -38,20 +38,6 @@ export function PublicBookingAuthGate({ slug, children }: { slug: string; childr
     return () => { active = false; listener.subscription.unsubscribe(); };
   }, [slug]);
 
-  async function oauth(provider: "google" | "facebook" | "apple") {
-    setError(""); setBusy(true);
-    const { error: authError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.href } });
-    if (authError) {
-      const message = authError.message.toLowerCase();
-      if (message.includes("unsupported provider") || message.includes("provider is not enabled")) {
-        setError(`O login com ${provider === "google" ? "Google" : provider === "facebook" ? "Facebook" : "Apple"} ainda não foi habilitado no servidor. A configuração precisa ser concluída no Supabase e no respectivo provedor OAuth.`);
-      } else {
-        setError(authError.message);
-      }
-      setBusy(false);
-    }
-  }
-
   async function sendCode() {
     if (name.trim().length < 3) { setError("Informe seu nome completo."); return; }
     const digits = phone.replace(/\D/g, "");
@@ -81,12 +67,7 @@ export function PublicBookingAuthGate({ slug, children }: { slug: string; childr
         <p className="text-xs uppercase tracking-[0.2em] text-primary">Agendamento</p>
         <h1 className="mt-2 text-3xl">Entre para continuar</h1>
         <p className="mt-2 text-sm text-muted-foreground">Esta barbearia exige autenticação para concluir o agendamento.</p>
-        <div className="mt-6 grid gap-3">
-          <button disabled={busy} onClick={() => oauth("google")} className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-3 text-sm font-medium hover:border-primary disabled:opacity-60"><span className="text-lg font-bold">G</span> Continuar com Google</button>
-          <button disabled={busy} onClick={() => oauth("facebook")} className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-3 text-sm font-medium hover:border-primary disabled:opacity-60"><Facebook className="h-4 w-4" /> Continuar com Facebook</button>
-          <button disabled={busy} onClick={() => oauth("apple")} className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-3 text-sm font-medium hover:border-primary disabled:opacity-60"><Apple className="h-4 w-4" /> Continuar com Apple</button>
-        </div>
-        <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />OU CADASTRE-SE COM TELEFONE<span className="h-px flex-1 bg-border" /></div>
+        <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />CADASTRE-SE COM TELEFONE<span className="h-px flex-1 bg-border" /></div>
         <div className="space-y-3">
           <input className="w-full rounded-md border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} disabled={codeSent} />
           <input className="w-full rounded-md border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary" placeholder="Telefone / WhatsApp" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={codeSent} />
