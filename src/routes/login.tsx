@@ -24,7 +24,6 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [recuperando, setRecuperando] = useState(false);
 
   useEffect(() => {
@@ -56,21 +55,6 @@ function LoginPage() {
       return;
     }
     navigate({ to: homeForArea(session.area), replace: true });
-  }
-
-  async function entrarComGoogle() {
-    setGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/login`,
-      },
-    });
-
-    if (error) {
-      setGoogleLoading(false);
-      toast.error(error.message);
-    }
   }
 
   async function esqueci() {
@@ -124,32 +108,16 @@ function LoginPage() {
           </label>
           <button
             type="submit"
-            disabled={loading || googleLoading}
+            disabled={loading}
             className="w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
             {loading ? "ENTRANDO..." : "ENTRAR"}
           </button>
         </form>
 
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs uppercase tracking-widest text-muted-foreground">ou</span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        <button
-          type="button"
-          onClick={entrarComGoogle}
-          disabled={loading || googleLoading}
-          className="flex w-full items-center justify-center gap-3 rounded-md border border-input bg-card py-3 font-medium hover:bg-muted disabled:opacity-60"
-        >
-          <span className="text-lg font-bold">G</span>
-          {googleLoading ? "CONECTANDO..." : "CONTINUAR COM GOOGLE"}
-        </button>
-
         <button
           onClick={esqueci}
-          disabled={recuperando || loading || googleLoading}
+          disabled={recuperando || loading}
           className="mt-4 text-sm text-muted-foreground underline hover:text-primary"
         >
           {recuperando ? "Enviando..." : "Esqueci minha senha"}
