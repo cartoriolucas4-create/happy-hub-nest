@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PublicBookingAuthGate } from "@/components/public/PublicBookingAuthGate";
 
 export function PublicSetupGate({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -10,7 +9,6 @@ export function PublicSetupGate({ children }: { children: React.ReactNode }) {
   const legacyMatch = pathname.match(/^\/barbearia\/([^/]+)/);
   const slug = bookingMatch?.[1] ? decodeURIComponent(bookingMatch[1]) : legacyMatch?.[1] ? decodeURIComponent(legacyMatch[1]) : "";
   const isPublicShop = Boolean(slug);
-  const isBooking = Boolean(bookingMatch?.[1]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["public-setup-gate", slug],
@@ -31,6 +29,5 @@ export function PublicSetupGate({ children }: { children: React.ReactNode }) {
     return <div className="flex min-h-screen items-center justify-center bg-background px-5 text-center text-foreground"><div className="max-w-md"><AlertTriangle className="mx-auto h-10 w-10 text-primary" aria-hidden="true"/><h1 className="mt-5 text-3xl">Esta barbearia ainda está configurando seu atendimento.</h1><p className="mt-3 text-sm text-muted-foreground">O site público ficará disponível assim que a configuração inicial for concluída.</p></div></div>;
   }
 
-  if (isBooking) return <PublicBookingAuthGate slug={slug}>{children}</PublicBookingAuthGate>;
   return <>{children}</>;
 }
