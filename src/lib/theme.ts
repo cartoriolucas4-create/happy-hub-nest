@@ -52,6 +52,7 @@ export function accentStyle(value: string | null | undefined): Record<string, st
   const accent = resolveAccentColor(value);
   const foreground = accentForeground(accent);
   return {
+    "--default-accent-color": accent,
     "--primary": accent,
     "--primary-foreground": foreground,
     "--accent": accent,
