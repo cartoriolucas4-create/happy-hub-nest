@@ -89,7 +89,7 @@
   --sidebar-primary: var(--default-accent-color);
   --sidebar-primary-foreground: oklch(0.1 0 0);
   --sidebar-accent: oklch(0.18 0.002 90);
-  --sidebar-accent-foreground: oklch(0.96 0.003 90);
+  --sidebar-accent-foreground: oklch(0.18 0.002 90);
   --sidebar-border: oklch(0.96 0.003 90 / 10%);
   --sidebar-ring: var(--default-accent-color);
 }
@@ -195,4 +195,45 @@
 
 #lovable-badge {
   display: none !important;
+}
+
+/* Mobile-first refinements for the public booking flow. The progressbar is
+   unique to /:slug/agendar, so these rules do not affect the admin area or
+   the public barbershop landing page. */
+@media (max-width: 639px) {
+  body:has([role="progressbar"]) {
+    overscroll-behavior-x: none;
+  }
+
+  body:has([role="progressbar"]) button,
+  body:has([role="progressbar"]) a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body:has([role="progressbar"]) main button {
+    touch-action: manipulation;
+  }
+
+  body:has([role="progressbar"]) input,
+  body:has([role="progressbar"]) textarea,
+  body:has([role="progressbar"]) select {
+    font-size: 16px;
+  }
+
+  body:has([role="progressbar"]) input[type="date"] {
+    min-height: 48px;
+  }
+
+  body:has([role="progressbar"]) img {
+    max-width: 100%;
+  }
+}
+
+/* Respect iOS/Android safe areas when the booking page is used edge-to-edge. */
+@supports (padding: max(0px)) {
+  @media (max-width: 639px) {
+    body:has([role="progressbar"]) main {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+  }
 }
