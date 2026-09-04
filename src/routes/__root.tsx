@@ -43,8 +43,8 @@ function PublicAccentController() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   useEffect(() => {
-    const match = pathname.match(/^\/barbearia\/([^/]+)(?:\/agendar)?\/?$/);
-    if (!match) {
+    const match = pathname.match(/^(?:\/barbearia\/)?([^/]+)(?:\/agendar)?\/?$/);
+    if (!match || match[1] === "" || match[1] === "admin") {
       applyAccentStyle(DEFAULT_ACCENT_COLOR);
       return;
     }
