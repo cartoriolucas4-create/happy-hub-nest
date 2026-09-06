@@ -100,8 +100,8 @@ export function useSupportIdentity() {
       const user = data.user;
       if (!user) return { nome: "", email: "", telefone: "" };
       const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
-      const nome = String(metadata.full_name || metadata.name || metadata.nome || "").trim();
-      const telefone = String(metadata.telefone || metadata.phone || "").trim();
+      const nome = String(metadata["full_name"] || metadata["name"] || metadata["nome"] || "").trim();
+      const telefone = String(metadata["telefone"] || metadata["phone"] || "").trim();
       return { nome, email: user.email || "", telefone };
     },
   });
