@@ -1099,9 +1099,11 @@ export type Database = {
         Args: { p_from: string; p_to: string }
         Returns: {
           costs: number
+          expenses: number
           external_revenue: number
           net_profit: number
           online_revenue: number
+          product_cost: number
           total_revenue: number
         }[]
       }
