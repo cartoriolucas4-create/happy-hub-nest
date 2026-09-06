@@ -10,7 +10,7 @@ import { useShop } from "@/lib/shop";
 import { brl, hhmm, statusClass, STATUS_LABEL, todayIso, addDays, brDate, type Status } from "@/lib/barber";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
-  head: () => ({ meta: [{ title: "Dashboard | BarberFlow" }, { name: "description", content: "Indicadores e agenda do dia da sua barbearia." }, { property: "og:title", content: "Dashboard | BarberFlow" }, { property: "og:description", content: "Painel administrativo da barbearia." }, { property: "og:type", content: "website" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Dashboard | BarberFlow" }, { name: "description", content: "Indicadores e agenda do dia da sua barbearia." }, { property: "og:title", content: "Dashboard | BarberFlow" }, { property: "og:description", content: "Painel administrativo da sua barbearia." }, { property: "og:type", content: "website" }, { name: "robots", content: "noindex" }] }),
   component: Dashboard,
 });
 
@@ -31,7 +31,7 @@ function Dashboard() {
   const { data: finance } = useQuery({ queryKey: ["financial-summary-direct", shop?.id, financeDates.from, financeDates.to], enabled: Boolean(shop?.id), staleTime: 0, refetchOnWindowFocus: true, queryFn: async () => {
     const db = supabase as any;
     const [onlineRes, externalRes, expenseRes] = await Promise.all([
-      db.from("appointments").select("valor").eq("barbershop_id", shop!.id).gte("data", financeDates.from).lte("data", financeDates.to).in("status", ["confirmado", "concluido"]),
+      db.from("appointments").select("valor,payment_received_at").eq("barbershop_id", shop!.id).not("payment_received_at", "is", null).gte("payment_received_at", `${financeDates.from}T00:00:00-03:00`).lte("payment_received_at", `${financeDates.to}T23:59:59.999-03:00`),
       db.from("external_sales").select("id,total,sold_at").eq("barbershop_id", shop!.id).eq("status", "finalizada").gte("sold_at", `${financeDates.from}T00:00:00-03:00`).lte("sold_at", `${financeDates.to}T23:59:59.999-03:00`),
       db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop!.id),
     ]);
