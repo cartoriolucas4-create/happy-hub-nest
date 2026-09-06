@@ -28,22 +28,23 @@ function Dashboard() {
   const [reportOpen, setReportOpen] = useState(false); const [reportDe, setReportDe] = useState(addDays(hoje, -29)); const [reportAte, setReportAte] = useState(hoje); const [reportStatus, setReportStatus] = useState<"" | "confirmado" | "concluido">(""); const [reportLoading, setReportLoading] = useState(false); const [financePeriod, setFinancePeriod] = useState<"today" | "7d" | "30d" | "month">("month");
   const { data } = useQuery({ queryKey: ["dashboard", shop?.id, hoje], enabled: Boolean(shop?.id), queryFn: async () => { const [hojeRes, recebimentosHojeRes, semanaRes, mesRes, clientesRes] = await Promise.all([supabase.from("appointments").select("*, barbers(nome), services(nome)").eq("data", hoje).order("hora_inicio"), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${hoje}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${addDays(hoje, -6)}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${addDays(hoje, -29)}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), supabase.from("customers").select("id", { count: "exact", head: true })]); if (hojeRes.error) throw hojeRes.error; if (recebimentosHojeRes.error) throw recebimentosHojeRes.error; if (semanaRes.error) throw semanaRes.error; if (mesRes.error) throw mesRes.error; if (clientesRes.error) throw clientesRes.error; return { hoje: hojeRes.data ?? [], recebimentosHoje: recebimentosHojeRes.data ?? [], semana: semanaRes.data ?? [], mes: mesRes.data ?? [], clientes: clientesRes.count ?? 0 }; } });
   const financeDates = financePeriod === "today" ? { from: hoje, to: hoje } : financePeriod === "7d" ? { from: addDays(hoje, -6), to: hoje } : financePeriod === "30d" ? { from: addDays(hoje, -29), to: hoje } : { from: `${hoje.slice(0, 8)}01`, to: hoje };
-  const { data: finance } = useQuery({ queryKey: ["financial-summary-direct", shop?.id, financeDates.from, financeDates.to], enabled: Boolean(shop?.id), queryFn: async () => {
+  const { data: finance } = useQuery({ queryKey: ["financial-summary-direct", shop?.id, financeDates.from, financeDates.to], enabled: Boolean(shop?.id), staleTime: 0, refetchOnWindowFocus: true, queryFn: async () => {
+    const db = supabase as any;
     const [onlineRes, externalRes, expenseRes] = await Promise.all([
-      (supabase as any).from("appointments").select("valor").eq("barbershop_id", shop!.id).gte("data", financeDates.from).lte("data", financeDates.to).in("status", ["confirmado", "concluido"]),
-      (supabase as any).from("external_sales").select("id,total,sold_at").eq("barbershop_id", shop!.id).eq("status", "finalizada").gte("sold_at", `${financeDates.from}T00:00:00-03:00`).lte("sold_at", `${financeDates.to}T23:59:59.999-03:00`),
-      (supabase as any).from("business_costs").select("amount").eq("barbershop_id", shop!.id).gte("cost_date", financeDates.from).lte("cost_date", financeDates.to),
+      db.from("appointments").select("valor").eq("barbershop_id", shop!.id).gte("data", financeDates.from).lte("data", financeDates.to).in("status", ["confirmado", "concluido"]),
+      db.from("external_sales").select("id,total,sold_at").eq("barbershop_id", shop!.id).eq("status", "finalizada").gte("sold_at", `${financeDates.from}T00:00:00-03:00`).lte("sold_at", `${financeDates.to}T23:59:59.999-03:00`),
+      db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop!.id),
     ]);
     if (onlineRes.error) throw onlineRes.error;
     if (externalRes.error) throw externalRes.error;
     if (expenseRes.error) throw expenseRes.error;
     const onlineRevenue = (onlineRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.valor ?? 0), 0);
     const externalRevenue = (externalRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.total ?? 0), 0);
-    const expenses = (expenseRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.amount ?? 0), 0);
+    const expenses = (expenseRes.data ?? []).filter((row: any) => String(row.cost_date ?? "") >= financeDates.from && String(row.cost_date ?? "") <= financeDates.to).reduce((sum: number, row: any) => sum + Number(row.amount ?? 0), 0);
     const saleIds = (externalRes.data ?? []).map((sale: any) => sale.id).filter(Boolean);
     let productCost = 0;
     if (saleIds.length) {
-      const { data: items, error: itemsError } = await (supabase as any).from("external_sale_items").select("quantity,unit_cost_snapshot,product_id,external_products(cost_price)").in("sale_id", saleIds);
+      const { data: items, error: itemsError } = await db.from("external_sale_items").select("quantity,unit_cost_snapshot,product_id,external_products(cost_price)").in("sale_id", saleIds);
       if (itemsError) throw itemsError;
       productCost = (items ?? []).reduce((sum: number, item: any) => {
         const snapshot = Number(item.unit_cost_snapshot ?? 0);
