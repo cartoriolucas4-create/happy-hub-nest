@@ -273,7 +273,7 @@ function ChartCard({ children, title, description, icon, iconClass, accent, badg
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${iconClass} text-base font-bold`}>{icon}</span>
-            <div className="min-w-0"><h3 className="text-base font-bold tracking-tight">{title}</h3><p className="mt-1 text-xs text-muted-foreground">{description}</p></div>
+            <div className="min-w-0"><h3 className="font-sans text-base font-bold leading-tight tracking-normal text-foreground sm:text-lg">{title}</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p></div>
           </div>
           {badge && <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${badgeClass}`}>{badge}</span>}
         </div>
