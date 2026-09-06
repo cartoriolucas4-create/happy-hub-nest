@@ -6,11 +6,11 @@ import { useShop } from "@/lib/shop";
 function dadosSuporte(shop: any, identity: { nome?: string; email?: string; telefone?: string } | undefined): SupportMessageData {
   return {
     id: shop?.id ?? null,
-    slug: shop?.slug,
+    slug: shop?.slug ?? null,
     barbearia: shop?.nome ?? null,
-    nome: identity?.nome,
-    telefone: shop?.whatsapp || shop?.telefone || identity?.telefone,
-    email: identity?.email || shop?.email,
+    nome: identity?.nome ?? null,
+    telefone: shop?.whatsapp || shop?.telefone || identity?.telefone || null,
+    email: identity?.email || shop?.email || null,
   };
 }
 
