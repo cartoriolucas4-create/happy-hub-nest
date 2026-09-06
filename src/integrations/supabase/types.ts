@@ -616,6 +616,7 @@ export type Database = {
         Row: {
           active: boolean
           barbershop_id: string
+          cost_price: number
           created_at: string
           description: string | null
           id: string
@@ -626,6 +627,7 @@ export type Database = {
         Insert: {
           active?: boolean
           barbershop_id: string
+          cost_price?: number
           created_at?: string
           description?: string | null
           id?: string
@@ -636,6 +638,7 @@ export type Database = {
         Update: {
           active?: boolean
           barbershop_id?: string
+          cost_price?: number
           created_at?: string
           description?: string | null
           id?: string
@@ -663,6 +666,7 @@ export type Database = {
           sale_id: string
           service_id: string | null
           total: number
+          unit_cost_snapshot: number
           unit_price_snapshot: number
         }
         Insert: {
@@ -674,6 +678,7 @@ export type Database = {
           sale_id: string
           service_id?: string | null
           total: number
+          unit_cost_snapshot?: number
           unit_price_snapshot: number
         }
         Update: {
@@ -685,6 +690,7 @@ export type Database = {
           sale_id?: string
           service_id?: string | null
           total?: number
+          unit_cost_snapshot?: number
           unit_price_snapshot?: number
         }
         Relationships: [

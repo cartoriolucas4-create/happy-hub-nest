@@ -1,16 +1,16 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Lock, MessageCircle, ShieldCheck } from "lucide-react";
-import { dataHoraBr, formatarRestante, montarMensagemSuporte, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useSupportIdentity, useSupportMessageTemplate, useSupportWhatsapp, whatsappSuporte, type Licenca } from "@/lib/license";
+import { dataHoraBr, formatarRestante, montarMensagemSuporte, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useSupportIdentity, useSupportMessageTemplate, useSupportWhatsapp, whatsappSuporte, type Licenca, type SupportMessageData } from "@/lib/license";
 import { useShop } from "@/lib/shop";
 
-function dadosSuporte(shop: any, identity: { nome?: string; email?: string; telefone?: string } | undefined) {
+function dadosSuporte(shop: any, identity: { nome?: string; email?: string; telefone?: string } | undefined): SupportMessageData {
   return {
-    id: shop?.id,
-    slug: shop?.slug,
-    barbearia: shop?.nome,
-    nome: identity?.nome,
-    telefone: shop?.whatsapp || shop?.telefone || identity?.telefone,
-    email: identity?.email || shop?.email,
+    id: shop?.id ?? null,
+    slug: shop?.slug ?? null,
+    barbearia: shop?.nome ?? null,
+    nome: identity?.nome ?? null,
+    telefone: shop?.whatsapp || shop?.telefone || identity?.telefone || null,
+    email: identity?.email || shop?.email || null,
   };
 }
 
