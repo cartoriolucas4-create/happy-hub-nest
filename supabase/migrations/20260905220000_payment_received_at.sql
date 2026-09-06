@@ -44,7 +44,7 @@ FOR EACH ROW
 EXECUTE FUNCTION public.set_payment_received_at_on_insert();
 
 UPDATE public.appointments
-SET payment_received_at = COALESCE(updated_at, created_at, NOW())
+SET payment_received_at = created_at
 WHERE status IN ('confirmado', 'concluido')
   AND payment_received_at IS NULL;
 
