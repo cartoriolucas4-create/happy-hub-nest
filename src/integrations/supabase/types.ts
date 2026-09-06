@@ -666,6 +666,7 @@ export type Database = {
           sale_id: string
           service_id: string | null
           total: number
+          unit_cost_snapshot: number
           unit_price_snapshot: number
         }
         Insert: {
@@ -677,6 +678,7 @@ export type Database = {
           sale_id: string
           service_id?: string | null
           total: number
+          unit_cost_snapshot?: number
           unit_price_snapshot: number
         }
         Update: {
@@ -688,6 +690,7 @@ export type Database = {
           sale_id?: string
           service_id?: string | null
           total?: number
+          unit_cost_snapshot?: number
           unit_price_snapshot?: number
         }
         Relationships: [
