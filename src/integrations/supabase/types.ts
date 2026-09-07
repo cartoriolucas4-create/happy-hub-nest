@@ -1093,6 +1093,20 @@ export type Database = {
             }
             Returns: string
           }
+      criar_agendamento_publico_multiplos: {
+        Args: {
+          p_barber_id: string
+          p_data: string
+          p_hora: string
+          p_nome: string
+          p_observacao?: string
+          p_payment_method_id?: string
+          p_service_ids: string[]
+          p_slug: string
+          p_telefone: string
+        }
+        Returns: string
+      }
       current_barbershop_id: { Args: never; Returns: string }
       effective_license_status: {
         Args: { p_user_id: string }
@@ -1123,6 +1137,19 @@ export type Database = {
           p_barber_id: string
           p_data: string
           p_service_id: string
+          p_slug: string
+        }
+        Returns: {
+          barber_id: string
+          barber_nome: string
+          hora: string
+        }[]
+      }
+      horarios_disponiveis_multiplos: {
+        Args: {
+          p_barber_id: string
+          p_data: string
+          p_service_ids: string[]
           p_slug: string
         }
         Returns: {
