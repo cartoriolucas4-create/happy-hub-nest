@@ -60,7 +60,7 @@ function Agendar() {
   const totalValor = selectedServices.reduce((sum, s) => sum + Number(s.preco), 0);
   const totalDuracao = selectedServices.reduce((sum, s) => sum + Number(s.duracao_minutos), 0);
   const horarioDoDia = base?.businessHours.find((h) => h.dia_semana === diaSemana(data));
-  const semana = Array.from({ length: 7 }, (_, i) => { const iso = addDays(todayIso(), i); const h = base?.businessHours.find((item) => item.dia_semana === diaSemana(iso)); return { iso, dia: diaSemana(iso), nome: DIAS[diaSemana(iso)], horario: h }; });
+  const semana = Array.from({ length: 7 }, (_, i) => { const iso = addDays(todayIso(), i); const h = base?.businessHours.find((item) => item.dia_semana === diaSemana(iso)); return { iso, dia: diaSemana(iso), nome: DIAS[diaSemana(iso)] ?? "", horario: h }; });
 
   const barbeirosDisponiveis = useMemo(() => (base?.barbers ?? []).filter((b) => serviceIds.every((serviceId) => {
     const links = (base?.links ?? []).filter((l) => l.service_id === serviceId);
