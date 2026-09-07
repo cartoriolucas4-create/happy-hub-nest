@@ -132,6 +132,7 @@ export type Database = {
           observacao: string | null
           payment_method_id: string | null
           payment_method_nome: string | null
+          payment_received_at: string | null
           service_id: string | null
           status: Database["public"]["Enums"]["appointment_status"]
           valor: number
@@ -150,6 +151,7 @@ export type Database = {
           observacao?: string | null
           payment_method_id?: string | null
           payment_method_nome?: string | null
+          payment_received_at?: string | null
           service_id?: string | null
           status?: Database["public"]["Enums"]["appointment_status"]
           valor?: number
@@ -168,6 +170,7 @@ export type Database = {
           observacao?: string | null
           payment_method_id?: string | null
           payment_method_nome?: string | null
+          payment_received_at?: string | null
           service_id?: string | null
           status?: Database["public"]["Enums"]["appointment_status"]
           valor?: number
