@@ -49,10 +49,10 @@ export function AdminShell({ title, subtitle, actions, children }: { title: stri
     queryFn: async () => { const { count, error } = await supabase.from("appointments").select("id", { count: "exact", head: true }).eq("barbershop_id", shop!.id).eq("status", "pendente"); if (error) throw error; return count ?? 0; },
   });
 
-  // Keep every active admin screen synchronized even when a database table is not
-  // enabled in Supabase Realtime. Realtime handles instant updates when available;
-  // the short polling fallback guarantees the dashboard, charts, expenses and
-  // products cannot remain stale because of a missing publication/configuration.
+  // Realtime is used when available, while the polling fallback deliberately
+  // refetches every active admin query (not only stale queries). This makes
+  // financial cards, charts, expenses and product-derived values converge even
+  // when a mutation invalidation or Realtime publication is missed.
   useEffect(() => {
     if (!shop?.id) return;
     const invalidate = () => {
@@ -63,8 +63,8 @@ export function AdminShell({ title, subtitle, actions, children }: { title: stri
       .on("postgres_changes", { event: "*", schema: "public" }, invalidate)
       .subscribe();
     const interval = window.setInterval(() => {
-      void queryClient.refetchQueries({ type: "active", stale: true });
-    }, 3000);
+      void queryClient.refetchQueries({ type: "active" });
+    }, 2000);
     return () => {
       window.clearInterval(interval);
       void supabase.removeChannel(channel);
