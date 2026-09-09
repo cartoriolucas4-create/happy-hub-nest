@@ -12,8 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch dashboard
-        shell: python
         run: |
+          python3 <<'PY'
           from pathlib import Path
           path = Path('src/routes/_authenticated/admin.index.tsx')
           text = path.read_text()
@@ -48,6 +48,7 @@ jobs:
   } });
 '''
           path.write_text(text[:start] + replacement + text[end:])
+          PY
       - name: Commit dashboard fix and remove temporary workflow
         run: |
           git config user.name "github-actions[bot]"
