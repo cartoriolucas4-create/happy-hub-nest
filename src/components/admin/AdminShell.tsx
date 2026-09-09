@@ -49,14 +49,11 @@ export function AdminShell({ title, subtitle, actions, children }: { title: stri
     queryFn: async () => { const { count, error } = await supabase.from("appointments").select("id", { count: "exact", head: true }).eq("barbershop_id", shop!.id).eq("status", "pendente"); if (error) throw error; return count ?? 0; },
   });
 
-  // Realtime is used when available, while the polling fallback deliberately
-  // refetches every active admin query (not only stale queries). This makes
-  // financial cards, charts, expenses and product-derived values converge even
-  // when a mutation invalidation or Realtime publication is missed.
   useEffect(() => {
     if (!shop?.id) return;
     const invalidate = () => {
       void queryClient.invalidateQueries();
+      void queryClient.refetchQueries({ type: "active" });
     };
     const channel = supabase
       .channel(`admin-live-sync-${shop.id}`)
@@ -64,7 +61,7 @@ export function AdminShell({ title, subtitle, actions, children }: { title: stri
       .subscribe();
     const interval = window.setInterval(() => {
       void queryClient.refetchQueries({ type: "active" });
-    }, 2000);
+    }, 1000);
     return () => {
       window.clearInterval(interval);
       void supabase.removeChannel(channel);
