@@ -33,14 +33,14 @@ function Dashboard() {
     const [onlineRes, externalRes, expenseRes] = await Promise.all([
       db.from("appointments").select("valor,payment_received_at").eq("barbershop_id", shop!.id).not("payment_received_at", "is", null).gte("payment_received_at", `${financeDates.from}T00:00:00-03:00`).lte("payment_received_at", `${financeDates.to}T23:59:59.999-03:00`),
       db.from("external_sales").select("id,total,sold_at").eq("barbershop_id", shop!.id).eq("status", "finalizada").gte("sold_at", `${financeDates.from}T00:00:00-03:00`).lte("sold_at", `${financeDates.to}T23:59:59.999-03:00`),
-      db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop!.id),
+      db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop!.id).gte("cost_date", financeDates.from).lte("cost_date", financeDates.to),
     ]);
     if (onlineRes.error) throw onlineRes.error;
     if (externalRes.error) throw externalRes.error;
     if (expenseRes.error) throw expenseRes.error;
     const onlineRevenue = (onlineRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.valor ?? 0), 0);
     const externalRevenue = (externalRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.total ?? 0), 0);
-    const expenses = (expenseRes.data ?? []).filter((row: any) => String(row.cost_date ?? "") >= financeDates.from && String(row.cost_date ?? "") <= financeDates.to).reduce((sum: number, row: any) => sum + Number(row.amount ?? 0), 0);
+    const expenses = (expenseRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.amount ?? 0), 0);
     const saleIds = (externalRes.data ?? []).map((sale: any) => sale.id).filter(Boolean);
     let productCost = 0;
     if (saleIds.length) {
