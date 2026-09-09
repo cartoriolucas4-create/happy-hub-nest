@@ -24,14 +24,20 @@ function emitReportPdf(shopName: string, de: string, ate: string, vendas: Report
   reportWindow.document.close();
 }
 function Dashboard() {
-  const { data: shop, isLoading } = useShop(); const hoje = todayIso();
+  const { data: shop, isLoading } = useShop(); const hoje = spToday();
   const [reportOpen, setReportOpen] = useState(false); const [reportDe, setReportDe] = useState(addDays(hoje, -29)); const [reportAte, setReportAte] = useState(hoje); const [reportStatus, setReportStatus] = useState<"" | "confirmado" | "concluido">(""); const [reportLoading, setReportLoading] = useState(false); const [financePeriod, setFinancePeriod] = useState<"today" | "7d" | "30d" | "month">("month");
   const { data } = useQuery({ queryKey: ["dashboard", shop?.id, hoje], enabled: Boolean(shop?.id), queryFn: async () => { const [hojeRes, recebimentosHojeRes, semanaRes, mesRes, clientesRes] = await Promise.all([supabase.from("appointments").select("*, barbers(nome), services(nome)").eq("data", hoje).order("hora_inicio"), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${hoje}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${addDays(hoje, -6)}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${addDays(hoje, -29)}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), supabase.from("customers").select("id", { count: "exact", head: true })]); if (hojeRes.error) throw hojeRes.error; if (recebimentosHojeRes.error) throw recebimentosHojeRes.error; if (semanaRes.error) throw semanaRes.error; if (mesRes.error) throw mesRes.error; if (clientesRes.error) throw clientesRes.error; return { hoje: hojeRes.data ?? [], recebimentosHoje: recebimentosHojeRes.data ?? [], semana: semanaRes.data ?? [], mes: mesRes.data ?? [], clientes: clientesRes.count ?? 0 }; } });
   const financeDates = financePeriod === "today" ? { from: hoje, to: hoje } : financePeriod === "7d" ? { from: addDays(hoje, -6), to: hoje } : financePeriod === "30d" ? { from: addDays(hoje, -29), to: hoje } : { from: `${hoje.slice(0, 8)}01`, to: hoje };
-  const { data: finance } = useQuery({ queryKey: ["financial-summary-direct", shop?.id, financeDates.from, financeDates.to], enabled: Boolean(shop?.id), staleTime: 0, refetchOnWindowFocus: true, queryFn: async () => {
+  const { data: finance, error: financeError } = useQuery({ queryKey: ["financial-summary-direct", shop?.id, financeDates.from, financeDates.to], enabled: Boolean(shop?.id), staleTime: 0, refetchOnWindowFocus: true, queryFn: async () => {
     const db = supabase as any;
+    const rpc = await db.rpc("financial_summary", { p_from: financeDates.from, p_to: financeDates.to });
+    if (!rpc.error) {
+      const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+      if (row) return { online_revenue: Number(row.online_revenue ?? 0), external_revenue: Number(row.external_revenue ?? 0), expenses: Number(row.expenses ?? 0), product_cost: Number(row.product_cost ?? 0), costs: Number(row.costs ?? 0), total_revenue: Number(row.total_revenue ?? 0), net_profit: Number(row.net_profit ?? 0) };
+    }
+    // Fallback: agrega diretamente das mesmas fontes (agendamentos pagos, vendas externas, despesas).
     const [onlineRes, externalRes, expenseRes] = await Promise.all([
-      db.from("appointments").select("valor,payment_received_at").eq("barbershop_id", shop!.id).not("payment_received_at", "is", null).gte("payment_received_at", `${financeDates.from}T00:00:00-03:00`).lte("payment_received_at", `${financeDates.to}T23:59:59.999-03:00`),
+      db.from("appointments").select("valor,payment_received_at").eq("barbershop_id", shop!.id).not("payment_received_at", "is", null).in("status", ["confirmado", "concluido"]).gte("payment_received_at", `${financeDates.from}T00:00:00-03:00`).lte("payment_received_at", `${financeDates.to}T23:59:59.999-03:00`),
       db.from("external_sales").select("id,total,sold_at").eq("barbershop_id", shop!.id).eq("status", "finalizada").gte("sold_at", `${financeDates.from}T00:00:00-03:00`).lte("sold_at", `${financeDates.to}T23:59:59.999-03:00`),
       db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop!.id).gte("cost_date", financeDates.from).lte("cost_date", financeDates.to),
     ]);
@@ -44,7 +50,7 @@ function Dashboard() {
     const saleIds = (externalRes.data ?? []).map((sale: any) => sale.id).filter(Boolean);
     let productCost = 0;
     if (saleIds.length) {
-      const { data: items, error: itemsError } = await db.from("external_sale_items").select("quantity,unit_cost_snapshot,product_id,external_products(cost_price)").in("sale_id", saleIds);
+      const { data: items, error: itemsError } = await db.from("external_sale_items").select("quantity,unit_cost_snapshot,product_id,external_products(cost_price)").in("sale_id", saleIds).not("product_id", "is", null);
       if (itemsError) throw itemsError;
       productCost = (items ?? []).reduce((sum: number, item: any) => {
         const snapshot = Number(item.unit_cost_snapshot ?? 0);
@@ -56,6 +62,7 @@ function Dashboard() {
     return { online_revenue: onlineRevenue, external_revenue: externalRevenue, expenses, product_cost: productCost, costs: expenses + productCost, total_revenue: revenue, net_profit: revenue - expenses - productCost };
   } });
   const online = Number(finance?.online_revenue ?? 0); const external = Number(finance?.external_revenue ?? 0); const expenses = Number(finance?.expenses ?? 0); const productCost = Number(finance?.product_cost ?? 0); const revenue = Number(finance?.total_revenue ?? online + external); const profit = Number(finance?.net_profit ?? revenue - expenses - productCost);
+
   const gerarRelatorio = async () => { if (!shop || !reportDe || !reportAte || reportDe > reportAte) return; setReportLoading(true); try { let query = (supabase as any).from("appointments").select("*, barbers(nome), services(nome)").not("payment_received_at", "is", null).gte("payment_received_at", `${reportDe}T00:00:00-03:00`).lte("payment_received_at", `${reportAte}T23:59:59.999-03:00`).order("payment_received_at"); if (reportStatus) query = query.eq("status", reportStatus); else query = query.in("status", ["confirmado", "concluido"]); const { data: vendas, error } = await query; if (error) throw error; emitReportPdf(shop.nome, reportDe, reportAte, (vendas ?? []) as ReportAppointment[]); setReportOpen(false); } catch (error) { window.alert(error instanceof Error ? error.message : "Não foi possível gerar o relatório."); } finally { setReportLoading(false); } };
   return <AdminShell title={shop?.nome ?? "Dashboard"} subtitle="Visão geral de hoje" actions={<div className="flex flex-wrap gap-2">{shop && <Link to="/admin/meu-link" className="rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary">/{shop.slug}</Link>}<button className={`${btn} inline-flex items-center gap-2`} onClick={() => setReportOpen(true)}><FileText className="h-4 w-4" /> RELATÓRIO DE VENDAS</button></div>}>
     {shop && <SetupChecklist shopId={shop.id} />}
