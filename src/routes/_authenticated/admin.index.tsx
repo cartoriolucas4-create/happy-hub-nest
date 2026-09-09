@@ -23,28 +23,29 @@ function emitReportPdf(shopName: string, de: string, ate: string, vendas: Report
   reportWindow.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório de vendas - ${escapeHtml(shopName)}</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0;font-size:12px}header{border-bottom:2px solid #222;padding-bottom:14px;margin-bottom:18px}h1{margin:0 0 5px;font-size:22px}p{margin:4px 0}.summary{display:flex;gap:28px;margin:18px 0;padding:14px;border:1px solid #ddd;border-radius:8px}.summary strong{display:block;font-size:17px;margin-top:4px}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #ddd;padding:8px 5px;text-align:left}th{font-size:10px;text-transform:uppercase;background:#f3f3f3}td:last-child,th:last-child{text-align:right}.empty{padding:24px;text-align:center;border:1px dashed #bbb}.footer{margin-top:18px;font-size:10px;color:#666}@media print{.no-print{display:none}}</style></head><body><header><h1>Relatório de vendas</h1><p><strong>${escapeHtml(shopName)}</strong></p><p>Período de recebimento: ${escapeHtml(janela)}</p></header><section class="summary"><div>Vendas<strong>${vendas.length}</strong></div><div>Faturamento<strong>${escapeHtml(brl(total))}</strong></div></section>${vendas.length ? `<table><thead><tr><th>Recebimento</th><th>Hora</th><th>Cliente</th><th>Serviço</th><th>Barbeiro</th><th>Status</th><th>Valor</th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty">Nenhuma venda recebida no período selecionado.</div>`}<p class="footer">Relatório gerado pelo painel administrativo.</p><script>window.onload=()=>{setTimeout(()=>window.print(),250)}</script></body></html>`);
   reportWindow.document.close();
 }
-function spToday() { try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); } catch { return todayIso(); } }
-function spDateFromTimestamp(value: string | null | undefined) { if (!value) return ""; try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value)); } catch { return value.slice(0, 10); } }
+function spToday() { try { const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date()); const year = parts.find((p) => p.type === "year")?.value ?? ""; const month = parts.find((p) => p.type === "month")?.value ?? ""; const day = parts.find((p) => p.type === "day")?.value ?? ""; return `${year}-${month}-${day}`; } catch { return todayIso(); } }
+function spDateFromTimestamp(value: string | null | undefined) { if (!value) return ""; try { const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(value)); const year = parts.find((p) => p.type === "year")?.value ?? ""; const month = parts.find((p) => p.type === "month")?.value ?? ""; const day = parts.find((p) => p.type === "day")?.value ?? ""; return `${year}-${month}-${day}`; } catch { return value.slice(0, 10); } }
 function Dashboard() {
   const { data: shop, isLoading } = useShop(); const hoje = spToday();
   const [reportOpen, setReportOpen] = useState(false); const [reportDe, setReportDe] = useState(addDays(hoje, -29)); const [reportAte, setReportAte] = useState(hoje); const [reportStatus, setReportStatus] = useState<"" | "confirmado" | "concluido">(""); const [reportLoading, setReportLoading] = useState(false); const [financePeriod, setFinancePeriod] = useState<"today" | "7d" | "30d" | "month">("month");
   const { data } = useQuery({ queryKey: ["dashboard", shop?.id, hoje], enabled: Boolean(shop?.id), queryFn: async () => { const [hojeRes, recebimentosHojeRes, semanaRes, mesRes, clientesRes] = await Promise.all([supabase.from("appointments").select("*, barbers(nome), services(nome)").eq("data", hoje).order("hora_inicio"), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${hoje}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${addDays(hoje, -6)}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), (supabase as any).from("appointments").select("valor, status, data, payment_received_at").gte("payment_received_at", `${addDays(hoje, -29)}T00:00:00-03:00`).lte("payment_received_at", `${hoje}T23:59:59.999-03:00`), supabase.from("customers").select("id", { count: "exact", head: true })]); if (hojeRes.error) throw hojeRes.error; if (recebimentosHojeRes.error) throw recebimentosHojeRes.error; if (semanaRes.error) throw semanaRes.error; if (mesRes.error) throw mesRes.error; if (clientesRes.error) throw clientesRes.error; return { hoje: hojeRes.data ?? [], recebimentosHoje: recebimentosHojeRes.data ?? [], semana: semanaRes.data ?? [], mes: mesRes.data ?? [], clientes: clientesRes.count ?? 0 }; } });
   const financeDates = financePeriod === "today" ? { from: hoje, to: hoje } : financePeriod === "7d" ? { from: addDays(hoje, -6), to: hoje } : financePeriod === "30d" ? { from: addDays(hoje, -29), to: hoje } : { from: `${hoje.slice(0, 8)}01`, to: hoje };
-  const { data: finance, error: financeError } = useQuery({ queryKey: ["financial-summary-direct", shop?.id, financeDates.from, financeDates.to], enabled: Boolean(shop?.id), staleTime: 0, refetchOnWindowFocus: true, refetchInterval: 5000, queryFn: async () => {
+  const { data: finance, error: financeError } = useQuery({ queryKey: ["financial-summary-direct", shop?.id, financeDates.from, financeDates.to], enabled: Boolean(shop?.id), staleTime: 0, refetchOnWindowFocus: true, refetchOnMount: "always", refetchOnReconnect: true, refetchInterval: 2000, queryFn: async () => {
     const db = supabase as any;
     const [onlineRes, externalRes, expenseRes] = await Promise.all([
       db.from("appointments").select("valor,payment_received_at").eq("barbershop_id", shop!.id).not("payment_received_at", "is", null).in("status", ["confirmado", "concluido"]).gte("payment_received_at", `${financeDates.from}T00:00:00-03:00`).lte("payment_received_at", `${financeDates.to}T23:59:59.999-03:00`),
       db.from("external_sales").select("id,total,sold_at").eq("barbershop_id", shop!.id).eq("status", "finalizada").gte("sold_at", `${financeDates.from}T00:00:00-03:00`).lte("sold_at", `${financeDates.to}T23:59:59.999-03:00`),
-      db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop!.id).gte("cost_date", financeDates.from).lte("cost_date", financeDates.to),
+      db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop!.id).order("cost_date", { ascending: false }),
     ]);
     if (onlineRes.error) throw onlineRes.error;
     if (externalRes.error) throw externalRes.error;
     if (expenseRes.error) throw expenseRes.error;
     const onlineRows = onlineRes.data ?? [];
     const externalRows = externalRes.data ?? [];
+    const expenseRows = (expenseRes.data ?? []).filter((row: any) => { const date = String(row.cost_date ?? "").slice(0, 10); return date >= financeDates.from && date <= financeDates.to; });
     const onlineRevenue = onlineRows.reduce((sum: number, row: any) => sum + Number(row.valor ?? 0), 0);
     const externalRevenue = externalRows.reduce((sum: number, row: any) => sum + Number(row.total ?? 0), 0);
-    const expenses = (expenseRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.amount ?? 0), 0);
+    const expenses = expenseRows.reduce((sum: number, row: any) => sum + Number(row.amount ?? 0), 0);
     const saleIds = externalRows.map((sale: any) => sale.id).filter(Boolean);
     let productCost = 0;
     if (saleIds.length) {
@@ -57,11 +58,7 @@ function Dashboard() {
         if (productsError) throw productsError;
         for (const product of products ?? []) costsByProduct.set(product.id, Number(product.cost_price ?? 0));
       }
-      productCost = (items ?? []).reduce((sum: number, item: any) => {
-        const snapshot = Number(item.unit_cost_snapshot ?? 0);
-        const currentCost = costsByProduct.get(item.product_id) ?? 0;
-        return sum + (snapshot > 0 ? snapshot : currentCost) * Number(item.quantity ?? 0);
-      }, 0);
+      productCost = (items ?? []).reduce((sum: number, item: any) => { const snapshot = Number(item.unit_cost_snapshot ?? 0); const currentCost = costsByProduct.get(item.product_id) ?? 0; return sum + (snapshot > 0 ? snapshot : currentCost) * Number(item.quantity ?? 0); }, 0);
     }
     const chartAppointments = [
       ...onlineRows.map((row: any) => ({ valor: Number(row.valor ?? 0), status: "concluido", data: spDateFromTimestamp(row.payment_received_at), payment_received_at: spDateFromTimestamp(row.payment_received_at) })),
