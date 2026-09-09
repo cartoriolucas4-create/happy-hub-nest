@@ -49,6 +49,28 @@ export function AdminShell({ title, subtitle, actions, children }: { title: stri
     queryFn: async () => { const { count, error } = await supabase.from("appointments").select("id", { count: "exact", head: true }).eq("barbershop_id", shop!.id).eq("status", "pendente"); if (error) throw error; return count ?? 0; },
   });
 
+  // Keep every active admin screen synchronized even when a database table is not
+  // enabled in Supabase Realtime. Realtime handles instant updates when available;
+  // the short polling fallback guarantees the dashboard, charts, expenses and
+  // products cannot remain stale because of a missing publication/configuration.
+  useEffect(() => {
+    if (!shop?.id) return;
+    const invalidate = () => {
+      void queryClient.invalidateQueries();
+    };
+    const channel = supabase
+      .channel(`admin-live-sync-${shop.id}`)
+      .on("postgres_changes", { event: "*", schema: "public" }, invalidate)
+      .subscribe();
+    const interval = window.setInterval(() => {
+      void queryClient.refetchQueries({ type: "active", stale: true });
+    }, 3000);
+    return () => {
+      window.clearInterval(interval);
+      void supabase.removeChannel(channel);
+    };
+  }, [shop?.id, queryClient]);
+
   useEffect(() => { const activeGroup = groupForPath(pathname); if (!activeGroup) return; setGroups((current) => { if (current[activeGroup]) return current; const next = { ...current, [activeGroup]: true }; saveGroups(next); return next; }); }, [pathname]);
   function toggleGroup(key: SidebarGroupKey) { setGroups((current) => { const next = { ...current, [key]: !current[key] }; saveGroups(next); return next; }); }
   async function sair() { await queryClient.cancelQueries(); queryClient.clear(); await supabase.auth.signOut(); navigate({ to: "/login", replace: true }); }
