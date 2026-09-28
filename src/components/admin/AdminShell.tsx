@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, CalendarDays, ClipboardList, Users, UserCog, Scissors, Ban, Settings, CreditCard, Images, Link2, LogOut, Menu, X, ChevronDown, ShoppingCart, ReceiptText, Shield } from "lucide-react";
+import { LayoutDashboard, CalendarDays, ClipboardList, Users, UserCog, Ban, Settings, CreditCard, Images, Link2, LogOut, Menu, X, ChevronDown, ShoppingCart, ReceiptText, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
 import { useShop } from "@/lib/shop";
@@ -36,7 +36,7 @@ function saveGroups(groups: Record<SidebarGroupKey, boolean>) { try { window.loc
 
 export function AdminShell({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: React.ReactNode; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [groups, setGroups] = useState<Record<SidebarGroupKey, boolean>>(() => ({ agenda: false, pessoas: false, operacao: false, configuracoes: false, negocio: false, ...readSavedGroups() }));
+  const [groups, setGroups] = useState<Record<SidebarGroupKey, boolean>>(() => ({ agenda: false, pessoas: false, configuracoes: false, negocio: false, ...readSavedGroups() }));
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
