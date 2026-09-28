@@ -35,17 +35,31 @@ function Bloqueios() {
     motivo: "",
   });
 
-  const { data, isLoading } = useQuery({
+  const { data: bloqueios = [], isLoading: carregandoBloqueios } = useQuery({
     queryKey: ["bloqueios", shop?.id],
     enabled: Boolean(shop?.id),
     queryFn: async () => {
-      const [bloq, barbers] = await Promise.all([
-        supabase.from("blocked_times").select("*, barbers(nome)").eq("barbershop_id", shop.data.id).order("data", { ascending: false }),
-        supabase.from("barbers").select("id, nome, ativo").eq("barbershop_id", shop.data.id).order("nome"),
-      ]);
-      if (bloq.error) throw bloq.error;
-      if (barbers.error) throw barbers.error;
-      return { bloqueios: bloq.data, barbers: barbers.data ?? [] };
+      const { data, error } = await supabase
+        .from("blocked_times")
+        .select("*, barbers(nome)")
+        .eq("barbershop_id", shop!.id)
+        .order("data", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: profissionais = [], isLoading: carregandoProfissionais, error: erroProfissionais } = useQuery({
+    queryKey: ["bloqueios-profissionais", shop?.id],
+    enabled: Boolean(shop?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("barbers")
+        .select("id, nome, ativo")
+        .eq("barbershop_id", shop!.id)
+        .order("nome");
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -157,9 +171,11 @@ function Bloqueios() {
       )}
 
       {isLoading && <Empty>Carregando...</Empty>}
-      {data?.bloqueios.length === 0 && <Empty>Nenhum bloqueio cadastrado.</Empty>}
+      {erroProfissionais && <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">Não foi possível carregar os profissionais desta barbearia. Tente novamente.</p>}
+      {carregandoProfissionais && <p className="mb-4 text-sm text-muted-foreground">Carregando profissionais...</p>}
+      {bloqueios.length === 0 && !carregandoBloqueios && <Empty>Nenhum bloqueio cadastrado.</Empty>}
       <div className="space-y-3">
-        {(data?.bloqueios ?? []).map((b) => (
+        {bloqueios.map((b) => (
           <div key={b.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card p-4">
             <div>
               <p className="font-display text-lg text-primary">
