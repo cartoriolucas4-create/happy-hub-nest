@@ -22,8 +22,7 @@ export const MENU = [
 ] as const;
 
 export const SIDEBAR_GROUPS = [
-  { key: "agenda", label: "Agenda", icon: CalendarDays, items: MENU.filter((m) => ["/admin/agenda", "/admin/agendamentos", "/admin/bloqueios"].includes(m.to)) },
-  { key: "pessoas", label: "Pessoas", icon: Users, items: MENU.filter((m) => ["/admin/clientes", "/admin/barbeiros"].includes(m.to)) },
+  { key: "agenda", label: "Agenda", icon: CalendarDays, items: MENU.filter((m) => ["/admin/agenda", "/admin/agendamentos", "/admin/clientes", "/admin/bloqueios"].includes(m.to)) },
   { key: "configuracoes", label: "Configurações", icon: Settings, items: [...MENU.filter((m) => ["/admin/pagamentos", "/admin/galeria", "/admin/configuracoes"].includes(m.to)), { to: "/admin/configurar", label: "Configuração inicial", icon: Settings }] },
   { key: "negocio", label: "Meu negócio", icon: Link2, items: MENU.filter((m) => m.to === "/admin/meu-link") },
 ] as const;
@@ -36,7 +35,7 @@ function saveGroups(groups: Record<SidebarGroupKey, boolean>) { try { window.loc
 
 export function AdminShell({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: React.ReactNode; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [groups, setGroups] = useState<Record<SidebarGroupKey, boolean>>(() => ({ agenda: false, pessoas: false, configuracoes: false, negocio: false, ...readSavedGroups() }));
+  const [groups, setGroups] = useState<Record<SidebarGroupKey, boolean>>(() => ({ agenda: false, configuracoes: false, negocio: false, ...readSavedGroups() }));
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
