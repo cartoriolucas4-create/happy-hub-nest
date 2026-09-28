@@ -84,7 +84,7 @@ export function GallerySettings() {
     <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
       <div>
         <h2 className="text-xs uppercase tracking-[0.2em] text-primary">Imagens da página</h2>
-        <h3 className="mt-2 text-2xl">Galeria</h3>
+        <h3 className="mt-2 text-2xl">Imagens da página</h3>
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">Adicione e organize as fotos dos seus trabalhos exibidas na página pública.</p>
       </div>
 
