@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, CalendarDays, ClipboardList, Users, Ban, Settings, CreditCard, Images, Link2, LogOut, Menu, X, ChevronDown, ShoppingCart, ReceiptText, Shield } from "lucide-react";
+import { LayoutDashboard, CalendarDays, ClipboardList, Users, Ban, Settings, Images, Link2, LogOut, Menu, X, ChevronDown, ShoppingCart, ReceiptText, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
 import { useShop } from "@/lib/shop";
@@ -13,15 +13,13 @@ export const MENU = [
   { to: "/admin/agendamentos", label: "Agendamentos", icon: ClipboardList },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/bloqueios", label: "Bloqueios", icon: Ban },
-  { to: "/admin/pagamentos", label: "Meios de pagamento", icon: CreditCard },
-  { to: "/admin/galeria", label: "Galeria", icon: Images },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
   { to: "/admin/meu-link", label: "Meu link", icon: Link2 },
 ] as const;
 
 export const SIDEBAR_GROUPS = [
   { key: "agenda", label: "Agenda", icon: CalendarDays, items: MENU.filter((m) => ["/admin/agenda", "/admin/agendamentos", "/admin/clientes", "/admin/bloqueios"].includes(m.to)) },
-  { key: "configuracoes", label: "Configurações", icon: Settings, items: [...MENU.filter((m) => ["/admin/pagamentos", "/admin/galeria", "/admin/configuracoes"].includes(m.to)), { to: "/admin/configurar", label: "Configuração inicial", icon: Settings }] },
+  { key: "configuracoes", label: "Configurações", icon: Settings, items: [...MENU.filter((m) => m.to === "/admin/configuracoes"), { to: "/admin/configurar", label: "Configuração inicial", icon: Settings }] },
   { key: "negocio", label: "Meu negócio", icon: Link2, items: MENU.filter((m) => m.to === "/admin/meu-link") },
 ] as const;
 
