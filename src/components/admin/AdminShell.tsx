@@ -19,7 +19,7 @@ export const MENU = [
 
 export const SIDEBAR_GROUPS = [
   { key: "agenda", label: "Agenda", icon: CalendarDays, items: MENU.filter((m) => ["/admin/agenda", "/admin/agendamentos", "/admin/clientes", "/admin/bloqueios"].includes(m.to)) },
-  { key: "configuracoes", label: "Visual", icon: Settings, items: [...MENU.filter((m) => m.to === "/admin/configuracoes"), { to: "/admin/configurar", label: "Meu negócio", icon: Settings }] },
+  { key: "configuracoes", label: "Configurações", icon: Settings, items: [...MENU.filter((m) => m.to === "/admin/configuracoes"), { to: "/admin/configurar", label: "Meu negócio", icon: Settings }] },
   { key: "negocio", label: "Meu negócio", icon: Link2, items: MENU.filter((m) => m.to === "/admin/meu-link") },
 ] as const;
 
