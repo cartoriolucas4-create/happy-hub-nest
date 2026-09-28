@@ -9,7 +9,7 @@ import { useIsSuperAdmin } from "@/lib/license";
 
 export const MENU = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
+  { to: "/admin/agenda", label: "Minha agenda", icon: CalendarDays },
   { to: "/admin/agendamentos", label: "Agendamentos", icon: ClipboardList },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/barbeiros", label: "Barbeiros", icon: UserCog },
@@ -24,7 +24,6 @@ export const MENU = [
 export const SIDEBAR_GROUPS = [
   { key: "agenda", label: "Agenda", icon: CalendarDays, items: MENU.filter((m) => ["/admin/agenda", "/admin/agendamentos", "/admin/bloqueios"].includes(m.to)) },
   { key: "pessoas", label: "Pessoas", icon: Users, items: MENU.filter((m) => ["/admin/clientes", "/admin/barbeiros"].includes(m.to)) },
-  { key: "operacao", label: "Operação", icon: Scissors, items: MENU.filter((m) => m.to === "/admin/servicos") },
   { key: "configuracoes", label: "Configurações", icon: Settings, items: [...MENU.filter((m) => ["/admin/pagamentos", "/admin/galeria", "/admin/configuracoes"].includes(m.to)), { to: "/admin/configurar", label: "Configuração inicial", icon: Settings }] },
   { key: "negocio", label: "Meu negócio", icon: Link2, items: MENU.filter((m) => m.to === "/admin/meu-link") },
 ] as const;
