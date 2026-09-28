@@ -144,7 +144,7 @@ function Bloqueios() {
               onChange={(e) => setForm({ ...form, barber_id: e.target.value })}
             >
               <option value="">Toda a barbearia</option>
-              {(data?.barbers ?? []).map((b) => (
+              {profissionais.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.nome}
                 </option>
@@ -170,7 +170,7 @@ function Bloqueios() {
         </div>
       )}
 
-      {isLoading && <Empty>Carregando...</Empty>}
+      {carregandoBloqueios && <Empty>Carregando...</Empty>}
       {erroProfissionais && <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">Não foi possível carregar os profissionais desta barbearia. Tente novamente.</p>}
       {carregandoProfissionais && <p className="mb-4 text-sm text-muted-foreground">Carregando profissionais...</p>}
       {bloqueios.length === 0 && !carregandoBloqueios && <Empty>Nenhum bloqueio cadastrado.</Empty>}
