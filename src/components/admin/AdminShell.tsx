@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, CalendarDays, ClipboardList, Users, Ban, Settings, Images, Link2, LogOut, Menu, X, ChevronDown, ShoppingCart, ReceiptText, Shield } from "lucide-react";
+import { LayoutDashboard, CalendarDays, ClipboardList, Users, Ban, Settings, Link2, LogOut, Menu, X, ChevronDown, ShoppingCart, ReceiptText, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
 import { useShop } from "@/lib/shop";
