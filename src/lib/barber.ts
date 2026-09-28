@@ -107,6 +107,8 @@ export function onlyDigits(v: string) {
 /* ----------  Dados dinâmicos da barbearia (multi-tenant)  ---------- */
 
 export type ShopLike = {
+  id?: string | null;
+  slug?: string | null;
   nome?: string | null;
   whatsapp?: string | null;
   telefone?: string | null;
@@ -131,10 +133,14 @@ export function waNumber(shop: ShopLike | null | undefined) {
 export function waLink(shop: ShopLike | null | undefined, mensagem?: string) {
   const num = waNumber(shop);
   if (!num) return "";
-  const texto =
+  const textoBase =
     mensagem ??
     (shop?.mensagem_whatsapp?.trim() ||
       `Olá! Gostaria de saber mais sobre os serviços da ${shop?.nome ?? "barbearia"}.`);
+  // O ID exibido ao cliente é sempre o ID/slug público, nunca o UUID interno do banco.
+  const texto = shop?.slug
+    ? textoBase.replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi, shop.slug)
+    : textoBase;
   return `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
 }
 
