@@ -22,7 +22,7 @@ function formatarWhatsapp(value: string) {
 }
 
 const CAMPOS = [
-  ["{id}", "ID interno da barbearia"],
+  ["{id}", "ID público da barbearia (nome após / no link)"],
   ["{slug}", "Slug/link público da barbearia"],
   ["{barbearia}", "Nome da barbearia"],
   ["{nome}", "Nome do responsável"],
