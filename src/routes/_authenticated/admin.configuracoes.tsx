@@ -106,7 +106,7 @@ function Configuracoes() {
 
   if (!form) return <AdminShell title="Configurações">Carregando...</AdminShell>;
   const grupos: { titulo: string; campos: [keyof Form, string][] }[] = [
-    { titulo: "Identificação", campos: [["nome", "Nome da barbearia"], ["slug", "Link público (/...)"] , ["responsavel", "Responsável"]] },
+    { titulo: "Identificação", campos: [["nome", "Nome da barbearia"], ["slug", "ID / Link público"] , ["responsavel", "Responsável"]] },
     { titulo: "Contato", campos: [["telefone", "Telefone"], ["whatsapp", "WhatsApp (com DDD)"], ["email", "E-mail"], ["instagram", "Instagram"], ["facebook", "Facebook"], ["site_url", "Site"]] },
     { titulo: "Endereço", campos: [["endereco", "Rua / Avenida"], ["numero", "Número"], ["complemento", "Complemento"], ["bairro", "Bairro"], ["cidade", "Cidade"], ["estado", "Estado"], ["cep", "CEP"]] },
   ];
@@ -122,7 +122,7 @@ function Configuracoes() {
   return (
     <AdminShell title="Configurações" subtitle="Dados exibidos na sua página pública">
       <form onSubmit={(e) => { e.preventDefault(); salvar.mutate(form); }} className="max-w-3xl space-y-8">
-        {grupos.map((g) => <section key={g.titulo}><h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-primary">{g.titulo}</h2><div className="grid gap-4 sm:grid-cols-2">{g.campos.map(([key, label]) => <label key={key}><span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span><input className={input} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></label>)}</div></section>)}
+        {grupos.map((g) => <section key={g.titulo}><h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-primary">{g.titulo}</h2><div className="grid gap-4 sm:grid-cols-2">{g.campos.map(([key, label]) => <label key={key}><span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span>{key === "slug" && <p className="mb-1 text-xs text-muted-foreground">O ID é a parte do Link Público depois da barra. Ex.: <strong>/lucasbarbeiro</strong> → ID: <strong>lucasbarbeiro</strong>.</p>}<input className={input} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></label>)}</div></section>)}
 
         <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="text-xs uppercase tracking-[0.2em] text-primary">Personalização</h2><h3 className="mt-2 text-2xl">Cor do Meu Link</h3><p className="mt-1 max-w-xl text-sm text-muted-foreground">Escolha a cor principal de destaque do seu Meu Link. O tema, conteúdo, horários, serviços e barbeiros permanecem preservados.</p></div><span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">Selecionado: <strong className="text-foreground">{selectedOptionName}</strong></span></div>
