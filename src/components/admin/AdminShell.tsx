@@ -13,7 +13,7 @@ export const MENU = [
   { to: "/admin/agendamentos", label: "Agendamentos", icon: ClipboardList },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/barbeiros", label: "Barbeiros", icon: UserCog },
-  { to: "/admin/servicos", label: "Serviços", icon: Scissors },
+  { to: "/admin/servicos", label: "Serviços", icon: undefined },
   { to: "/admin/bloqueios", label: "Bloqueios", icon: Ban },
   { to: "/admin/pagamentos", label: "Meios de pagamento", icon: CreditCard },
   { to: "/admin/galeria", label: "Galeria", icon: Images },
