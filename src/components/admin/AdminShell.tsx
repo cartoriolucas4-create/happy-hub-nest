@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, CalendarDays, ClipboardList, Users, UserCog, Ban, Settings, CreditCard, Images, Link2, LogOut, Menu, X, ChevronDown, ShoppingCart, ReceiptText, Shield } from "lucide-react";
+import { LayoutDashboard, CalendarDays, ClipboardList, Users, Ban, Settings, CreditCard, Images, Link2, LogOut, Menu, X, ChevronDown, ShoppingCart, ReceiptText, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessGate, LicenseBanner } from "@/components/admin/AccessGate";
 import { useShop } from "@/lib/shop";
@@ -12,8 +12,6 @@ export const MENU = [
   { to: "/admin/agenda", label: "Minha agenda", icon: CalendarDays },
   { to: "/admin/agendamentos", label: "Agendamentos", icon: ClipboardList },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
-  { to: "/admin/barbeiros", label: "Barbeiros", icon: UserCog },
-  { to: "/admin/servicos", label: "Serviços", icon: undefined },
   { to: "/admin/bloqueios", label: "Bloqueios", icon: Ban },
   { to: "/admin/pagamentos", label: "Meios de pagamento", icon: CreditCard },
   { to: "/admin/galeria", label: "Galeria", icon: Images },
