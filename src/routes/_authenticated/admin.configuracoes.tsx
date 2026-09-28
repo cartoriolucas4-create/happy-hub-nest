@@ -10,6 +10,7 @@ import { ACCENT_OPTIONS, DEFAULT_ACCENT_DB_VALUE, DEFAULT_ACCENT_COLOR, accentFo
 import { isEmail, slugify } from "@/lib/barber";
 import { isReservedPublicSlug } from "@/lib/public-links";
 import { mediaUrl, uploadMedia } from "@/lib/media";
+import { GallerySettings } from "@/components/admin/GallerySettings";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações | BarberFlow" }, { name: "description", content: "Dados, contato, endereço e identidade visual da barbearia." }, { property: "og:title", content: "Configurações | BarberFlow" }, { property: "og:description", content: "Configurações da barbearia." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] }),
@@ -172,6 +173,8 @@ function Configuracoes() {
             </div>
           </div>
         </section>
+
+        <GallerySettings />
 
         <button className={btn} disabled={salvar.isPending || Boolean(enviando)}>{salvar.isPending ? "SALVANDO..." : "SALVAR CONFIGURAÇÕES"}</button>
       </form>
