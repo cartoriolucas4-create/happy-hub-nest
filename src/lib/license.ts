@@ -119,9 +119,10 @@ export type SupportMessageData = {
 /** Substitui os campos disponíveis na mensagem sem deixar placeholders quebrados. */
 export function montarMensagemSuporte(template: string | null | undefined, data: SupportMessageData) {
   const texto = template || SUPORTE_MENSAGEM_PADRAO;
+  const idPublico = data.slug || data.id || "ID-DA-BARBEARIA";
   const valores: Record<string, string> = {
-    id: data.id || "ID-DA-BARBEARIA",
-    slug: data.slug || data.id || "SLUG-DA-BARBEARIA",
+    id: idPublico,
+    slug: idPublico,
     barbearia: data.barbearia || "Barbearia",
     nome: data.nome || "",
     telefone: data.telefone || "",
