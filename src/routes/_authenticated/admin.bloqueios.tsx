@@ -40,8 +40,8 @@ function Bloqueios() {
     enabled: Boolean(shop?.id),
     queryFn: async () => {
       const [bloq, barbers] = await Promise.all([
-        supabase.from("blocked_times").select("*, barbers(nome)").order("data", { ascending: false }),
-        supabase.from("barbers").select("id, nome").eq("ativo", true).order("nome"),
+        supabase.from("blocked_times").select("*, barbers(nome)").eq("barbershop_id", shop.data.id).order("data", { ascending: false }),
+        supabase.from("barbers").select("id, nome").eq("barbershop_id", shop.data.id).eq("ativo", true).order("nome"),
       ]);
       if (bloq.error) throw bloq.error;
       return { bloqueios: bloq.data, barbers: barbers.data ?? [] };
