@@ -54,7 +54,9 @@ function PaginaPublica() {
   if (error) return <Aviso texto="Não foi possível carregar esta barbearia." />;
   if (!data) return <Aviso texto="Barbearia não encontrada." />;
   const { shop, services, barbers, hours, logo, cover, galeria } = data;
-  const linha1 = enderecoLinha1(shop); const linha2 = enderecoLinha2(shop); const maps = mapsLink(shop); const wa = waLink(shop);
+  const linha1 = enderecoLinha1(shop); const linha2 = enderecoLinha2(shop); const maps = mapsLink(shop);
+  const mensagemEquipe = `Olá! Gostaria de falar com a equipe da ${shop.nome}. Vim pelo link de agendamento e gostaria de tirar uma dúvida.`;
+  const wa = waLink(shop, mensagemEquipe);
   const heroImg = cover ?? heroPadrao; const fotos = galeria.length > 0 ? galeria : GALERIA_PADRAO;
   const slogan = shop.slogan?.trim() || "Precisão em cada detalhe.";
   const sobre = shop.descricao?.trim() || "Uma barbearia feita para quem valoriza o cuidado com a própria imagem: técnica apurada, produtos selecionados e um atendimento pensado nos mínimos detalhes.";
