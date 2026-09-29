@@ -44,7 +44,7 @@ function PaginaPublica() {
       const [services, barbers, products, hours, logo, cover, galeria] = await Promise.all([
         supabase.from("services").select("*").eq("barbershop_id", shop.data.id).eq("ativo", true).order("preco"),
         supabase.from("barbers").select("*").eq("barbershop_id", shop.data.id).eq("ativo", true).order("nome"),
-        supabase.from("external_products").select("id,name,description,price,image_path").eq("barbershop_id", shop.data.id).eq("active", true).order("name"),
+        supabase.from("external_products").select("*").eq("barbershop_id", shop.data.id).eq("active", true).order("name"),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.data.id).order("dia_semana"),
         mediaUrl(shop.data.logo_url), mediaUrl(shop.data.cover_url), fetchGaleria(shop.data.id),
       ]);
