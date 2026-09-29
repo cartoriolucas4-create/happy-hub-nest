@@ -21,10 +21,8 @@ const FILTROS = [
   { valor: "suspended", label: "Suspensos" },
 ] as const;
 
-const rpc = supabase.rpc as unknown as (
-  fn: string,
-  args: Record<string, unknown>,
-) => Promise<{ data: unknown; error: { message: string } | null }>;
+const rpc = (fn: string, args: Record<string, unknown>) =>
+  supabase.rpc(fn, args) as unknown as Promise<{ data: unknown; error: { message: string } | null }>;
 
 export const Route = createFileRoute("/_authenticated/super-admin/clientes/")({ component: Clientes });
 
