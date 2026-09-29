@@ -131,7 +131,7 @@
   --sidebar-ring: var(--default-accent-color);
 }
 
-/* Admin readability: keep the brand display face for the logo/buttons, but use a calmer UI face for the dashboard and sales screens. */
+/* Admin readability: calm UI typography for dashboard and sales screens. */
 .admin-readable h1,
 .admin-readable h2,
 .admin-readable h3,
