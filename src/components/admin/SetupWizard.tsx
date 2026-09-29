@@ -16,7 +16,7 @@ type HourRow = { dia_semana: number; hora_inicio: string; hora_fim: string; poss
 type Payment = { id: string; name: string; description: string | null; icon: string | null; active: boolean; display_order: number; pix_key: string | null; pix_beneficiary: string | null };
 
 const emptyService: ServiceForm = { nome: "", descricao: "", preco: "", duracao_minutos: "" };
-const emptyBarber: BarberForm = { nome: "", telefone: "", descricao: "", foto_url: "", commission_type: "percentual", commission_value: "" };
+const emptyBarber: BarberForm = { nome: "", telefone: "", descricao: "", foto_url: "", commission_type: "percentual", commission_value: "0" };
 const emptyPayment: PaymentForm = { name: "", description: "", icon: "" };
 const keys = ["servicos", "barbeiros", "dias", "horarios", "pagamentos"] as const;
 const DEFAULT_PAYMENTS = [
