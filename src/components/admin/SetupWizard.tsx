@@ -16,7 +16,7 @@ type HourRow = { dia_semana: number; hora_inicio: string; hora_fim: string; poss
 type Payment = { id: string; name: string; description: string | null; icon: string | null; active: boolean; display_order: number; pix_key: string | null; pix_beneficiary: string | null };
 
 const emptyService: ServiceForm = { nome: "", descricao: "", preco: "", duracao_minutos: "" };
-const emptyBarber: BarberForm = { nome: "", telefone: "", descricao: "", foto_url: "", commission_type: "percentual", commission_value: "0" };
+const emptyBarber: BarberForm = { nome: "", telefone: "", descricao: "", foto_url: "", commission_type: "percentual", commission_value: "" };
 const emptyPayment: PaymentForm = { name: "", description: "", icon: "" };
 const keys = ["servicos", "barbeiros", "dias", "horarios", "pagamentos"] as const;
 const DEFAULT_PAYMENTS = [
@@ -79,8 +79,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
       if (barbers.error) throw barbers.error;
       if (bh.error) throw bh.error;
       if (payments.error) throw payments.error;
-      if (commissionRules.error) throw commissionRules.error;
-      return { services: services.data ?? [], barbers: barbers.data ?? [], bh: bh.data ?? [], payments: (payments.data ?? []) as unknown as Payment[], commissionRules: (commissionRules.data ?? []) as CommissionRule[] };
+      return { services: services.data ?? [], barbers: barbers.data ?? [], bh: bh.data ?? [], payments: (payments.data ?? []) as unknown as Payment[], commissionRules: commissionRules.error ? [] : ((commissionRules.data ?? []) as CommissionRule[]) };
     },
   });
 
@@ -156,20 +155,46 @@ export function SetupWizard({ shopId }: { shopId: string }) {
 
   async function saveCommissionRules(barberId: string) {
     const db = supabase as any;
-    const value = Number(barber.commission_value.replace(",", "."));
-    if (!barber.commission_value.trim() || !Number.isFinite(value) || value < 0 || (barber.commission_type === "percentual" && value > 100)) {
+    const defaultValueText = barber.commission_value.trim();
+    const overrides = Object.entries(serviceCommissionOverrides).filter(([, rule]) => rule.value.trim());
+
+    // Comissão é um recurso opcional: sem valores preenchidos, não toca na tabela de comissões.
+    if (!defaultValueText && overrides.length === 0) return;
+
+    const value = defaultValueText ? Number(defaultValueText.replace(",", ".")) : null;
+    if (defaultValueText && (!Number.isFinite(value) || value! < 0 || (barber.commission_type === "percentual" && value! > 100))) {
       throw new Error(barber.commission_type === "percentual" ? "Informe uma comissão entre 0% e 100%." : "Informe um valor fixo válido.");
     }
-    await db.from("barber_commission_rules").delete().eq("barber_id", barberId).eq("barbershop_id", shopId);
-    const rows = [{ barbershop_id: shopId, barber_id: barberId, service_id: null, commission_type: barber.commission_type, commission_value: value, active: true }];
-    for (const [serviceId, rule] of Object.entries(serviceCommissionOverrides)) {
-      if (!rule.value.trim()) continue;
+
+    const rows: any[] = [];
+    if (value !== null) {
+      rows.push({ barbershop_id: shopId, barber_id: barberId, service_id: null, commission_type: barber.commission_type, commission_value: value, active: true });
+    }
+    for (const [serviceId, rule] of overrides) {
       const serviceValue = Number(rule.value.replace(",", "."));
-      if (!Number.isFinite(serviceValue) || serviceValue < 0 || (rule.type === "percentual" && serviceValue > 100)) throw new Error("Revise as comissões personalizadas por serviço.");
+      if (!Number.isFinite(serviceValue) || serviceValue < 0 || (rule.type === "percentual" && serviceValue > 100)) {
+        throw new Error("Revise as comissões personalizadas por serviço.");
+      }
       rows.push({ barbershop_id: shopId, barber_id: barberId, service_id: serviceId, commission_type: rule.type, commission_value: serviceValue, active: true });
     }
+
+    const { error: deleteError } = await db.from("barber_commission_rules").delete().eq("barber_id", barberId).eq("barbershop_id", shopId);
+    if (deleteError) {
+      if (deleteError.code === "PGRST205" || /barber_commission_rules|schema cache|does not exist/i.test(deleteError.message ?? "")) {
+        toast.info("Profissional salvo. A comissão será configurada quando o módulo estiver disponível.");
+        return;
+      }
+      throw deleteError;
+    }
+
     const { error } = await db.from("barber_commission_rules").insert(rows);
-    if (error) throw error;
+    if (error) {
+      if (error.code === "PGRST205" || /barber_commission_rules|schema cache|does not exist/i.test(error.message ?? "")) {
+        toast.info("Profissional salvo. A comissão será configurada quando o módulo estiver disponível.");
+        return;
+      }
+      throw error;
+    }
   }
 
   async function saveBarber() {
@@ -179,7 +204,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
       const { error } = await supabase.from("barbers").update({ nome: barber.nome.trim(), telefone: barber.telefone.trim() || null, descricao: barber.descricao.trim() || null, foto_url: barber.foto_url.trim() || null }).eq("id", editingBarberId).eq("barbershop_id", shopId);
       if (error) throw error;
       await saveCommissionRules(editingBarberId);
-      setEditingBarberId(null); setBarber(emptyBarber); setServiceCommissionOverrides({}); await refetch(); toast.success("Profissional e comissão atualizados.");
+      setEditingBarberId(null); setBarber(emptyBarber); setServiceCommissionOverrides({}); await refetch(); toast.success("Profissional atualizado.");
     } catch (e: any) { toast.error(e.message); }
   }
 
@@ -196,7 +221,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
       const { data, error } = await supabase.from("barbers").insert({ barbershop_id: shopId, nome: barber.nome.trim(), telefone: barber.telefone.trim() || null, descricao: barber.descricao.trim() || null, foto_url: barber.foto_url.trim() || null, ativo: true }).select("id").single();
       if (error) throw error;
       await saveCommissionRules(data.id);
-      setBarber(emptyBarber); setServiceCommissionOverrides({}); await refetch(); toast.success("Profissional e comissão cadastrados.");
+      setBarber(emptyBarber); setServiceCommissionOverrides({}); await refetch(); toast.success("Profissional cadastrado.");
     } catch (e: any) { toast.error(e.message); }
   }
 
@@ -258,7 +283,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
 
     {step === 1 && <section className="mt-8"><h3 className="text-xl">Serviços</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre pelo menos um serviço real. O valor é o preço cobrado do cliente e a duração é o tempo necessário para realizar o serviço.</p><div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Nome do serviço<input className={input + " mt-1"} value={service.nome} onChange={(e) => setService({ ...service, nome: e.target.value })} placeholder="Ex.: Corte" /></label><label className="text-sm">Valor<input className={input + " mt-1"} inputMode="decimal" value={service.preco} onChange={(e) => setService({ ...service, preco: e.target.value })} placeholder="R$ 0,00" /></label><label className="text-sm">Duração (minutos)<input className={input + " mt-1"} type="number" min={5} max={480} value={service.duracao_minutos} onChange={(e) => setService({ ...service, duracao_minutos: e.target.value })} placeholder="30" /></label><label className="text-sm">Descrição (opcional)<input className={input + " mt-1"} value={service.descricao} onChange={(e) => setService({ ...service, descricao: e.target.value })} /></label></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={editingServiceId ? saveService : addService}><Plus className="mr-2 inline h-4 w-4" />{editingServiceId ? "Salvar serviço" : "Cadastrar serviço"}</button>{editingServiceId && <button className={btnGhost} onClick={() => { setEditingServiceId(null); setService(emptyService); }}>Cancelar</button>}<button className={btnGhost} onClick={() => setStep(2)}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div><div className="mt-8"><p className="text-xs uppercase tracking-widest text-muted-foreground">Serviços cadastrados</p><div className="mt-2 space-y-2">{(current?.services ?? []).map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"><span>{item.nome} · {brl(item.preco)} · {item.duracao_minutos} min</span><span className="flex gap-1"><button type="button" className="rounded p-1.5 text-muted-foreground hover:text-primary" onClick={() => { setEditingServiceId(item.id); setService({ nome: item.nome, descricao: item.descricao ?? "", preco: String(item.preco).replace(".", ","), duracao_minutos: String(item.duracao_minutos) }); }} aria-label="Editar serviço"><Pencil className="h-4 w-4" /></button><button type="button" className="rounded p-1.5 text-muted-foreground hover:text-destructive" onClick={() => deleteService(item.id)} aria-label="Excluir serviço"><Trash2 className="h-4 w-4" /></button></span></div>)}</div></div></section>}
 
-    {step === 2 && <section className="mt-8"><h3 className="text-xl">Profissionais / Barbeiros</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre os profissionais reais da sua barbearia e defina como a comissão será calculada.</p><div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Nome<input className={input + " mt-1"} value={barber.nome} onChange={(e) => setBarber({ ...barber, nome: e.target.value })} /></label><label className="text-sm">Telefone (opcional)<input className={input + " mt-1"} value={barber.telefone} onChange={(e) => setBarber({ ...barber, telefone: e.target.value })} /></label><label className="text-sm">Especialidade (opcional)<input className={input + " mt-1"} value={barber.descricao} onChange={(e) => setBarber({ ...barber, descricao: e.target.value })} /></label><label className="text-sm">URL da foto (opcional)<input className={input + " mt-1"} value={barber.foto_url} onChange={(e) => setBarber({ ...barber, foto_url: e.target.value })} /></label><div className="sm:col-span-2 rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="grid gap-3 sm:grid-cols-[1fr_1fr]"><label className="text-sm">Tipo de comissão<select className={input + " mt-1"} value={barber.commission_type} onChange={(e) => setBarber({ ...barber, commission_type: e.target.value as CommissionType })}><option value="percentual">Percentual (%)</option><option value="fixo">Valor fixo por serviço</option></select></label><label className="text-sm">{barber.commission_type === "percentual" ? "Percentual" : "Valor por serviço"}<input className={input + " mt-1"} inputMode="decimal" value={barber.commission_value} onChange={(e) => setBarber({ ...barber, commission_value: e.target.value })} placeholder={barber.commission_type === "percentual" ? "Ex.: 40" : "Ex.: 15,00"} /></label></div><p className="mt-2 text-xs text-muted-foreground">A regra fica registrada no atendimento/venda quando a comissão é gerada. Alterações futuras não mudam comissões já lançadas.</p><div className="mt-4"><p className="text-sm font-medium">Comissão personalizada por serviço (opcional)</p><p className="mt-1 text-xs text-muted-foreground">Preencha somente os serviços que devem fugir da regra padrão.</p><div className="mt-3 space-y-2">{(current?.services ?? []).map((s) => { const rule = serviceCommissionOverrides[s.id] ?? { type: barber.commission_type, value: "" }; return <div key={s.id} className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-[1fr_160px_160px]"><span className="self-center text-sm">{s.nome} · {brl(s.preco)}</span><select className={input} value={rule.type} onChange={(e) => setServiceCommissionOverrides((old) => ({ ...old, [s.id]: { ...rule, type: e.target.value as CommissionType } }))}><option value="percentual">Percentual</option><option value="fixo">Valor fixo</option></select><input className={input} inputMode="decimal" value={rule.value} onChange={(e) => setServiceCommissionOverrides((old) => ({ ...old, [s.id]: { ...rule, value: e.target.value } }))} placeholder={rule.type === "percentual" ? "%" : "R$"} /></div>; })}</div></div></div></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={editingBarberId ? saveBarber : addBarber}><Plus className="mr-2 inline h-4 w-4" />{editingBarberId ? "Salvar profissional" : "Cadastrar profissional"}</button>{editingBarberId && <button className={btnGhost} onClick={() => { setEditingBarberId(null); setBarber(emptyBarber); setServiceCommissionOverrides({}); }}>Cancelar</button>}<button className={btnGhost} onClick={() => setStep(3)}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div><div className="mt-8"><p className="text-xs uppercase tracking-widest text-muted-foreground">Profissionais cadastrados</p><div className="mt-2 space-y-2">{(current?.barbers ?? []).map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"><span>{item.nome}</span><span className="flex gap-1"><button type="button" className="rounded p-1.5 text-muted-foreground hover:text-primary" onClick={() => {
+    {step === 2 && <section className="mt-8"><h3 className="text-xl">Profissionais / Barbeiros</h3><p className="mt-1 text-sm text-muted-foreground">Cadastre os profissionais reais da sua barbearia e defina como a comissão será calculada.</p><div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Nome<input className={input + " mt-1"} value={barber.nome} onChange={(e) => setBarber({ ...barber, nome: e.target.value })} /></label><label className="text-sm">Telefone (opcional)<input className={input + " mt-1"} value={barber.telefone} onChange={(e) => setBarber({ ...barber, telefone: e.target.value })} /></label><label className="text-sm">Especialidade (opcional)<input className={input + " mt-1"} value={barber.descricao} onChange={(e) => setBarber({ ...barber, descricao: e.target.value })} /></label><label className="text-sm">URL da foto (opcional)<input className={input + " mt-1"} value={barber.foto_url} onChange={(e) => setBarber({ ...barber, foto_url: e.target.value })} /></label><div className="sm:col-span-2 rounded-lg border border-primary/30 bg-primary/5 p-4"><p className="mb-3 text-sm font-medium text-primary">Comissão (opcional)</p><div className="grid gap-3 sm:grid-cols-[1fr_1fr]"><label className="text-sm">Tipo de comissão<select className={input + " mt-1"} value={barber.commission_type} onChange={(e) => setBarber({ ...barber, commission_type: e.target.value as CommissionType })}><option value="percentual">Percentual (%)</option><option value="fixo">Valor fixo por serviço</option></select></label><label className="text-sm">{barber.commission_type === "percentual" ? "Percentual" : "Valor por serviço"}<input className={input + " mt-1"} inputMode="decimal" value={barber.commission_value} onChange={(e) => setBarber({ ...barber, commission_value: e.target.value })} placeholder={barber.commission_type === "percentual" ? "Opcional · Ex.: 40" : "Opcional · Ex.: 15,00"} /></label></div><p className="mt-2 text-xs text-muted-foreground">A regra fica registrada no atendimento/venda quando a comissão é gerada. Alterações futuras não mudam comissões já lançadas.</p><div className="mt-4"><p className="text-sm font-medium">Comissão personalizada por serviço (opcional)</p><p className="mt-1 text-xs text-muted-foreground">Preencha somente os serviços que devem fugir da regra padrão. Deixe tudo em branco se não houver comissão.</p><div className="mt-3 space-y-2">{(current?.services ?? []).map((s) => { const rule = serviceCommissionOverrides[s.id] ?? { type: barber.commission_type, value: "" }; return <div key={s.id} className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-[1fr_160px_160px]"><span className="self-center text-sm">{s.nome} · {brl(s.preco)}</span><select className={input} value={rule.type} onChange={(e) => setServiceCommissionOverrides((old) => ({ ...old, [s.id]: { ...rule, type: e.target.value as CommissionType } }))}><option value="percentual">Percentual</option><option value="fixo">Valor fixo</option></select><input className={input} inputMode="decimal" value={rule.value} onChange={(e) => setServiceCommissionOverrides((old) => ({ ...old, [s.id]: { ...rule, value: e.target.value } }))} placeholder={rule.type === "percentual" ? "%" : "R$"} /></div>; })}</div></div></div></div><div className="mt-5 flex flex-wrap gap-2"><button className={btn} onClick={editingBarberId ? saveBarber : addBarber}><Plus className="mr-2 inline h-4 w-4" />{editingBarberId ? "Salvar profissional" : "Cadastrar profissional"}</button>{editingBarberId && <button className={btnGhost} onClick={() => { setEditingBarberId(null); setBarber(emptyBarber); setServiceCommissionOverrides({}); }}>Cancelar</button>}<button className={btnGhost} onClick={() => setStep(3)}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button></div><div className="mt-8"><p className="text-xs uppercase tracking-widest text-muted-foreground">Profissionais cadastrados</p><div className="mt-2 space-y-2">{(current?.barbers ?? []).map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"><span>{item.nome}</span><span className="flex gap-1"><button type="button" className="rounded p-1.5 text-muted-foreground hover:text-primary" onClick={() => {
   const rules = (current?.commissionRules ?? []).filter((r: CommissionRule) => r.barber_id === item.id && r.active);
   const defaultRule = rules.find((r) => r.service_id === null);
   const overrides: Record<string, { type: CommissionType; value: string }> = {};
