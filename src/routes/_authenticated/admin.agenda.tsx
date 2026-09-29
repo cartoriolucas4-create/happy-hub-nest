@@ -38,7 +38,7 @@ function Agenda() {
     queryKey: ["barbers-min", shop?.id],
     enabled: Boolean(shop?.id),
     queryFn: async () => {
-      const { data } = await supabase.from("barbers").select("id, nome").eq("ativo", true).order("nome");
+      const { data } = await supabase.from("barbers").select("id, nome").eq("barbershop_id", shop!.id).eq("ativo", true).order("nome");
       return data ?? [];
     },
   });
@@ -50,6 +50,7 @@ function Agenda() {
       let q = supabase
         .from("appointments")
         .select("*, barbers(nome), services(nome)")
+        .eq("barbershop_id", shop!.id)
         .gte("data", inicio)
         .lte("data", fim)
         .neq("status", "cancelado")
