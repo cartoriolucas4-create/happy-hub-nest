@@ -14,7 +14,7 @@ export async function mediaUrl(value: string | null | undefined) {
 /** Envia a imagem para a pasta da própria barbearia e devolve o caminho salvo. */
 export async function uploadMedia(
   shopId: string,
-  kind: "logo" | "capa" | "galeria",
+  kind: "logo" | "capa" | "galeria" | "produto",
   file: File,
 ) {
   if (!file.type.startsWith("image/")) throw new Error("Envie um arquivo de imagem.");
