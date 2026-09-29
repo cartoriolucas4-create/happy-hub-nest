@@ -26,7 +26,7 @@ function Agenda() {
   const { data: shop } = useShop();
   const hoje = todayIso();
   const [dia, setDia] = useState(hoje);
-  const [modo, setModo] = useState<"dia" | "semana">("dia");
+  const [modo, setModo] = useState<"dia" | "semana">("semana");
   const [barbeiro, setBarbeiro] = useState("");
 
   const inicioSemana = addDays(dia, -new Date(`${dia}T12:00:00`).getDay());
