@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Trash2, Pencil } from "lucide-react";
+import { MessageCircle, Plus, Search, Trash2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, Empty, btn, btnGhost, input } from "@/components/admin/AdminShell";
 import { useShop } from "@/lib/shop";
@@ -94,6 +94,17 @@ function Clientes() {
     return c.nome.toLowerCase().includes(t) || c.telefone.includes(busca);
   });
 
+  function mandarMensagem(nome: string, telefone: string) {
+    const numeros = telefone.replace(/\\D/g, "");
+    if (!numeros) {
+      toast.error("Este cliente não possui um WhatsApp válido cadastrado.");
+      return;
+    }
+    const numeroWhatsApp = numeros.startsWith("55") ? numeros : `55${numeros}`;
+    const mensagem = `Olá, ${nome}! Tudo bem? Aqui é da barbearia. Como posso ajudar?`;
+    window.open(`https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`, "_blank", "noopener,noreferrer");
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form) return;
@@ -179,6 +190,15 @@ function Clientes() {
                   onClick={() => setAberto(aberto === c.id ? null : c.id)}
                 >
                   {aberto === c.id ? "Fechar" : "Histórico"}
+                </button>
+                <button
+                  type="button"
+                  className={btnGhost}
+                  onClick={() => mandarMensagem(c.nome, c.telefone)}
+                >
+                  <span className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4" /> Mandar mensagem
+                  </span>
                 </button>
                 <button
                   aria-label="Editar"
