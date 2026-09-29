@@ -103,25 +103,45 @@ function Dashboard() {
       const db = supabase as any;
       let aq = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method,barber_id,service_id,barbers(nome),services(nome)").eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
       if (reportStatus) aq = aq.eq("status", reportStatus); else aq = aq.in("status", ["confirmado","concluido"]);
-      const [a,s,cost,com,cust] = await Promise.all([
+
+      const [a,s,cost,cust] = await Promise.all([
         aq,
         db.from("external_sales").select("id,total,subtotal,discount,sold_at,payment_method,status,barbers(nome),customers(nome)").eq("barbershop_id", shop.id).gte("sold_at", reportDe+"T00:00:00-03:00").lte("sold_at", reportAte+"T23:59:59.999-03:00").order("sold_at"),
         db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop.id).gte("cost_date", reportDe).lte("cost_date", reportAte).order("cost_date"),
-        db.from("commission_entries").select("id,competencia,barber_id,service_id,descricao,base_amount,commission_type,commission_value,commission_amount,status,paid_at").eq("barbershop_id", shop.id).gte("competencia", reportDe).lte("competencia", reportAte).order("competencia"),
         db.from("customers").select("id",{count:"exact",head:true}).eq("barbershop_id",shop.id),
       ]);
-      if(a.error) throw a.error; if(s.error) throw s.error; if(cost.error) throw cost.error; if(com.error) throw com.error; if(cust.error) throw cust.error;
-      const cr=(com.data??[]) as ReportCommission[];
-      const bi=[...new Set(cr.map(x=>x.barber_id).filter(Boolean))], si=[...new Set(cr.map(x=>x.service_id).filter(Boolean))];
-      const [br,sv]=await Promise.all([
-        bi.length?db.from("barbers").select("id,nome").in("id",bi).eq("barbershop_id",shop.id):Promise.resolve({data:[]}),
-        si.length?db.from("services").select("id,nome").in("id",si).eq("barbershop_id",shop.id):Promise.resolve({data:[]}),
-      ]);
-      const bm=new Map((br.data??[]).map((x:any)=>[x.id,{nome:x.nome}])), sm=new Map((sv.data??[]).map((x:any)=>[x.id,{nome:x.nome}]));
-      const enriched=cr.map(x=>({...x,barbers:bm.get(x.barber_id),services:sm.get(x.service_id)}));
+
+      const supabaseErrorMessage = (error: any) => error?.message || error?.details || error?.hint || JSON.stringify(error);
+      if(a.error) throw new Error("Agendamentos: " + supabaseErrorMessage(a.error));
+      if(s.error) throw new Error("Vendas presenciais: " + supabaseErrorMessage(s.error));
+      if(cost.error) throw new Error("Despesas: " + supabaseErrorMessage(cost.error));
+      if(cust.error) throw new Error("Clientes: " + supabaseErrorMessage(cust.error));
+
+      let enriched: ReportCommission[] = [];
+      let commissionWarning = "";
+      const com = await db.from("commission_entries").select("id,competencia,barber_id,service_id,descricao,base_amount,commission_type,commission_value,commission_amount,status,paid_at").eq("barbershop_id", shop.id).gte("competencia", reportDe).lte("competencia", reportAte).order("competencia");
+      if (com.error) {
+        commissionWarning = "As comissões não puderam ser incluídas: " + supabaseErrorMessage(com.error);
+      } else {
+        const cr=(com.data??[]) as ReportCommission[];
+        const bi=[...new Set(cr.map(x=>x.barber_id).filter(Boolean))], si=[...new Set(cr.map(x=>x.service_id).filter(Boolean))];
+        const [br,sv]=await Promise.all([
+          bi.length?db.from("barbers").select("id,nome").in("id",bi).eq("barbershop_id",shop.id):Promise.resolve({data:[]}),
+          si.length?db.from("services").select("id,nome").in("id",si).eq("barbershop_id",shop.id):Promise.resolve({data:[]}),
+        ]);
+        if(br.error) throw new Error("Profissionais das comissões: " + supabaseErrorMessage(br.error));
+        if(sv.error) throw new Error("Serviços das comissões: " + supabaseErrorMessage(sv.error));
+        const bm=new Map((br.data??[]).map((x:any)=>[x.id,{nome:x.nome}])), sm=new Map((sv.data??[]).map((x:any)=>[x.id,{nome:x.nome}]));
+        enriched=cr.map(x=>({...x,barbers:bm.get(x.barber_id),services:sm.get(x.service_id)}));
+      }
+
       emitReportPdf(shop.nome,reportDe,reportAte,(a.data??[]) as ReportAppointment[],(s.data??[]) as ReportSale[],enriched,(cost.data??[]) as ReportCost[],cust.count??0,reportStatus);
       setReportOpen(false);
-    } catch(error){ window.alert(error instanceof Error?error.message:"Não foi possível gerar o relatório completo."); } finally { setReportLoading(false); }
+      if (commissionWarning) window.alert("Relatório gerado, mas houve uma limitação:\n\n" + commissionWarning);
+    } catch(error){
+      const detail = error instanceof Error ? error.message : (error as any)?.message || (error as any)?.details || JSON.stringify(error);
+      window.alert("Não foi possível gerar o relatório completo.\n\n" + detail);
+    } finally { setReportLoading(false); }
   };
 
   return <AdminShell title={shop?.nome ?? "Dashboard"} subtitle="Visão geral de hoje" actions={<div className="flex flex-wrap gap-2">{shop && <Link to="/admin/meu-link" className="rounded-md border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary">/{shop.slug}</Link>}<button className={`${btn} inline-flex items-center gap-2`} onClick={() => setReportOpen(true)}><FileText className="h-4 w-4" /> RELATÓRIO DE VENDAS</button></div>}>
