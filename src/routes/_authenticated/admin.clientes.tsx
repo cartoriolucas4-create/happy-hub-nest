@@ -65,14 +65,8 @@ function Clientes() {
         email: f.email.trim() || null,
       };
       const res = f.id
-        ? await supabase
-            .from("customers")
-            .update(payload)
-            .eq("id", f.id)
-            .eq("barbershop_id", shop!.id)
-            .select("id")
-            .single()
-        : await supabase.from("customers").insert(payload).select("id").single();
+        ? await supabase.from("customers").update(payload).eq("id", f.id).eq("barbershop_id", shop!.id)
+        : await supabase.from("customers").insert(payload);
       if (res.error) throw res.error;
     },
     onSuccess: () => {
