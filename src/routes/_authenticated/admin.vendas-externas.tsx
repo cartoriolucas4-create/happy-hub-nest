@@ -34,10 +34,23 @@ function CommissionPanel() {
     queryKey: ["commission-entries", shop?.id, de, ate, barberId, status],
     enabled: Boolean(shop?.id),
     queryFn: async () => {
-      let q = db.from("commission_entries").select("id,barber_id,service_id,source_type,competencia,descricao,base_amount,commission_type,commission_value,commission_amount,status,paid_at,payment_method,payment_note,barbers(nome),services(nome)").eq("barbershop_id", shop!.id).gte("competencia", de).lte("competencia", ate).order("competencia", { ascending: false }).order("created_at", { ascending: false });
-      if (barberId) q = q.eq("barber_id", barberId);
-      if (status) q = q.eq("status", status);
-      const { data, error } = await q; if (error) throw error; return data ?? [];
+      const { data: rawEntries, error } = await db.from("commission_entries")
+        .select("id,barber_id,service_id,source_type,competencia,descricao,base_amount,commission_type,commission_value,commission_amount,status,paid_at,payment_method,payment_note,created_at")
+        .eq("barbershop_id", shop!.id).gte("competencia", de).lte("competencia", ate)
+        .order("competencia", { ascending: false }).order("created_at", { ascending: false });
+      if (error) throw error;
+      let result = rawEntries ?? [];
+      if (barberId) result = result.filter((item: any) => item.barber_id === barberId);
+      if (status) result = result.filter((item: any) => item.status === status);
+      const barberIds = [...new Set(result.map((item: any) => item.barber_id).filter(Boolean))];
+      const serviceIds = [...new Set(result.map((item: any) => item.service_id).filter(Boolean))];
+      const [{ data: barberRows }, { data: serviceRows }] = await Promise.all([
+        barberIds.length ? db.from("barbers").select("id,nome").in("id", barberIds).eq("barbershop_id", shop!.id) : Promise.resolve({ data: [] }),
+        serviceIds.length ? db.from("services").select("id,nome").in("id", serviceIds).eq("barbershop_id", shop!.id) : Promise.resolve({ data: [] }),
+      ]);
+      const barberMap = new Map((barberRows ?? []).map((x: any) => [x.id, x]));
+      const serviceMap = new Map((serviceRows ?? []).map((x: any) => [x.id, x]));
+      return result.map((item: any) => ({ ...item, barbers: barberMap.get(item.barber_id) ?? null, services: serviceMap.get(item.service_id) ?? null }));
     },
   });
   const { data: barbers = [] } = useQuery({ queryKey: ["commission-barbers", shop?.id], enabled: Boolean(shop?.id), queryFn: async () => { const { data, error } = await db.from("barbers").select("id,nome").eq("barbershop_id", shop!.id).order("nome"); if (error) throw error; return data ?? []; } });
