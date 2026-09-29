@@ -483,6 +483,36 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.sa_remover_tempo_acesso_massa(p_user_ids uuid[], p_quantidade integer, p_unidade text, p_observacao text DEFAULT NULL)
+RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $
+DECLARE v_id uuid; v_count integer := 0;
+BEGIN
+  PERFORM public.sa_require();
+  IF COALESCE(array_length(p_user_ids, 1), 0) = 0 THEN RAISE EXCEPTION 'Selecione ao menos um cliente'; END IF;
+  IF EXISTS (SELECT 1 FROM unnest(p_user_ids) x WHERE public.has_role(x, 'super_admin')) THEN RAISE EXCEPTION 'A selecao inclui um super admin'; END IF;
+  FOREACH v_id IN ARRAY p_user_ids LOOP
+    PERFORM public.sa_remover_tempo_acesso(v_id, p_quantidade, p_unidade, p_observacao);
+    v_count := v_count + 1;
+  END LOOP;
+  RETURN v_count;
+END;
+$;
+
+CREATE OR REPLACE FUNCTION public.sa_definir_vencimento_massa(p_user_ids uuid[], p_vencimento timestamptz, p_observacao text DEFAULT NULL)
+RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $
+DECLARE v_id uuid; v_count integer := 0;
+BEGIN
+  PERFORM public.sa_require();
+  IF COALESCE(array_length(p_user_ids, 1), 0) = 0 THEN RAISE EXCEPTION 'Selecione ao menos um cliente'; END IF;
+  IF EXISTS (SELECT 1 FROM unnest(p_user_ids) x WHERE public.has_role(x, 'super_admin')) THEN RAISE EXCEPTION 'A selecao inclui um super admin'; END IF;
+  FOREACH v_id IN ARRAY p_user_ids LOOP
+    PERFORM public.sa_definir_vencimento(v_id, p_vencimento, p_observacao);
+    v_count := v_count + 1;
+  END LOOP;
+  RETURN v_count;
+END;
+$;
+
 REVOKE ALL ON FUNCTION public.sa_require() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.sa_assert_not_super_admin(uuid) FROM PUBLIC, anon, authenticated;
 
@@ -495,6 +525,8 @@ REVOKE ALL ON FUNCTION public.sa_desbloquear_acesso(uuid, text) FROM PUBLIC, ano
 REVOKE ALL ON FUNCTION public.sa_liberar_acesso_massa(uuid[], integer, text, text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.sa_bloquear_clientes_massa(uuid[]) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.sa_desbloquear_clientes_massa(uuid[]) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.sa_remover_tempo_acesso_massa(uuid[], integer, text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.sa_definir_vencimento_massa(uuid[], timestamptz, text) FROM PUBLIC, anon;
 
 GRANT EXECUTE ON FUNCTION public.sa_require() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.sa_liberar_acesso(uuid, integer, text, text) TO authenticated;
@@ -506,3 +538,5 @@ GRANT EXECUTE ON FUNCTION public.sa_desbloquear_acesso(uuid, text) TO authentica
 GRANT EXECUTE ON FUNCTION public.sa_liberar_acesso_massa(uuid[], integer, text, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.sa_bloquear_clientes_massa(uuid[]) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.sa_desbloquear_clientes_massa(uuid[]) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.sa_remover_tempo_acesso_massa(uuid[], integer, text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.sa_definir_vencimento_massa(uuid[], timestamptz, text) TO authenticated;
