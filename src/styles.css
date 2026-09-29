@@ -131,6 +131,39 @@
   --sidebar-ring: var(--default-accent-color);
 }
 
+/* Admin readability: keep the brand display face for the logo/buttons, but use a calmer UI face for the dashboard and sales screens. */
+.admin-readable h1,
+.admin-readable h2,
+.admin-readable h3,
+.admin-readable .font-display {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.admin-readable h1 {
+  line-height: 1.15;
+}
+
+.admin-readable h2 {
+  line-height: 1.25;
+}
+
+.admin-readable h3 {
+  line-height: 1.3;
+}
+
+.admin-readable p,
+.admin-readable td,
+.admin-readable th,
+.admin-readable label,
+.admin-readable button,
+.admin-readable input,
+.admin-readable select,
+.admin-readable textarea {
+  letter-spacing: normal;
+}
+
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
