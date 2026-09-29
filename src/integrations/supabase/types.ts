@@ -1311,6 +1311,23 @@ export type Database = {
         }
         Returns: number
       }
+      sa_remover_tempo_acesso_massa: {
+        Args: {
+          p_observacao?: string
+          p_quantidade: number
+          p_unidade: string
+          p_user_ids: string[]
+        }
+        Returns: number
+      }
+      sa_definir_vencimento_massa: {
+        Args: {
+          p_observacao?: string
+          p_user_ids: string[]
+          p_vencimento: string
+        }
+        Returns: number
+      }
       sa_registrar_alteracao_senha: {
         Args: { p_user_id: string }
         Returns: undefined
