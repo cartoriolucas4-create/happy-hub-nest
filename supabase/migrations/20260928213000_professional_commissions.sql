@@ -119,55 +119,40 @@ BEGIN
     IF EXISTS (SELECT 1 FROM public.commission_entries WHERE appointment_id = NEW.id AND status = 'pago') THEN
       RAISE EXCEPTION 'Não é possível cancelar um atendimento com comissão já paga.';
     END IF;
-    UPDATE public.commission_entries
-       SET status = 'cancelado'
-     WHERE appointment_id = NEW.id
-       AND status = 'pendente';
+    UPDATE public.commission_entries SET status = 'cancelado' WHERE appointment_id = NEW.id AND status = 'pendente';
     RETURN NEW;
   END IF;
 
-  IF NEW.status NOT IN ('confirmado','concluido') THEN
+  IF NEW.status NOT IN ('confirmado','concluido') OR NEW.barber_id IS NULL OR NEW.service_id IS NULL THEN
     RETURN NEW;
   END IF;
 
-  IF NEW.barber_id IS NULL THEN RETURN NEW; END IF;
+  SELECT id, nome, preco INTO v_service
+  FROM public.services WHERE id = NEW.service_id LIMIT 1;
 
-  FOR v_service IN
-    SELECT s.id, s.nome, s.preco
-    FROM public.appointment_services aps
-    JOIN public.services s ON s.id = aps.service_id
-    WHERE aps.appointment_id = NEW.id
-    UNION ALL
-    SELECT s.id, s.nome, s.preco
-    FROM public.services s
-    WHERE s.id = NEW.service_id
-      AND NOT EXISTS (SELECT 1 FROM public.appointment_services x WHERE x.appointment_id = NEW.id)
-  LOOP
-    SELECT * INTO v_rule
-    FROM public.commission_rule_for(NEW.barber_id, v_service.id);
+  IF v_service.id IS NULL THEN RETURN NEW; END IF;
 
-    IF v_rule.commission_type IS NULL THEN CONTINUE; END IF;
+  SELECT * INTO v_rule FROM public.commission_rule_for(NEW.barber_id, v_service.id);
+  IF v_rule.commission_type IS NULL THEN RETURN NEW; END IF;
 
-    v_base := COALESCE(v_service.preco, NEW.valor);
-    v_amount := CASE
-      WHEN v_rule.commission_type = 'percentual'
-        THEN ROUND(v_base * v_rule.commission_value / 100, 2)
-      ELSE v_rule.commission_value
-    END;
+  v_base := COALESCE(v_service.preco, NEW.valor);
+  v_amount := CASE
+    WHEN v_rule.commission_type = 'percentual' THEN ROUND(v_base * v_rule.commission_value / 100, 2)
+    ELSE v_rule.commission_value
+  END;
 
-    INSERT INTO public.commission_entries (
-      barbershop_id, barber_id, service_id, appointment_id, source_type,
-      competencia, descricao, base_amount, commission_type, commission_value,
-      commission_amount, status
-    )
-    VALUES (
-      NEW.barbershop_id, NEW.barber_id, v_service.id, NEW.id, 'agendamento',
-      NEW.data, COALESCE(v_service.nome, 'Serviço'), v_base, v_rule.commission_type,
-      v_rule.commission_value, GREATEST(v_amount, 0), 'pendente'
-    )
-    ON CONFLICT (appointment_id, service_id) WHERE source_type = 'agendamento'
-    DO NOTHING;
-  END LOOP;
+  INSERT INTO public.commission_entries (
+    barbershop_id, barber_id, service_id, appointment_id, source_type,
+    competencia, descricao, base_amount, commission_type, commission_value,
+    commission_amount, status
+  )
+  VALUES (
+    NEW.barbershop_id, NEW.barber_id, v_service.id, NEW.id, 'agendamento',
+    NEW.data, COALESCE(v_service.nome, 'Serviço'), v_base, v_rule.commission_type,
+    v_rule.commission_value, GREATEST(v_amount, 0), 'pendente'
+  )
+  ON CONFLICT (appointment_id, service_id) WHERE source_type = 'agendamento'
+  DO NOTHING;
 
   RETURN NEW;
 END;
