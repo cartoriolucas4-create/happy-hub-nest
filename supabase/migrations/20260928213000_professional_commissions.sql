@@ -116,6 +116,9 @@ DECLARE
   v_amount numeric(10,2);
 BEGIN
   IF NEW.status = 'cancelado' THEN
+    IF EXISTS (SELECT 1 FROM public.commission_entries WHERE appointment_id = NEW.id AND status = 'pago') THEN
+      RAISE EXCEPTION 'Não é possível cancelar um atendimento com comissão já paga.';
+    END IF;
     UPDATE public.commission_entries
        SET status = 'cancelado'
      WHERE appointment_id = NEW.id
