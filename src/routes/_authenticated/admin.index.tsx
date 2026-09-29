@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 });
 
 
-type ReportAppointment = { id:string; data:string; hora_inicio:string; hora_fim:string; cliente_nome:string; valor:number; status:Status; payment_received_at?:string|null; payment_method?:string|null; services?:{nome?:string}|null; barbers?:{nome?:string}|null };
+type ReportAppointment = { id:string; data:string; hora_inicio:string; hora_fim:string; cliente_nome:string; valor:number; status:Status; payment_received_at?:string|null; payment_method_id?:string|null; payment_method?:string|null; services?:{nome?:string}|null; barbers?:{nome?:string}|null };
 type ReportSale = { id:string; sold_at:string; total:number; subtotal?:number; discount?:number; payment_method?:string|null; status:string; customers?:{nome?:string}|null; barbers?:{nome?:string}|null };
 type ReportCommission = { id:string; competencia:string; barber_id:string; service_id?:string|null; descricao:string; base_amount:number; commission_type:string; commission_value:number; commission_amount:number; status:string; paid_at?:string|null; barbers?:{nome?:string}|null; services?:{nome?:string}|null };
 type ReportCost = { amount:number; cost_date:string };
@@ -101,7 +101,7 @@ function Dashboard() {
     setReportLoading(true);
     try {
       const db = supabase as any;
-      let aq = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method,barber_id,service_id,barbers(nome),services(nome)").eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
+      let aq = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method_id,barber_id,service_id,barbers(nome),services(nome)").eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
       if (reportStatus) aq = aq.eq("status", reportStatus); else aq = aq.in("status", ["confirmado","concluido"]);
 
       const [a,s,cost,cust] = await Promise.all([
@@ -116,6 +116,17 @@ function Dashboard() {
       if(s.error) throw new Error("Vendas presenciais: " + supabaseErrorMessage(s.error));
       if(cost.error) throw new Error("Despesas: " + supabaseErrorMessage(cost.error));
       if(cust.error) throw new Error("Clientes: " + supabaseErrorMessage(cust.error));
+
+      const paymentIds = [...new Set(((a.data ?? []) as ReportAppointment[]).map((x) => x.payment_method_id).filter(Boolean))];
+      const { data: paymentRows, error: paymentError } = paymentIds.length
+        ? await db.from("payment_methods").select("id,name").in("id", paymentIds).eq("barbershop_id", shop.id)
+        : { data: [], error: null };
+      if (paymentError) throw new Error("Meios de pagamento: " + supabaseErrorMessage(paymentError));
+      const paymentMap = new Map((paymentRows ?? []).map((x:any) => [x.id, x.name]));
+      const appointmentsForReport = ((a.data ?? []) as ReportAppointment[]).map((x) => ({
+        ...x,
+        payment_method: x.payment_method_id ? paymentMap.get(x.payment_method_id) ?? "Não informado" : "Não informado",
+      }));
 
       let enriched: ReportCommission[] = [];
       let commissionWarning = "";
@@ -135,7 +146,7 @@ function Dashboard() {
         enriched=cr.map(x=>({...x,barbers:bm.get(x.barber_id),services:sm.get(x.service_id)}));
       }
 
-      emitReportPdf(shop.nome,reportDe,reportAte,(a.data??[]) as ReportAppointment[],(s.data??[]) as ReportSale[],enriched,(cost.data??[]) as ReportCost[],cust.count??0,reportStatus);
+      emitReportPdf(shop.nome,reportDe,reportAte,appointmentsForReport,(s.data??[]) as ReportSale[],enriched,(cost.data??[]) as ReportCost[],cust.count??0,reportStatus);
       setReportOpen(false);
       if (commissionWarning) window.alert("Relatório gerado, mas houve uma limitação:\n\n" + commissionWarning);
     } catch(error){
