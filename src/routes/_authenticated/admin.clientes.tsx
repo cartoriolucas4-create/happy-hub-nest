@@ -65,12 +65,18 @@ function Clientes() {
         email: f.email.trim() || null,
       };
       const res = f.id
-        ? await supabase.from("customers").update(payload).eq("id", f.id)
-        : await supabase.from("customers").insert(payload);
+        ? await supabase
+            .from("customers")
+            .update(payload)
+            .eq("id", f.id)
+            .eq("barbershop_id", shop!.id)
+            .select("id")
+            .single()
+        : await supabase.from("customers").insert(payload).select("id").single();
       if (res.error) throw res.error;
     },
     onSuccess: () => {
-      toast.success("Cliente salvo!");
+      toast.success(form.id ? "Cliente atualizado com sucesso!" : "Cliente salvo!");
       setForm(null);
       qc.invalidateQueries({ queryKey: ["clientes"] });
     },
@@ -201,11 +207,16 @@ function Clientes() {
                   </span>
                 </button>
                 <button
-                  aria-label="Editar"
-                  className="text-muted-foreground hover:text-primary"
-                  onClick={() => setForm({ id: c.id, nome: c.nome, telefone: c.telefone, email: c.email ?? "" })}
+                  type="button"
+                  className={btnGhost}
+                  onClick={() => {
+                    setAberto(null);
+                    setForm({ id: c.id, nome: c.nome, telefone: c.telefone, email: c.email ?? "" });
+                  }}
                 >
-                  <Pencil className="h-4 w-4" />
+                  <span className="flex items-center gap-2">
+                    <Pencil className="h-4 w-4" /> Editar
+                  </span>
                 </button>
                 <button
                   aria-label="Excluir"
