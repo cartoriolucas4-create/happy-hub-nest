@@ -68,7 +68,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
     enabled: Boolean(shopId),
     queryFn: async () => {
       await ensureDefaultPayments(shopId);
-      const [services, barbers, bh, payments] = await Promise.all([
+      const [services, barbers, bh, payments, commissionRules] = await Promise.all([
         supabase.from("services").select("id,nome,descricao,preco,duracao_minutos,ativo").eq("barbershop_id", shopId).order("nome"),
         supabase.from("barbers").select("id,nome,telefone,descricao,foto_url,ativo").eq("barbershop_id", shopId).order("nome"),
         supabase.from("business_hours").select("*").eq("barbershop_id", shopId).order("dia_semana"),
