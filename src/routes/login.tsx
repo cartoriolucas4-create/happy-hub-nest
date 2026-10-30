@@ -45,8 +45,10 @@ function LoginPage() {
   useEffect(() => {
     let active = true;
     void getAuthenticatedArea()
-      .then((session) => {
-        if (active && session) return navigate({ to: homeForArea(session.area), replace: true });
+      .then(async (session): Promise<void> => {
+        if (active && session) {
+          await navigate({ to: homeForArea(session.area), replace: true });
+        }
       })
       .catch((error) => {
         console.error("[Login] Não foi possível verificar a sessão existente:", error);
