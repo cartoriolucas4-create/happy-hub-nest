@@ -7,7 +7,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
   vite: {
-    base: "/happy-hub-nest/",
+    base: "/",
   },
   tanstackStart: {
     // GitHub Pages is a static host, so use TanStack Start's SPA mode.
