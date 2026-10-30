@@ -69,8 +69,8 @@ function Clientes() {
         : await supabase.from("customers").insert(payload);
       if (res.error) throw res.error;
     },
-    onSuccess: () => {
-      toast.success(form.id ? "Cliente atualizado com sucesso!" : "Cliente salvo!");
+    onSuccess: (_data, savedForm) => {
+      toast.success(savedForm.id ? "Cliente atualizado com sucesso!" : "Cliente salvo!");
       setForm(null);
       qc.invalidateQueries({ queryKey: ["clientes"] });
     },

@@ -122,7 +122,7 @@ function Dashboard() {
         ? await db.from("payment_methods").select("id,name").in("id", paymentIds).eq("barbershop_id", shop.id)
         : { data: [], error: null };
       if (paymentError) throw new Error("Meios de pagamento: " + supabaseErrorMessage(paymentError));
-      const paymentMap = new Map((paymentRows ?? []).map((x:any) => [x.id, x.name]));
+      const paymentMap = new Map<string, string>((paymentRows ?? []).map((x:any): [string, string] => [x.id, x.name]));
       const appointmentsForReport = ((a.data ?? []) as ReportAppointment[]).map((x) => ({
         ...x,
         payment_method: x.payment_method_id ? paymentMap.get(x.payment_method_id) ?? "Não informado" : "Não informado",
@@ -142,8 +142,8 @@ function Dashboard() {
         ]);
         if(br.error) throw new Error("Profissionais das comissões: " + supabaseErrorMessage(br.error));
         if(sv.error) throw new Error("Serviços das comissões: " + supabaseErrorMessage(sv.error));
-        const bm=new Map((br.data??[]).map((x:any)=>[x.id,{nome:x.nome}])), sm=new Map((sv.data??[]).map((x:any)=>[x.id,{nome:x.nome}]));
-        enriched=cr.map(x=>({...x,barbers:bm.get(x.barber_id),services:sm.get(x.service_id)}));
+        const bm=new Map<string,{nome:string}>((br.data??[]).map((x:any): [string,{nome:string}]=>[x.id,{nome:x.nome}])), sm=new Map<string,{nome:string}>((sv.data??[]).map((x:any): [string,{nome:string}]=>[x.id,{nome:x.nome}]));
+        enriched=cr.map(x=>({...x,barbers:bm.get(x.barber_id)??null,services:x.service_id?sm.get(x.service_id)??null:null}));
       }
 
       emitReportPdf(shop.nome,reportDe,reportAte,appointmentsForReport,(s.data??[]) as ReportSale[],enriched,(cost.data??[]) as ReportCost[],cust.count??0,reportStatus);
