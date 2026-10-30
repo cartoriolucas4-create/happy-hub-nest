@@ -6,6 +6,7 @@ import { PublicSetupGate } from "@/components/public/PublicSetupGate";
 import { supabase } from "@/integrations/supabase/client";
 import { accentStyle, DEFAULT_ACCENT_COLOR } from "@/lib/theme";
 import { formatBrlInput } from "@/lib/barber";
+import { CANONICAL_ORIGIN, getCanonicalRedirectUrl } from "@/lib/public-links";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -21,10 +22,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({ meta: [
     { charSet: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1" },
     { title: "BarberFlow | Sistema de agendamento para barbearias" },
+    { property: "og:url", content: CANONICAL_ORIGIN },
     { name: "description", content: "Plataforma de agendamento online para barbearias: agenda, equipe, serviços e clientes em um só lugar." },
     { name: "author", content: "Lovable" }, { property: "og:title", content: "BarberFlow | Agendamento para barbearias" },
     { property: "og:description", content: "Gerencie sua barbearia e receba agendamentos online 24h." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "twitter:site", content: "@Lovable" },
   ], links: [
+    { rel: "canonical", href: CANONICAL_ORIGIN },
     { rel: "stylesheet", href: appCss }, { rel: "preconnect", href: "https://fonts.googleapis.com" }, { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" }, { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
   ] }),
