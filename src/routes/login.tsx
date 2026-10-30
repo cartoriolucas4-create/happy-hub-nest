@@ -20,6 +20,21 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+function readableAuthError(error: unknown, action: "login" | "recovery") {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  if (/failed to fetch|fetch failed|network|load failed|timeout|ERR_NAME_NOT_RESOLVED/i.test(message)) {
+    return "Não foi possível conectar ao servidor de contas. Verifique a conexão e a configuração do serviço e tente novamente.";
+  }
+  if (/invalid login credentials/i.test(message)) return "E-mail ou senha incorretos.";
+  if (/email not confirmed/i.test(message)) return "Confirme seu e-mail antes de entrar. Verifique também a caixa de spam.";
+  if (/redirect|url.*not.*allowed|not.*allow.*url/i.test(message)) {
+    return "O endereço de retorno não está autorizado no serviço de autenticação. É necessário liberar https://agendocorte.com/** nas URLs de redirecionamento.";
+  }
+  return action === "recovery"
+    ? `Não foi possível enviar o link de recuperação: ${message}`
+    : `Não foi possível entrar: ${message}`;
+}
+
 function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -28,51 +43,71 @@ function LoginPage() {
   const [recuperando, setRecuperando] = useState(false);
 
   useEffect(() => {
-    getAuthenticatedArea().then((session) => {
-      if (session) navigate({ to: homeForArea(session.area), replace: true });
-    });
+    let active = true;
+    void getAuthenticatedArea()
+      .then((session) => {
+        if (active && session) return navigate({ to: homeForArea(session.area), replace: true });
+      })
+      .catch((error) => {
+        console.error("[Login] Não foi possível verificar a sessão existente:", error);
+      });
+    return () => { active = false; };
   }, [navigate]);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
+    if (loading || recuperando) return;
     if (!isEmail(email)) {
       toast.error("Informe um e-mail válido.");
       return;
     }
+    if (!senha) {
+      toast.error("Informe sua senha.");
+      return;
+    }
+
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password: senha,
-    });
-    setLoading(false);
-    if (error) {
-      toast.error("E-mail ou senha inválidos.");
-      return;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha,
+      });
+      if (error) throw error;
+
+      const session = await getAuthenticatedArea();
+      if (!session) {
+        await supabase.auth.signOut().catch(() => undefined);
+        throw new Error("A conta foi autenticada, mas não foi possível carregar suas permissões. Verifique se o banco de dados está conectado e atualizado.");
+      }
+      await navigate({ to: homeForArea(session.area), replace: true });
+    } catch (error) {
+      console.error("[Login] Falha ao entrar:", error);
+      toast.error(readableAuthError(error, "login"));
+    } finally {
+      setLoading(false);
     }
-    const session = await getAuthenticatedArea();
-    if (!session) {
-      await supabase.auth.signOut();
-      toast.error("Não foi possível determinar as permissões da conta.");
-      return;
-    }
-    navigate({ to: homeForArea(session.area), replace: true });
   }
 
   async function esqueci() {
+    if (loading || recuperando) return;
     if (!isEmail(email)) {
-      toast.error("Informe seu e-mail para recuperar a senha.");
+      toast.error("Digite seu e-mail no campo acima para receber o link de recuperação.");
       return;
     }
+
     setRecuperando(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: canonicalSiteUrl("/reset-password"),
-    });
-    setRecuperando(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: canonicalSiteUrl("/reset-password"),
+      });
+      if (error) throw error;
+      toast.success("Se esse e-mail estiver cadastrado, enviaremos um link de recuperação. Confira também a caixa de spam.");
+    } catch (error) {
+      console.error("[Login] Falha ao solicitar recuperação:", error);
+      toast.error(readableAuthError(error, "recovery"));
+    } finally {
+      setRecuperando(false);
     }
-    toast.success("Enviamos um link de recuperação para seu e-mail.");
   }
 
   return (
@@ -109,7 +144,7 @@ function LoginPage() {
           </label>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || recuperando}
             className="w-full rounded-md bg-primary py-3 font-display text-lg tracking-widest text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
             {loading ? "ENTRANDO..." : "ENTRAR"}
@@ -117,9 +152,10 @@ function LoginPage() {
         </form>
 
         <button
+          type="button"
           onClick={esqueci}
           disabled={recuperando || loading}
-          className="mt-4 text-sm text-muted-foreground underline hover:text-primary"
+          className="mt-4 text-sm text-muted-foreground underline hover:text-primary disabled:opacity-60"
         >
           {recuperando ? "Enviando..." : "Esqueci minha senha"}
         </button>
