@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,7 @@ function ResetPassword() {
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     if (senha.length < 6) {
       toast.error("A senha deve ter ao menos 6 caracteres.");
       return;
@@ -36,24 +37,48 @@ function ResetPassword() {
       toast.error("As senhas não conferem.");
       return;
     }
+
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: senha });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!sessionData.session) {
+        throw new Error("O link de recuperação não foi validado ou expirou. Solicite um novo link na tela de login.");
+      }
+
+      const { error } = await supabase.auth.updateUser({ password: senha });
+      if (error) throw error;
+
+      toast.success("Senha atualizada com sucesso!");
+      let destination = "/login" as string;
+      try {
+        const session = await getAuthenticatedArea();
+        if (session) destination = homeForArea(session.area);
+      } catch (error) {
+        console.error("[ResetPassword] Senha atualizada, mas não foi possível carregar as permissões:", error);
+      }
+      await navigate({ to: destination as "/login" | "/admin" | "/super-admin", replace: true });
+    } catch (error) {
+      console.error("[ResetPassword] Falha ao atualizar senha:", error);
+      const message = error instanceof Error ? error.message : String(error ?? "");
+      if (/failed to fetch|fetch failed|network|load failed|timeout/i.test(message)) {
+        toast.error("Não foi possível conectar ao servidor de contas. Tente novamente.");
+      } else {
+        toast.error(message || "Não foi possível atualizar a senha. Solicite um novo link de recuperação.");
+      }
+    } finally {
+      setLoading(false);
     }
-    toast.success("Senha atualizada!");
-    const session = await getAuthenticatedArea();
-    navigate({ to: session ? homeForArea(session.area) : "/login", replace: true });
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-5">
       <form onSubmit={salvar} className="w-full max-w-md space-y-4">
         <h1 className="text-3xl">Definir nova senha</h1>
+        <p className="text-sm text-muted-foreground">Abra esta página pelo link enviado ao seu e-mail. Se o link expirou, solicite outro na tela de login.</p>
         <input
           type="password"
+          autoComplete="new-password"
           placeholder="Nova senha"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
@@ -62,6 +87,7 @@ function ResetPassword() {
         />
         <input
           type="password"
+          autoComplete="new-password"
           placeholder="Confirmar senha"
           value={confirma}
           onChange={(e) => setConfirma(e.target.value)}
@@ -74,6 +100,7 @@ function ResetPassword() {
         >
           {loading ? "SALVANDO..." : "SALVAR SENHA"}
         </button>
+        <p className="text-center text-sm text-muted-foreground"><Link to="/login" className="underline">Voltar ao login</Link></p>
       </form>
     </div>
   );
