@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
 import { toast } from "sonner";
 import { Copy, ExternalLink, Check, AlertTriangle, Share2 } from "lucide-react";
 import { AdminShell, btn, btnGhost } from "@/components/admin/AdminShell";
@@ -21,8 +20,7 @@ export const Route = createFileRoute("/_authenticated/admin/meu-link")({
 function MeuLink() {
   const { data: shop } = useShop();
   const { data: status } = useSetupStatus(shop?.id);
-  const [origin] = useState(() => (typeof window === "undefined" ? "" : window.location.origin));
-  const url = shop ? publicShopUrl(origin, shop.slug) : "";
+  const url = shop ? publicShopUrl("", shop.slug) : "";
 
   async function copiar() {
     if (!shop || !url) return;
