@@ -5,6 +5,7 @@ import { Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isEmail, isPhone, slugify } from "@/lib/barber";
 import { isReservedPublicSlug } from "@/lib/public-links";
+import { signupErrorMessage } from "@/lib/signup-errors";
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({
@@ -30,6 +31,7 @@ function Cadastro() {
   const [slugEditado, setSlugEditado] = useState(false);
   const [disponivel, setDisponivel] = useState<boolean | null>(null);
   const [checando, setChecando] = useState(false);
+  const [erroSlug, setErroSlug] = useState<string | null>(null);
   const [responsavel, setResponsavel] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
@@ -42,6 +44,9 @@ function Cadastro() {
   const slugReservado = isReservedPublicSlug(slugFinal);
 
   useEffect(() => {
+    let active = true;
+    setErroSlug(null);
+    setDisponivel(null);
     if (slugFinal.length < 3 || slugReservado) {
       setChecando(false);
       setDisponivel(slugReservado ? false : null);
@@ -49,15 +54,23 @@ function Cadastro() {
     }
     setChecando(true);
     const t = setTimeout(async () => {
-      const { data, error } = await supabase.rpc("slug_disponivel", { p_slug: slugFinal });
-      setChecando(false);
-      setDisponivel(error ? null : Boolean(data));
+      try {
+        const { data, error } = await supabase.rpc("slug_disponivel", { p_slug: slugFinal });
+        if (error) throw error;
+        if (typeof data !== "boolean") throw new Error("Resposta inválida ao verificar o link.");
+        if (active) setDisponivel(data);
+      } catch (error) {
+        if (active) setErroSlug(signupErrorMessage(error, "slug"));
+      } finally {
+        if (active) setChecando(false);
+      }
     }, 450);
-    return () => clearTimeout(t);
+    return () => { active = false; clearTimeout(t); };
   }, [slugFinal, slugReservado]);
 
   async function cadastrar(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     if (nomeBarbearia.trim().length < 3) {
       toast.error("Informe o nome da barbearia.");
       return;
@@ -88,6 +101,20 @@ function Cadastro() {
     }
 
     setLoading(true);
+    let step: "slug" | "auth" = "slug";
+    try {
+      // Recheck at submission; never treat a failed availability request as approval.
+      const availability = await supabase.rpc("slug_disponivel", { p_slug: slugFinal });
+      if (availability.error) throw availability.error;
+      if (availability.data !== true) {
+        if (availability.data === false) {
+          setDisponivel(false);
+          toast.error("Esse link já está em uso. Escolha outro.");
+          return;
+        }
+        throw new Error("Resposta inválida ao verificar o link.");
+      }
+      step = "auth";
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password: senha,
@@ -101,18 +128,18 @@ function Cadastro() {
         },
       },
     });
-    setLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) throw error;
     if (!data.session) {
       setEnviado(true);
       return;
     }
     toast.success("Conta criada! Vamos configurar sua barbearia.");
-    navigate({ to: "/admin/configurar", replace: true });
+    await navigate({ to: "/admin/configurar", replace: true });
+    } catch (error) {
+      toast.error(signupErrorMessage(error, step));
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (enviado) {
@@ -181,6 +208,7 @@ function Cadastro() {
                 {slugReservado ? "Esse link é reservado pelo sistema." : "Esse link já está em uso."}
               </span>
             )}
+            {erroSlug && <span role="alert" className="mt-1 block text-xs text-destructive">{erroSlug}</span>}
           </Field>
 
           <Field label="Nome do responsável">

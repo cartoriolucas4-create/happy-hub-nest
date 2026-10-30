@@ -8,6 +8,7 @@ import { SuperShell, sBtn, sBtnGhost, sInput } from "@/components/superadmin/Sup
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { STATUS_LICENCA, dataHoraBr, statusLicencaClass, type LicenseStatus } from "@/lib/license";
+import type { Database } from "@/integrations/supabase/types";
 
 type Unidade = "dias" | "meses" | "anos";
 type Acao = "bloquear" | "desbloquear" | "adicionar" | "remover" | "definir" | null;
@@ -21,8 +22,9 @@ const FILTROS = [
   { valor: "suspended", label: "Suspensos" },
 ] as const;
 
-const rpc = (fn: string, args: Record<string, unknown>) =>
-  supabase.rpc(fn, args) as unknown as Promise<{ data: unknown; error: { message: string } | null }>;
+type RpcFunctions = Database["public"]["Functions"];
+const rpc = <Name extends keyof RpcFunctions>(fn: Name, args: RpcFunctions[Name]["Args"]) =>
+  supabase.rpc(fn, args);
 
 export const Route = createFileRoute("/_authenticated/super-admin/clientes/")({ component: Clientes });
 

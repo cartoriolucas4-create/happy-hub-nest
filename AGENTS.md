@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- GitHub Pages builds validate this project's public backend URL and public/anon key before bundling, preferring optional repository secrets over the tracked public environment file, to prevent misdirected deployments or privileged-key exposure.
+- Signup must revalidate the public slug at submission and restore pending state in finally; network and API errors retain their original diagnostic so infrastructure outages cannot be mistaken for successful availability checks.
