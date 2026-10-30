@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isEmail } from "@/lib/barber";
 import { getAuthenticatedArea, homeForArea } from "@/lib/auth-area";
+import { canonicalSiteUrl } from "@/lib/public-links";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -64,7 +65,7 @@ function LoginPage() {
     }
     setRecuperando(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: canonicalSiteUrl("/reset-password"),
     });
     setRecuperando(false);
     if (error) {
