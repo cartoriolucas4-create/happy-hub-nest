@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isEmail, isPhone, slugify } from "@/lib/barber";
-import { isReservedPublicSlug } from "@/lib/public-links";
+import { canonicalSiteUrl, isReservedPublicSlug } from "@/lib/public-links";
 import { signupErrorMessage } from "@/lib/signup-errors";
 
 export const Route = createFileRoute("/cadastro")({
@@ -119,7 +119,7 @@ function Cadastro() {
       email: email.trim(),
       password: senha,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: canonicalSiteUrl("/"),
         data: {
           nome: responsavel.trim(),
           telefone: telefone.trim(),
