@@ -1,5 +1,12 @@
 # Roadmap
 
+## Cadastro em produção — solicitação atual
+- [ ] Reativar o serviço de contas pausado — exige solicitação explícita do usuário para retomar Lovable Cloud.
+- [ ] Permitir `https://agendocorte.com/**` e `https://www.agendocorte.com/**` em Auth settings → Advanced — lista não editável pelas ferramentas disponíveis.
+- [ ] Validar Auth e permissões efetivas da RPC com o serviço ativo.
+- [x] Reproduzir erro de rede e verificar configuração pública do build e grants registrados.
+- [x] Tratar falhas no cadastro e verificar configuração antes da publicação Pages.
+
 ## Concluído
 - [x] Painel geral: ações em massa (bloquear/desbloquear/liberar prazo) + registro de troca de senha
 - [x] Painel geral: controle de prazo (adicionar/remover tempo, definir vencimento, encerrar acesso) — RPCs criadas e erro "reading 'rest'" corrigido
