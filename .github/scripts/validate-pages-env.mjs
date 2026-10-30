@@ -9,7 +9,7 @@ const env = loadEnv("production", process.cwd(), "VITE_");
 const url = env.VITE_SUPABASE_URL;
 const key = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 if (!url || !key) throw new Error("Missing public backend configuration for the Pages build.");
-if (new URL(url).origin !== "https://xcsbvlpsbonekvmavddh.supabase.co") {
+if (new URL(url).origin !== "https://gozynjftplaquakpeprx.supabase.co") {
   throw new Error("Pages backend URL does not match this project's backend.");
 }
 let publicKey = key.startsWith("sb_publishable_");
