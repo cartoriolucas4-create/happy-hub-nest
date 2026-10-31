@@ -61,7 +61,7 @@ function ProductDemo() {
     const timer = window.setTimeout(() => setScene(current => (current + 1) % demoScenes.length), delay);
     return () => window.clearTimeout(timer);
   }, [scene]);
-  const current = demoScenes[scene] ?? demoScenes[0];
+  const current = demoScenes[scene] ?? demoScenes[0]!;
   const manager = current.phase === "manager";
   return <div className="product-demo-wrap">
     <div className="product-demo-glow" />
@@ -272,5 +272,5 @@ function DashboardTile({ icon: Icon, title, value }: { icon: React.ElementType; 
 }
 
 function Device({ icon: Icon, title, text }: { icon: React.ElementType; title: string; text: string }) {
-  return <div className="rounded-xl border border-border bg-background p-4"><Icon className="h-5 w-5 text-primary" /><p className="mt-3 text-sm font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></div>;
+  return <div className="rounded-xl border border-border bg-background p-4">{createElement(Icon as React.ElementType, { className: "h-5 w-5 text-primary" })}<p className="mt-3 text-sm font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></div>;
 }
