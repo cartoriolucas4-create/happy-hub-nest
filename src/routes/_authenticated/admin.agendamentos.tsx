@@ -13,7 +13,15 @@ export const Route = createFileRoute("/_authenticated/admin/agendamentos")({
   component: Agendamentos,
 });
 
-function withTimeout<T>(promise: PromiseLike<T>, ms = 12000): Promise<T> {\n  return Promise.race([Promise.resolve(promise), new Promise<T>((_, reject) => window.setTimeout(() => reject(new Error("A consulta demorou mais que 12 segundos. Verifique sua conexão e tente novamente.")), ms)]);\n}\n\nfunction addMinutes(hora: string, minutos: number) { const [h, m] = hora.split(":").map(Number); const total = (h ?? 0) * 60 + (m ?? 0) + minutos; return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`; }
+function withTimeout<T>(promise: PromiseLike<T>, ms = 12000): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<T>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error("A consulta demorou mais que 12 segundos. Verifique sua conexão e tente novamente.")), ms);
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+  });
+}
 function addDaysIso(iso: string, amount: number) { const [y, m, d] = iso.split("-").map(Number); const date = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1); date.setDate(date.getDate() + amount); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
 function dayLabel(iso: string) { const [y, m, d] = iso.split("-").map(Number); return new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1)).replace(".", "").slice(0, 3).toUpperCase(); }
 function monthLabel(iso: string) { const [y, m] = iso.split("-").map(Number); return new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(y ?? 1970, (m ?? 1) - 1, 1)).replace(".", "").toUpperCase(); }
