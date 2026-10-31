@@ -232,28 +232,6 @@ function Landing() {
             </article>
           </div>
 
-          <div className="mx-auto mt-14 max-w-5xl">
-            <div className="text-center"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Uma plataforma completa</p><h3 className="mt-2 text-2xl font-semibold tracking-tight">Tudo o que sua barbearia precisa para funcionar melhor.</h3><p className="mt-2 text-sm text-muted-foreground">Os recursos abaixo estão disponíveis em todos os planos.</p></div>
-            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {resources.map(([Icon, title, description]) => <div key={title} className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">{title}</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p></div>)}
-              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Receipt className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Vendas presenciais</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Registre vendas realizadas diretamente no balcão.</p></div>
-              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Wallet className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Despesas e custos</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Registre gastos e acompanhe os custos da operação.</p></div>
-              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><BarChart3 className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Indicadores e relatórios</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Tenha uma visão organizada dos resultados registrados.</p></div>
-              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Smartphone className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Acesso em qualquer tela</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Use no computador, tablet ou celular, de onde estiver.</p></div>
-            </div>
-          </div>
-
-          <div className="mx-auto mt-10 max-w-5xl rounded-2xl border border-border bg-background p-5 sm:p-7">
-            <div className="text-center"><h3 className="text-xl font-semibold">Por que o plano anual compensa mais?</h3><p className="mt-2 text-sm text-muted-foreground">Você mantém a operação organizada por 12 meses e paga muito menos pelo mesmo conjunto de recursos.</p></div>
-            <div className="mt-6 grid gap-4 text-center sm:grid-cols-3">
-              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Mensalidade equivalente</p><p className="mt-1 text-2xl font-bold">R$ 25,00</p><p className="mt-1 text-xs text-muted-foreground">no plano anual</p></div>
-              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Economia por mês</p><p className="mt-1 text-2xl font-bold text-primary">R$ 54,90</p><p className="mt-1 text-xs text-muted-foreground">no plano anual, em relação ao preço normal</p></div>
-              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Desconto adicional no Pix</p><p className="mt-1 text-2xl font-bold text-primary">10%</p><p className="mt-1 text-xs text-muted-foreground">em qualquer período</p></div>
-            </div>
-            <div className="mt-6 text-center"><a href="/comprar?plano=anual" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Quero economizar com o anual <ArrowRight className="h-4 w-4"/></a></div>
-          </div>
-          <p className="mt-8 text-center text-xs text-muted-foreground">Pagamento processado com segurança pela InfinitePay. O desconto de 10% no Pix é aplicado ao valor do plano no pagamento.</p>
-          <div className="mt-4 flex justify-center"><Link to="/login" className="text-xs font-medium text-muted-foreground underline underline-offset-4 hover:text-primary">Já tem uma conta? Entrar</Link></div>
         </div>
       </section>
 
@@ -284,6 +262,34 @@ function Landing() {
           </div>
         </div>
       </section>
+
+      <section id="recursos-planos" className="border-b border-border py-12 sm:py-16"><div className="mx-auto max-w-6xl px-5 lg:px-8">
+          <div className="mx-auto mt-14 max-w-5xl">
+            <div className="text-center"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Uma plataforma completa</p><h3 className="mt-2 text-2xl font-semibold tracking-tight">Tudo o que sua barbearia precisa para funcionar melhor.</h3><p className="mt-2 text-sm text-muted-foreground">Os recursos abaixo estão disponíveis em todos os planos.</p></div>
+            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {resources.map(([Icon, title, description]) => <div key={title} className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">{title}</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p></div>)}
+              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Receipt className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Vendas presenciais</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Registre vendas realizadas diretamente no balcão.</p></div>
+              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Wallet className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Despesas e custos</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Registre gastos e acompanhe os custos da operação.</p></div>
+              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><BarChart3 className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Indicadores e relatórios</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Tenha uma visão organizada dos resultados registrados.</p></div>
+              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Smartphone className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Acesso em qualquer tela</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Use no computador, tablet ou celular, de onde estiver.</p></div>
+            </div>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-5xl rounded-2xl border border-border bg-background p-5 sm:p-7">
+            <div className="text-center"><h3 className="text-xl font-semibold">Por que o plano anual compensa mais?</h3><p className="mt-2 text-sm text-muted-foreground">Você mantém a operação organizada por 12 meses e paga muito menos pelo mesmo conjunto de recursos.</p></div>
+            <div className="mt-6 grid gap-4 text-center sm:grid-cols-3">
+              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Mensalidade equivalente</p><p className="mt-1 text-2xl font-bold">R$ 25,00</p><p className="mt-1 text-xs text-muted-foreground">no plano anual</p></div>
+              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Economia por mês</p><p className="mt-1 text-2xl font-bold text-primary">R$ 54,90</p><p className="mt-1 text-xs text-muted-foreground">no plano anual, em relação ao preço normal</p></div>
+              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Desconto adicional no Pix</p><p className="mt-1 text-2xl font-bold text-primary">10%</p><p className="mt-1 text-xs text-muted-foreground">em qualquer período</p></div>
+            </div>
+            <div className="mt-6 text-center"><a href="/comprar?plano=anual" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Quero economizar com o anual <ArrowRight className="h-4 w-4"/></a></div>
+          </div>
+          <p className="mt-8 text-center text-xs text-muted-foreground">Pagamento processado com segurança pela InfinitePay. O desconto de 10% no Pix é aplicado ao valor do plano no pagamento.</p>
+          <div className="mt-4 flex justify-center"><Link to="/login" className="text-xs font-medium text-muted-foreground underline underline-offset-4 hover:text-primary">Já tem uma conta? Entrar</Link></div>
+        </div>
+      </section>
+
+
 
       <section id="demonstracao" className="scroll-mt-20 border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="mx-auto max-w-3xl text-center"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Veja na prática</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Não é só uma lista de recursos. É sua rotina mais simples.</h2><p className="mt-4 leading-7 text-muted-foreground">Conheça as áreas que ajudam você a organizar o dia a dia da barbearia.</p></div>
         <div className="mt-12 grid items-center gap-8 lg:grid-cols-[1.1fr_.9fr]">
