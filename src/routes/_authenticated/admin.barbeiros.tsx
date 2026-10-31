@@ -30,9 +30,11 @@ type Form = {
   foto_url: string;
   ativo: boolean;
   servicos: string[];
+  commission_type: "" | "percentual" | "fixo";
+  commission_value: string;
 };
 
-const vazio: Form = { nome: "", telefone: "", descricao: "", foto_url: "", ativo: true, servicos: [] };
+const vazio: Form = { nome: "", telefone: "", descricao: "", foto_url: "", ativo: true, servicos: [], commission_type: "", commission_value: "" };
 
 function Barbeiros() {
   const { data: shop } = useShop();
@@ -45,15 +47,17 @@ function Barbeiros() {
     enabled: Boolean(shop?.id),
     queryFn: async () => {
       if (!shop?.id) throw new Error("Barbearia não identificada.");
-      const [barbers, services, links] = await Promise.all([
+      const [barbers, services, links, rules] = await Promise.all([
         supabase.from("barbers").select("*").eq("barbershop_id", shop.id).order("nome"),
         supabase.from("services").select("id, nome").eq("barbershop_id", shop.id).eq("ativo", true).order("nome"),
         supabase.from("barber_services").select("barber_id, service_id").eq("barbershop_id", shop.id),
+        supabase.from("barber_commission_rules").select("barber_id, commission_type, commission_value").eq("barbershop_id", shop.id).is("service_id", null).eq("active", true),
       ]);
       if (barbers.error) throw barbers.error;
       if (services.error) throw services.error;
       if (links.error) throw links.error;
-      return { barbers: barbers.data ?? [], services: services.data ?? [], links: links.data ?? [] };
+      if (rules.error) throw rules.error;
+      return { barbers: barbers.data ?? [], services: services.data ?? [], links: links.data ?? [], rules: rules.data ?? [] };
     },
   });
 
@@ -87,6 +91,20 @@ function Barbeiros() {
         if (ins.error) throw ins.error;
       }
 
+      const removeDefaultRule = await supabase.from("barber_commission_rules").delete().eq("barber_id", id!).eq("barbershop_id", shop.id).is("service_id", null);
+      if (removeDefaultRule.error) throw removeDefaultRule.error;
+      if (f.commission_type && Number(f.commission_value) > 0) {
+        const addRule = await supabase.from("barber_commission_rules").insert({
+          barbershop_id: shop.id,
+          barber_id: id!,
+          service_id: null,
+          commission_type: f.commission_type,
+          commission_value: Number(f.commission_value),
+          active: true,
+        });
+        if (addRule.error) throw addRule.error;
+      }
+
       const verify = await supabase.from("barbers").select("id,nome,telefone,descricao,foto_url,ativo").eq("id", id!).eq("barbershop_id", shop.id).single();
       if (verify.error) throw verify.error;
       return verify.data;
@@ -96,6 +114,7 @@ function Barbeiros() {
       setForm(null);
       qc.invalidateQueries({ queryKey: ["barbeiros", shop?.id] });
       qc.invalidateQueries({ queryKey: ["agendar-base"] });
+      qc.invalidateQueries({ queryKey: ["commission-entries"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -146,6 +165,10 @@ function Barbeiros() {
       toast.error("Informe o nome do barbeiro.");
       return;
     }
+    if (form.commission_type && (!Number.isFinite(Number(form.commission_value)) || Number(form.commission_value) <= 0 || (form.commission_type === "percentual" && Number(form.commission_value) > 100))) {
+      toast.error("Informe um valor de comissão válido. Percentuais devem estar entre 0 e 100.");
+      return;
+    }
     salvar.mutate({ ...form, nome: form.nome.toUpperCase() });
   }
 
@@ -194,6 +217,24 @@ function Barbeiros() {
               </div>
             </div>
           </div>
+          <fieldset className="sm:col-span-2 rounded-lg border border-border p-4">
+            <legend className="px-1 text-xs uppercase tracking-widest text-muted-foreground">Comissão padrão (opcional)</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label>
+                <span className="text-xs text-muted-foreground">Tipo de comissão</span>
+                <select className={input} value={form.commission_type} onChange={(e) => setForm({ ...form, commission_type: e.target.value as Form["commission_type"] })}>
+                  <option value="">Sem comissão</option>
+                  <option value="percentual">Percentual (%)</option>
+                  <option value="fixo">Valor fixo (R$)</option>
+                </select>
+              </label>
+              <label>
+                <span className="text-xs text-muted-foreground">Valor {form.commission_type === "percentual" ? "(%)" : "(R$)"}</span>
+                <input className={input} type="number" min="0" step="0.01" disabled={!form.commission_type} value={form.commission_value} onChange={(e) => setForm({ ...form, commission_value: e.target.value })} placeholder={form.commission_type === "percentual" ? "Ex.: 40" : "Ex.: 15,00"} />
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">A regra será aplicada automaticamente aos novos atendimentos confirmados. Regras específicas por serviço têm prioridade.</p>
+          </fieldset>
           <fieldset className="sm:col-span-2">
             <legend className="text-xs uppercase tracking-widest text-muted-foreground">Serviços que executa</legend>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -224,6 +265,7 @@ function Barbeiros() {
       <div className="grid gap-3 sm:grid-cols-2">
         {(data?.barbers ?? []).map((b) => {
           const servicos = (data?.links ?? []).filter((l) => l.barber_id === b.id).map((l) => l.service_id);
+          const commission = (data?.rules ?? []).find((r: any) => r.barber_id === b.id);
           return (
             <div key={b.id} className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-5">
               <div className="flex min-w-0 items-center gap-3">
@@ -234,10 +276,11 @@ function Barbeiros() {
                   <h3 className="text-xl">{b.nome} {b.ativo ? "" : <span className="text-sm text-muted-foreground">· inativo</span>}</h3>
                   {b.descricao && <p className="text-sm text-muted-foreground">{b.descricao}</p>}
                   <p className="mt-2 text-xs text-muted-foreground">{servicos.length} serviço(s) vinculado(s)</p>
+                  {commission && <p className="mt-1 text-xs text-primary">Comissão: {commission.commission_type === "percentual" ? `${Number(commission.commission_value)}%` : `R$ ${Number(commission.commission_value).toFixed(2).replace(".", ",")}`}</p>}
                 </div>
               </div>
               <div className="flex gap-2">
-                <button aria-label="Editar" className="text-muted-foreground hover:text-primary" onClick={() => setForm({ id: b.id, nome: b.nome.toUpperCase(), telefone: b.telefone ?? "", descricao: b.descricao ?? "", foto_url: b.foto_url ?? "", ativo: b.ativo, servicos })}>
+                <button aria-label="Editar" className="text-muted-foreground hover:text-primary" onClick={() => setForm({ id: b.id, nome: b.nome.toUpperCase(), telefone: b.telefone ?? "", descricao: b.descricao ?? "", foto_url: b.foto_url ?? "", ativo: b.ativo, servicos, commission_type: commission?.commission_type ?? "", commission_value: commission ? String(commission.commission_value) : "" })}>
                   <Pencil className="h-4 w-4" />
                 </button>
                 <button aria-label="Excluir" disabled={excluir.isPending} className="text-muted-foreground hover:text-destructive disabled:opacity-50" onClick={() => { if (confirm(`Excluir definitivamente o barbeiro "${b.nome}"? Os agendamentos vinculados também serão excluídos. Esta ação não pode ser desfeita.`)) excluir.mutate({ id: b.id, nome: b.nome }); }}>
