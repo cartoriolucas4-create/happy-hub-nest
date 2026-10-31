@@ -9,9 +9,9 @@ import { canonicalSiteUrl } from "@/lib/public-links";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar | BarberFlow" },
+      { title: "Entrar | Minha Barbearia" },
       { name: "description", content: "Acesse o painel administrativo da sua barbearia." },
-      { property: "og:title", content: "Entrar | BarberFlow" },
+      { property: "og:title", content: "Entrar | Minha Barbearia" },
       { property: "og:description", content: "Acesse o painel da sua barbearia." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -116,7 +116,7 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-5 py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="font-display text-2xl tracking-[0.2em]">
-          BARBER<span className="text-primary">FLOW</span>
+          MINHA <span className="text-primary">BARBEARIA</span>
         </Link>
         <h1 className="mt-8 text-3xl">Entrar</h1>
         <p className="mt-2 text-sm text-muted-foreground">Acesse o painel da sua barbearia.</p>
