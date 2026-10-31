@@ -222,6 +222,7 @@ function Landing() {
               <div className="mt-2 inline-flex w-fit rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-500">25% OFF NA ASSINATURA</div>
               <p className="mt-2 text-[11px] text-muted-foreground">Economize R$ 20,00 por mês em relação ao preço normal.</p>
               <div className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 53,91</strong><span className="block">Total com desconto no Pix</span></div>
+              <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-primary"><CreditCard className="h-4 w-4"/> Ou parcele em até 12x sem juros no cartão de crédito.</p>
               <div className="my-5 h-px bg-border" />
               <ul className="flex-1 space-y-3 text-sm">
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso a todos os módulos da plataforma</li>
@@ -241,6 +242,7 @@ function Landing() {
               <div className="mt-2 inline-flex w-fit rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-500">69% OFF NA ASSINATURA</div>
               <p className="mt-2 text-[11px] text-muted-foreground">Você economiza R$ 658,80 em relação ao preço normal.</p>
               <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 270,00 no total</strong><span className="block">Equivalente a R$ 22,50/mês</span></div>
+              <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-primary"><CreditCard className="h-4 w-4"/> Ou parcele em até 12x sem juros no cartão de crédito.</p>
               <div className="my-5 h-px bg-primary/20" />
               <ul className="flex-1 space-y-3 text-sm">
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Todos os recursos da plataforma</li>
@@ -263,6 +265,7 @@ function Landing() {
               <div className="mt-2 inline-flex w-fit rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-500">50% OFF NA ASSINATURA</div>
               <p className="mt-2 text-[11px] text-muted-foreground">Economize R$ 240,00 em relação ao preço normal.</p>
               <div className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 215,46 no total</strong><span className="block">Equivalente a R$ 35,91/mês</span></div>
+              <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-primary"><CreditCard className="h-4 w-4"/> Ou parcele em até 12x sem juros no cartão de crédito.</p>
               <div className="my-5 h-px bg-border" />
               <ul className="flex-1 space-y-3 text-sm">
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso a todos os módulos da plataforma</li>
