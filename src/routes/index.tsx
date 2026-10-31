@@ -108,7 +108,7 @@ function Landing() {
   return <div className="landing-page min-h-screen bg-background text-foreground">
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 lg:h-[72px] lg:px-8">
-        <a href="#inicio" className="flex shrink-0 items-center gap-2.5" aria-label="Minha Barbearia — início"><span className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 text-primary"><Scissors className="h-5 w-5" strokeWidth={1.8} /></span><span className="flex flex-col leading-none"><strong className="text-[13px] font-extrabold tracking-[.16em] text-foreground sm:text-sm">MINHA</strong><strong className="mt-1 text-[13px] font-extrabold tracking-[.13em] text-primary sm:text-sm">BARBEARIA</strong></span></a>
+        <a href="#inicio" className="flex shrink-0 items-center gap-2.5" aria-label="Minha Barbearia — início"><img src="/minha-barbearia-logo.webp" alt="Minha Barbearia" className="h-11 w-auto max-w-[220px] object-contain object-left" /></a>
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Navegação principal">
           <a href="#inicio" className="text-sm text-muted-foreground hover:text-foreground">Início</a><a href="#demonstracao" className="text-sm text-muted-foreground hover:text-foreground">Demonstração</a><a href="#recursos" className="text-sm text-muted-foreground hover:text-foreground">Recursos</a><a href="#pwa" className="text-sm text-muted-foreground hover:text-foreground">Aplicativo</a><a href="#planos" className="text-sm text-muted-foreground hover:text-foreground">Começar</a>
         </nav>
