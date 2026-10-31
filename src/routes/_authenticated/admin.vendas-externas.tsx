@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 import { ArrowUpRight, Banknote, Barcode, Check, ChevronDown, Minus, Package, Pencil, Plus, Receipt, Search, Scissors, ShoppingCart, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -176,7 +177,7 @@ function VendasExternas() {
 
 function Metric({ icon: Icon, label, value, hint }: { icon: React.ElementType; label: string; value: string; hint: string }) { return <div className="rounded-xl border border-border bg-card p-4 sm:p-5"><div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span><ArrowUpRight className="h-4 w-4 text-muted-foreground/50" /></div><p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold tracking-tight">{value}</p><p className="mt-1 text-xs text-muted-foreground">{hint}</p></div>; }
 
-function SaleDialog({ search, setSearch, filtered, catalog, addItem, cart, changeQuantity, barberId, setBarberId, clientId, setClientId, paymentMethod, setPaymentMethod, paymentMethods, barbers, clients, discount, setDiscount, subtotal, discountValue, total, saving, onSubmit, onClose }: any) { const [scannerOpen, setScannerOpen] = useState(false); const handleBarcode = (code: string) => { const normalizedCode = code.trim().replace(/\\s+/g, ""); const product = catalog.find((item: CatalogItem) => item.kind === "product" && item.barcode?.trim() === normalizedCode) ?? null; if (product) { addItem(product); playBarcodeBeep(); toast.success(`${product.name} adicionado ao carrinho.`); } else { toast.error("Nenhum produto com esse código foi encontrado."); } }; return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-5" role="dialog" aria-modal="true"><div className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"><div className="flex items-center justify-between border-b border-border bg-card px-5 py-4 sm:px-6"><div><div className="flex items-center gap-2"><Receipt className="h-5 w-5 text-primary" /><h2 className="text-xl font-semibold">Nova venda</h2></div><p className="mt-1 text-xs text-muted-foreground">Venda presencial · nenhum agendamento será criado.</p></div><button className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground" onClick={onClose} aria-label="Fechar"><X className="h-5 w-5" /></button></div><div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[1fr_360px]"><div className="min-w-0 p-5 sm:p-6"><div className="flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input autoFocus value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar serviço ou produto..." className={`${input} pl-9`} /></div><button type="button" onClick={() => setScannerOpen(true)} className={`${btnGhost} rounded-lg`}><Barcode className="h-4 w-4" /> Ler código</button><button type="button" onClick={() => setSearch("")} className={`${btnGhost} rounded-lg`}><ChevronDown className="h-4 w-4" /> Ver catálogo</button></div><div className="mt-5 grid gap-3 sm:grid-cols-2">{filtered.map((item: CatalogItem) => <button key={`${item.kind}-${item.id}`} type="button" onClick={() => addItem(item)} className="flex items-center gap-3 rounded-xl border border-border p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">{item.kind === "service" ? <Scissors className="h-5 w-5" /> : <Package className="h-5 w-5" />}</span><span className="min-w-0 flex-1"><span className="block truncate font-medium">{item.name}</span><span className="block text-xs text-muted-foreground">{item.kind === "service" ? "Serviço" : "Produto"}</span></span><span className="font-semibold text-primary">{brl(item.price)}</span></button>)}{!filtered.length && <Empty>Nenhum item encontrado.</Empty>}</div></div><aside className="border-t border-border bg-card/50 p-5 sm:p-6 lg:border-l lg:border-t-0"><div className="flex items-center justify-between"><div><h3 className="font-semibold">Resumo da venda</h3><p className="text-xs text-muted-foreground">Confira antes de finalizar.</p></div><span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{cart.reduce((n: number, i: CartItem) => n + i.quantity, 0)} item(ns)</span></div><div className="mt-4 space-y-2">{cart.length ? cart.map((item: CartItem) => <div key={`${item.kind}-${item.id}`} className="rounded-lg border border-border bg-background p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{item.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{brl(item.price)} cada</p></div><p className="font-semibold">{brl(item.price * item.quantity)}</p></div><div className="mt-2 flex items-center justify-end gap-2"><button type="button" onClick={() => changeQuantity(item.id, item.kind, -1)} className="rounded-md border border-border p-1.5 hover:border-primary"><Minus className="h-3.5 w-3.5" /></button><span className="w-5 text-center text-sm">{item.quantity}</span><button type="button" onClick={() => changeQuantity(item.id, item.kind, 1)} className="rounded-md border border-border p-1.5 hover:border-primary"><Plus className="h-3.5 w-3.5" /></button></div></div>) : <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground"><ShoppingCart className="mx-auto mb-2 h-6 w-6" />Adicione itens ao carrinho.</div>}</div><div className="mt-5 space-y-3"><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Barbeiro<select value={barberId} onChange={(e) => setBarberId(e.target.value)} className={`${input} mt-1`}><option value="">Selecionar (opcional)</option>{barbers.map((b: any) => <option key={b.id} value={b.id}>{b.nome}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cliente<select value={clientId} onChange={(e) => setClientId(e.target.value)} className={`${input} mt-1`}><option value="">Sem cliente</option>{clients.map((c: any) => <option key={c.id} value={c.id}>{c.nome}{c.telefone ? ` · ${c.telefone}` : ""}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Forma de pagamento<select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={`${input} mt-1`}><option value="">Selecionar forma</option>{(paymentMethods.length ? paymentMethods.map((p: any) => p.name) : fallbackPayments).map((p: string) => <option key={p} value={p}>{p}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Desconto<input value={discount} onChange={(e) => setDiscount(e.target.value.replace(/[^0-9,.]/g, ""))} placeholder="R$ 0,00" inputMode="decimal" className={`${input} mt-1`} /></label></div><div className="mt-5 border-t border-border pt-4 text-sm"><div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{brl(subtotal)}</span></div><div className="mt-2 flex justify-between text-muted-foreground"><span>Desconto</span><span>- {brl(discountValue)}</span></div><div className="mt-3 flex items-end justify-between"><span className="font-semibold">Total</span><span className="text-2xl font-bold text-primary">{brl(total)}</span></div></div><button disabled={saving || !cart.length} onClick={onSubmit} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-semibold tracking-wide text-primary-foreground shadow-lg shadow-primary/10 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"><Check className="h-4 w-4" />{saving ? "FINALIZANDO..." : "FINALIZAR VENDA"}</button></aside></div></div></div>; }
+function SaleDialog({ search, setSearch, filtered, catalog, addItem, cart, changeQuantity, barberId, setBarberId, clientId, setClientId, paymentMethod, setPaymentMethod, paymentMethods, barbers, clients, discount, setDiscount, subtotal, discountValue, total, saving, onSubmit, onClose }: any) { const [scannerOpen, setScannerOpen] = useState(false); const handleBarcode = (code: string) => { const normalizedCode = code.trim().replace(/\\s+/g, ""); const product = catalog.find((item: CatalogItem) => item.kind === "product" && item.barcode?.trim() === normalizedCode) ?? null; if (product) { addItem(product); toast.success(`${product.name} adicionado ao carrinho.`); } else { toast.error("Nenhum produto com esse código foi encontrado."); } }; return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-5" role="dialog" aria-modal="true"><div className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"><div className="flex items-center justify-between border-b border-border bg-card px-5 py-4 sm:px-6"><div><div className="flex items-center gap-2"><Receipt className="h-5 w-5 text-primary" /><h2 className="text-xl font-semibold">Nova venda</h2></div><p className="mt-1 text-xs text-muted-foreground">Venda presencial · nenhum agendamento será criado.</p></div><button className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground" onClick={onClose} aria-label="Fechar"><X className="h-5 w-5" /></button></div><div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[1fr_360px]"><div className="min-w-0 p-5 sm:p-6"><div className="flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input autoFocus value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar serviço ou produto..." className={`${input} pl-9`} /></div><button type="button" onClick={() => setScannerOpen(true)} className={`${btnGhost} rounded-lg`}><Barcode className="h-4 w-4" /> Ler código</button><button type="button" onClick={() => setSearch("")} className={`${btnGhost} rounded-lg`}><ChevronDown className="h-4 w-4" /> Ver catálogo</button></div><div className="mt-5 grid gap-3 sm:grid-cols-2">{filtered.map((item: CatalogItem) => <button key={`${item.kind}-${item.id}`} type="button" onClick={() => addItem(item)} className="flex items-center gap-3 rounded-xl border border-border p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">{item.kind === "service" ? <Scissors className="h-5 w-5" /> : <Package className="h-5 w-5" />}</span><span className="min-w-0 flex-1"><span className="block truncate font-medium">{item.name}</span><span className="block text-xs text-muted-foreground">{item.kind === "service" ? "Serviço" : "Produto"}</span></span><span className="font-semibold text-primary">{brl(item.price)}</span></button>)}{!filtered.length && <Empty>Nenhum item encontrado.</Empty>}</div></div><aside className="border-t border-border bg-card/50 p-5 sm:p-6 lg:border-l lg:border-t-0"><div className="flex items-center justify-between"><div><h3 className="font-semibold">Resumo da venda</h3><p className="text-xs text-muted-foreground">Confira antes de finalizar.</p></div><span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{cart.reduce((n: number, i: CartItem) => n + i.quantity, 0)} item(ns)</span></div><div className="mt-4 space-y-2">{cart.length ? cart.map((item: CartItem) => <div key={`${item.kind}-${item.id}`} className="rounded-lg border border-border bg-background p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{item.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{brl(item.price)} cada</p></div><p className="font-semibold">{brl(item.price * item.quantity)}</p></div><div className="mt-2 flex items-center justify-end gap-2"><button type="button" onClick={() => changeQuantity(item.id, item.kind, -1)} className="rounded-md border border-border p-1.5 hover:border-primary"><Minus className="h-3.5 w-3.5" /></button><span className="w-5 text-center text-sm">{item.quantity}</span><button type="button" onClick={() => changeQuantity(item.id, item.kind, 1)} className="rounded-md border border-border p-1.5 hover:border-primary"><Plus className="h-3.5 w-3.5" /></button></div></div>) : <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground"><ShoppingCart className="mx-auto mb-2 h-6 w-6" />Adicione itens ao carrinho.</div>}</div><div className="mt-5 space-y-3"><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Barbeiro<select value={barberId} onChange={(e) => setBarberId(e.target.value)} className={`${input} mt-1`}><option value="">Selecionar (opcional)</option>{barbers.map((b: any) => <option key={b.id} value={b.id}>{b.nome}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cliente<select value={clientId} onChange={(e) => setClientId(e.target.value)} className={`${input} mt-1`}><option value="">Sem cliente</option>{clients.map((c: any) => <option key={c.id} value={c.id}>{c.nome}{c.telefone ? ` · ${c.telefone}` : ""}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Forma de pagamento<select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={`${input} mt-1`}><option value="">Selecionar forma</option>{(paymentMethods.length ? paymentMethods.map((p: any) => p.name) : fallbackPayments).map((p: string) => <option key={p} value={p}>{p}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Desconto<input value={discount} onChange={(e) => setDiscount(e.target.value.replace(/[^0-9,.]/g, ""))} placeholder="R$ 0,00" inputMode="decimal" className={`${input} mt-1`} /></label></div><div className="mt-5 border-t border-border pt-4 text-sm"><div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{brl(subtotal)}</span></div><div className="mt-2 flex justify-between text-muted-foreground"><span>Desconto</span><span>- {brl(discountValue)}</span></div><div className="mt-3 flex items-end justify-between"><span className="font-semibold">Total</span><span className="text-2xl font-bold text-primary">{brl(total)}</span></div></div><button disabled={saving || !cart.length} onClick={onSubmit} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-semibold tracking-wide text-primary-foreground shadow-lg shadow-primary/10 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"><Check className="h-4 w-4" />{saving ? "FINALIZANDO..." : "FINALIZAR VENDA"}</button></aside></div></div></div>; }
 
 function ProductDialog({ form, setForm, onSave, saving }: { form: ProductForm; setForm: (v: ProductForm | null) => void; onSave: () => void; saving: boolean }) {
   const unitProfit = (money(form.price) || 0) - (money(form.costPrice) || 0);
@@ -201,31 +202,92 @@ function ProductDialog({ form, setForm, onSave, saving }: { form: ProductForm; s
   </Dialog>;
 }
 function BarcodeScanner({ onDetected, onClose }: { onDetected: (code: string) => void; onClose: () => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [manual, setManual] = useState("");
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsRef = useRef<any>(null);
+  const lastCodeRef = useRef<{ code: string; at: number }>({ code: "", at: 0 });
   const onDetectedRef = useRef(onDetected);
+  const [cameraState, setCameraState] = useState<"starting" | "ready" | "error">("starting");
+  const [cameraError, setCameraError] = useState("");
+  const [manual, setManual] = useState("");
   onDetectedRef.current = onDetected;
-  const focusReader = () => { requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true })); };
-  useEffect(() => { focusReader(); }, []);
-  const submitCode = (value: string) => {
+
+  useEffect(() => {
+    let active = true;
+    const reader = new BrowserMultiFormatReader();
+    const video = videoRef.current;
+    if (!video) return;
+    reader.decodeFromConstraints(
+      { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+      video,
+      (result, _error, controls) => {
+        if (!active) { controls.stop(); return; }
+        controlsRef.current = controls;
+        if (result) {
+          const code = result.getText().trim().replace(/\\s+/g, "");
+          const now = Date.now();
+          if (code && (lastCodeRef.current.code !== code || now - lastCodeRef.current.at > 1400)) {
+            lastCodeRef.current = { code, at: now };
+            playBarcodeBeep();
+            onDetectedRef.current(code);
+          }
+          setCameraState("ready");
+        }
+      },
+    ).then((controls) => {
+      if (!active) { controls.stop(); return; }
+      controlsRef.current = controls;
+      setCameraState("ready");
+    }).catch((error: any) => {
+      if (!active) return;
+      setCameraState("error");
+      const message = String(error?.name ?? "");
+      setCameraError(message === "NotAllowedError" || message === "PermissionDeniedError"
+        ? "Permita o acesso à câmera no navegador para ler o código de barras."
+        : message === "NotFoundError" || message === "DevicesNotFoundError"
+          ? "Nenhuma câmera foi encontrada neste aparelho."
+          : "Não foi possível iniciar a câmera. Verifique a permissão e tente novamente.");
+    });
+    return () => {
+      active = false;
+      controlsRef.current?.stop();
+      controlsRef.current = null;
+    };
+  }, []);
+
+  const submitManual = (value: string) => {
     const code = value.trim().replace(/\\s+/g, "");
     if (!code) return;
     playBarcodeBeep();
     onDetectedRef.current(code);
     setManual("");
-    focusReader();
   };
-  return <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-3 sm:p-4" role="dialog" aria-modal="true">
-    <div className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3"><div><h3 className="text-lg font-semibold">Leitor de código de barras</h3><p className="text-xs text-muted-foreground">Leitor USB/Bluetooth pronto para uso</p></div><button type="button" className={btnGhost} onClick={onClose}><X className="h-4 w-4" /></button></div>
-      <div className="p-4">
-        <div className="rounded-xl border border-primary/40 bg-primary/5 p-4 text-center"><Barcode className="mx-auto h-10 w-10 text-primary" /><p className="mt-2 font-semibold">Aguardando leitura...</p><p className="mt-1 text-xs text-muted-foreground">Bipe o produto. O código será capturado automaticamente.</p></div>
-        <form className="mt-4" onSubmit={(e) => { e.preventDefault(); submitCode(manual); }}>
-          <label className="mb-1 block text-sm font-medium">Campo de leitura</label>
-          <input ref={inputRef} autoFocus inputMode="none" autoComplete="off" autoCorrect="off" spellCheck={false} className={input + " w-full text-lg tracking-wider"} value={manual} onChange={(e) => setManual(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submitCode(manual); } }} placeholder="Pronto para receber o código" />
-          <button className="mt-3 w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground" type="submit" disabled={!manual.trim()}>Confirmar código digitado</button>
+
+  return <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-2 sm:p-4" role="dialog" aria-modal="true">
+    <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3"><div><h3 className="text-lg font-semibold">Leitor de código de barras</h3><p className="text-xs text-muted-foreground">Aponte a câmera traseira para o código</p></div><button type="button" className={btnGhost} onClick={onClose}><X className="h-4 w-4" /></button></div>
+      <div className="p-3 sm:p-4">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black">
+          <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+          <div className="pointer-events-none absolute inset-x-[8%] top-1/2 -translate-y-1/2">
+            <div className="relative h-24 rounded-lg border border-white/60 bg-transparent shadow-[0_0_0_999px_rgba(0,0,0,.28)]">
+              <div className="absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 bg-red-500 shadow-[0_0_10px_3px_rgba(239,68,68,.75)] animate-pulse" />
+              <span className="absolute -top-6 left-0 right-0 text-center text-[11px] font-semibold text-white drop-shadow">CENTRALIZE O CÓDIGO NESTA LINHA</span>
+            </div>
+          </div>
+          <div className="absolute bottom-3 left-3 rounded-full bg-black/65 px-3 py-1.5 text-xs font-medium text-white">
+            {cameraState === "starting" ? "Iniciando câmera..." : cameraState === "ready" ? "Câmera ativa · procurando código" : "Câmera indisponível"}
+          </div>
+          {cameraState === "error" && <div className="absolute inset-0 flex items-center justify-center bg-black/75 p-6 text-center"><p className="max-w-sm text-sm text-white">{cameraError}</p></div>}
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
+          <div className="flex items-center gap-2"><Barcode className="h-5 w-5 text-primary" /><div><p className="text-sm font-semibold">Leitura automática</p><p className="text-xs text-muted-foreground">Ao reconhecer, emite um bipe.</p></div></div>
+          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-500">AO VIVO</span>
+        </div>
+        <form className="mt-4" onSubmit={(e) => { e.preventDefault(); submitManual(manual); }}>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Se preferir, digite o código manualmente</label>
+          <div className="flex gap-2"><input autoComplete="off" inputMode="numeric" className={input + " min-w-0 flex-1"} value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Código de barras" /><button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit" disabled={!manual.trim()}>Usar</button></div>
         </form>
-        <p className="mt-3 text-xs text-muted-foreground">O campo fica selecionado automaticamente e o teclado virtual é desativado. Na tela de venda, você pode bipar vários produtos seguidos sem fechar o leitor.</p>
+        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">A câmera precisa estar autorizada no navegador e o site aberto em HTTPS. No celular, será usada preferencialmente a câmera traseira.</p>
       </div>
     </div>
   </div>;
