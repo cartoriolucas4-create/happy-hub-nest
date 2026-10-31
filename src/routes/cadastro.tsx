@@ -130,7 +130,7 @@ function Cadastro() {
           telefone: telefone.trim(),
           barbershop_nome: nomeBarbearia.trim(),
           barbershop_slug: slugFinal,
-          plano_solicitado: planoValido,
+          plano_solicitado: planoValido,\n          compra_order_nsu: params.get("compra") || null,
         },
       },
     });
