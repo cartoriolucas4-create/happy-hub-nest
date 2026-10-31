@@ -47,7 +47,17 @@ function LoginPage() {
     void getAuthenticatedArea()
       .then(async (session): Promise<void> => {
         if (active && session) {
-          await navigate({ to: homeForArea(session.area), replace: true });
+          const requestedPlan = session.user.user_metadata?.plano_solicitado;
+          if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
+            await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
+          } else {
+            const requestedPlan = session.user.user_metadata?.plano_solicitado;
+      if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
+        await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
+      } else {
+        await navigate({ to: homeForArea(session.area), replace: true });
+      }
+          }
         }
       })
       .catch((error) => {
