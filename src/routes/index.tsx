@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import {
   ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, Clock3,
   CreditCard, DollarSign, Link2, Menu, Monitor, Scissors, Smartphone,
@@ -61,7 +61,7 @@ function ProductDemo() {
     const timer = window.setTimeout(() => setScene(current => (current + 1) % demoScenes.length), delay);
     return () => window.clearTimeout(timer);
   }, [scene]);
-  const current = demoScenes[scene];
+  const current = demoScenes[scene] ?? demoScenes[0];
   const manager = current.phase === "manager";
   return <div className="product-demo-wrap">
     <div className="product-demo-glow" />
@@ -165,7 +165,7 @@ function Landing() {
       <section id="demonstracao" className="scroll-mt-20 border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="mx-auto max-w-3xl text-center"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Veja na prática</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Não é só uma lista de recursos. É sua rotina mais simples.</h2><p className="mt-4 leading-7 text-muted-foreground">Conheça as áreas que ajudam você a organizar o dia a dia da barbearia.</p></div>
         <div className="mt-12 grid items-center gap-8 lg:grid-cols-[1.1fr_.9fr]">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-xl sm:p-6"><div className="flex items-center justify-between border-b border-border pb-4"><div><p className="text-xs text-muted-foreground">MINHA BARBEARIA / PAINEL</p><h3 className="mt-1 text-lg font-semibold">Resumo da operação</h3></div><BarChart3 className="h-5 w-5 text-primary" /></div><div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-xl border border-border bg-background p-4"><p className="text-xs text-muted-foreground">Agenda</p><p className="mt-2 text-lg font-semibold">Organizada</p><p className="mt-1 text-[11px] text-primary">Horários e atendimentos</p></div><div className="rounded-xl border border-border bg-background p-4"><p className="text-xs text-muted-foreground">Equipe</p><p className="mt-2 text-lg font-semibold">Centralizada</p><p className="mt-1 text-[11px] text-primary">Profissionais e serviços</p></div></div><div className="mt-3 rounded-xl border border-border bg-background p-4"><div className="flex items-center justify-between"><span className="text-sm font-semibold">Atendimentos</span><span className="text-xs text-muted-foreground">Exemplo de agenda</span></div>{[["09:00","Corte","Confirmado"],["10:30","Barba","Confirmado"],["14:00","Corte + barba","Agendado"]].map(([time,service,state]) => <div key={time} className="mt-3 flex items-center gap-3 border-b border-border pb-3 last:border-0 last:pb-0"><span className="w-12 text-xs font-semibold text-primary">{time}</span><span className="flex-1 text-sm">{service}</span><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] text-primary">{state}</span></div>)}</div></div>
-          <div><div className="space-y-5">{[[CalendarClock,"Agenda sem confusão","Visualize seus horários e acompanhe os atendimentos."],[Users,"Clientes organizados","Encontre informações e acompanhe os registros da sua clientela."],[DollarSign,"Mais clareza financeira","Consulte os lançamentos e acompanhe a movimentação do negócio."],[UserCog,"Equipe alinhada","Organize profissionais, serviços e configurações da barbearia."]].map(([Icon,title,desc]) => <div key={title as string} className="flex gap-4"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><div><h3 className="font-semibold">{title as string}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{desc as string}</p></div></div>)}</div></div>
+          <div><div className="space-y-5">{[[CalendarClock,"Agenda sem confusão","Visualize seus horários e acompanhe os atendimentos."],[Users,"Clientes organizados","Encontre informações e acompanhe os registros da sua clientela."],[DollarSign,"Mais clareza financeira","Consulte os lançamentos e acompanhe a movimentação do negócio."],[UserCog,"Equipe alinhada","Organize profissionais, serviços e configurações da barbearia."]].map(([Icon,title,desc]) => <div key={title as string} className="flex gap-4"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">{createElement(Icon as React.ElementType, { className: "h-5 w-5" })}</span><div><h3 className="font-semibold">{title as string}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{desc as string}</p></div></div>)}</div></div>
         </div>
       </div></section>
 
