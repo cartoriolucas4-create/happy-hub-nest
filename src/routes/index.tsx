@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, Clock3,
   CreditCard, DollarSign, Link2, Menu, Monitor, Scissors, Smartphone,
-  Tablet, UserCog, Users, X, BarChart3, ShieldCheck, Zap, CircleHelp,
+  Tablet, UserCog, Users, X, BarChart3, ShieldCheck, Zap, CircleHelp,\n  Phone, Video, MoreVertical, CheckCheck, Send, MessageCircle,\n  CalendarCheck, Wallet, TrendingUp, Receipt, ArrowDownLeft, ArrowUpRight,
 } from "lucide-react";
 import heroImg from "@/assets/hero-barbearia.jpg";
 
@@ -37,6 +37,66 @@ const faqs = [
   ["Posso cadastrar meus profissionais e serviços?", "Sim. A configuração permite cadastrar os profissionais, serviços, valores, duração e horários da operação."],
   ["Como começo a usar?", "Crie sua conta, configure os dados da barbearia e compartilhe seu link de agendamento."],
 ];
+
+
+const demoScenes = [
+  { phase: "client", label: "WhatsApp", caption: "O cliente recebe seu link e inicia o agendamento." },
+  { phase: "client", label: "Página da barbearia", caption: "A página apresenta a barbearia, os serviços e os valores." },
+  { phase: "client", label: "Escolha do profissional", caption: "O cliente escolhe o serviço e quem vai atender." },
+  { phase: "client", label: "Data e horário", caption: "Ele seleciona um horário disponível na agenda." },
+  { phase: "client", label: "Agendamento confirmado", caption: "Pronto: o horário fica confirmado para o cliente." },
+  { phase: "manager", label: "Painel do gestor", caption: "Você começa pelo resumo da operação e dos indicadores." },
+  { phase: "manager", label: "Agenda", caption: "Acompanhe os horários, clientes e atendimentos do dia." },
+  { phase: "manager", label: "Vendas", caption: "Registre também as vendas feitas presencialmente." },
+  { phase: "manager", label: "Entradas e saídas", caption: "Lance receitas e despesas e acompanhe o saldo." },
+  { phase: "manager", label: "Relatórios", caption: "Visualize o movimento e os resultados da barbearia." },
+] as const;
+
+function ProductDemo() {
+  const [scene, setScene] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setScene(current => (current + 1) % demoScenes.length), 6000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const current = demoScenes[scene];
+  const manager = current.phase === "manager";
+  return <div className="product-demo-wrap">
+    <div className="product-demo-glow" />
+    <div className="product-demo-phone">
+      <div className="product-demo-island" />
+      <div className="product-demo-status"><span>9:41</span><span>●●●　▰</span></div>
+      <div className="product-demo-screen">
+        {scene === 0 ? <div className="demo-whatsapp">
+          <div className="demo-wa-header"><span className="demo-wa-back">‹</span><span className="demo-wa-avatar">MB</span><span className="min-w-0 flex-1"><b>Minha Barbearia</b><small>Perfil comercial</small></span><Video size={16}/><Phone size={15}/><MoreVertical size={16}/></div>
+          <div className="demo-wa-chat"><div className="demo-wa-date">HOJE</div><div className="demo-wa-bubble">Olá! Tudo bem? 💈<br/>Agende seu próximo horário com a gente pelo link abaixo.</div><div className="demo-wa-link"><span>🔗</span><div><b>Agende seu horário</b><small>agendocorte.com/minhabarbearia</small></div></div><div className="demo-wa-time">14:32　<CheckCheck size={11}/></div><div className="demo-wa-reply">Quero agendar! <small>14:33　✓✓</small></div></div>
+          <div className="demo-wa-input"><span>＋</span><span>Mensagem</span><MessageCircle size={17}/><span>📷</span></div>
+        </div> : scene === 1 ? <div className="demo-booking">
+          <div className="demo-booking-cover"><span>MINHA BARBEARIA</span><b>ESTILO. PRECISÃO.<br/>NO SEU TEMPO.</b></div>
+          <div className="demo-booking-content"><small>PÁGINA OFICIAL</small><h4>Barbearia do Lucas</h4><p>Seu estilo merece atenção aos detalhes.</p><b className="demo-booking-title">Nossos serviços</b><div className="demo-service"><span>✂ Corte tradicional</span><b>R$ 35,00</b></div><div className="demo-service"><span>✦ Barba</span><b>R$ 25,00</b></div><div className="demo-service"><span>✂ Corte + barba</span><b>R$ 55,00</b></div><div className="demo-gold-button">AGENDAR HORÁRIO　›</div></div>
+        </div> : scene === 2 ? <div className="demo-booking">
+          <div className="demo-mini-header"><span>‹</span><b>Agendar horário</b><span>1 de 3</span></div><div className="demo-booking-content"><small>SERVIÇO SELECIONADO</small><div className="demo-selected-service"><b>Corte tradicional</b><strong>R$ 35,00</strong></div><b className="demo-booking-title">Escolha o profissional</b><div className="demo-barber selected"><span className="demo-barber-avatar">LR</span><span><b>Lucas Rodrigues</b><small>Barbeiro</small></span><Check size={16}/></div><div className="demo-barber"><span className="demo-barber-avatar">MR</span><span><b>Marcos Ribeiro</b><small>Barbeiro</small></span></div><div className="demo-gold-button">CONTINUAR　›</div></div>
+        </div> : scene === 3 ? <div className="demo-booking">
+          <div className="demo-mini-header"><span>‹</span><b>Escolha o horário</b><span>2 de 3</span></div><div className="demo-booking-content"><small>OUTUBRO 2026</small><div className="demo-calendar">{["D","S","T","Q","Q","S","S","25","26","27","28","29","30","31"].map((d,i)=><span key={i} className={d==="30"?"active":""}>{d}</span>)}</div><b className="demo-booking-title">Sexta-feira, 30 de outubro</b><div className="demo-times">{["14:00","14:30","15:00","15:30","16:00","16:30"].map(t=><span key={t} className={t==="15:30"?"active":""}>{t}</span>)}</div><div className="demo-gold-button">CONFIRMAR HORÁRIO　›</div></div>
+        </div> : scene === 4 ? <div className="demo-success"><span className="demo-success-check"><Check size={30}/></span><small>MINHA BARBEARIA</small><h4>Agendamento realizado!</h4><p>Seu horário está reservado.</p><div className="demo-confirm-card"><span>Serviço</span><b>Corte tradicional</b><span>Profissional</span><b>Lucas Rodrigues</b><span>Data e horário</span><b>30/10 · 15h30</b><span>Valor</span><b>R$ 35,00</b></div><div className="demo-gold-button">TUDO CERTO!</div></div>
+        : <div className="demo-manager">
+          <div className="demo-manager-head"><div><small>MINHA BARBEARIA</small><b>{manager ? "Painel de gestão" : "Agendamentos"}</b></div><span className="demo-manager-avatar">LR</span></div>
+          {scene === 5 ? <><p className="demo-manager-greeting">Bom dia, Lucas 👋</p><div className="demo-manager-grid"><div><small>FATURAMENTO HOJE</small><b>R$ 1.280</b><em>↑ 12,5%</em></div><div><small>AGENDAMENTOS</small><b>18</b><em>Hoje</em></div><div><small>VENDAS</small><b>R$ 420</b><em>Registradas</em></div><div><small>DESPESAS</small><b>R$ 95</b><em>Do período</em></div></div><div className="demo-manager-card"><b>Movimentação da semana</b><div className="demo-manager-chart">{[35,55,44,72,60,90,76].map((h,i)=><i key={i} style={{height:h+"%"}}/>)}</div><small>SEG　 TER　 QUA　 QUI　 SEX　 SÁB　 DOM</small></div></>
+          : scene === 6 ? <><div className="demo-manager-title"><CalendarCheck size={16}/> Agenda de hoje <span>18 horários</span></div>{[["09:00","Corte tradicional","João Pedro","Concluído"],["10:30","Corte + barba","André Lima","Confirmado"],["11:30","Degradê","Pedro Alves","Próximo"],["14:00","Barba","Rafael Souza","Confirmado"]].map(row=><div className="demo-manager-row" key={row[0]}><b>{row[0]}</b><span><strong>{row[1]}</strong><small>{row[2]}</small></span><em>{row[3]}</em></div>)}</>
+          : scene === 7 ? <><div className="demo-manager-title"><Receipt size={16}/> Nova venda <span>Presencial</span></div><div className="demo-sale-box"><small>PRODUTO / SERVIÇO</small><b>Pomada modeladora</b><small>VALOR DA VENDA</small><strong>R$ 45,00</strong><small>FORMA DE PAGAMENTO</small><div className="demo-payment-pills"><span className="active">PIX</span><span>Dinheiro</span><span>Cartão</span></div><div className="demo-gold-button">✓　REGISTRAR VENDA</div></div><div className="demo-manager-notice">Venda registrada com sucesso</div></>
+          : scene === 8 ? <><div className="demo-manager-title"><Wallet size={16}/> Controle financeiro</div><div className="demo-finance-balance"><small>SALDO DO PERÍODO</small><b>R$ 3.840,00</b></div><div className="demo-finance-row"><span><ArrowDownLeft size={16}/> Entradas</span><b className="positive">+ R$ 4.500,00</b></div><div className="demo-finance-row"><span><ArrowUpRight size={16}/> Saídas</span><b className="negative">− R$ 660,00</b></div><div className="demo-finance-row"><span><Receipt size={16}/> Despesas registradas</span><b>12 lançamentos</b></div><div className="demo-gold-button">VER LANÇAMENTOS</div></>
+          : <><div className="demo-manager-title"><TrendingUp size={16}/> Relatório de resultados</div><div className="demo-report-total"><small>FATURAMENTO NO MÊS</small><b>R$ 12.450,00</b><em>↑ 18% em relação ao mês anterior</em></div><div className="demo-manager-chart demo-report-chart">{[40,58,48,70,62,88,75,100,82,91].map((h,i)=><i key={i} style={{height:h+"%"}}/>)}</div><div className="demo-manager-row"><span><strong>Serviços realizados</strong><small>Atendimentos concluídos</small></span><b>214</b></div><div className="demo-manager-row"><span><strong>Ticket médio</strong><small>Por atendimento</small></span><b>R$ 58,18</b></div></>}
+          <div className="demo-bottom-nav"><span>⌂<small>Início</small></span><span>▦<small>Agenda</small></span><span>＋<small>Vendas</small></span><span>◷<small>Financeiro</small></span></div>
+        </div>}
+      </div>
+    </div>
+    <div className="product-demo-caption">
+      <div className="flex items-center justify-between gap-3"><span className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Demonstração automática · 60s</span><span className="text-[10px] text-muted-foreground">{manager ? "02 / 02 · GESTOR" : "01 / 02 · CLIENTE"}</span></div>
+      <h3 className="mt-2 text-lg font-semibold">{current.label}</h3><p className="mt-1 min-h-10 text-sm leading-6 text-muted-foreground">{current.caption}</p>
+      <div className="mt-4 flex gap-1.5">{demoScenes.map((s,i)=><button key={s.label} type="button" aria-label={`Ir para etapa ${i+1}: ${s.label}`} onClick={()=>setScene(i)} className={`h-1.5 flex-1 rounded-full transition-colors ${i===scene?"bg-primary":"bg-border"}`}/>)}</div>
+      <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground"><span>CLIENTE</span><span>GESTOR</span></div>
+    </div>
+  </div>;
+}
 
 function Landing() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -109,9 +169,33 @@ function Landing() {
 
       <section className="border-b border-border py-20 sm:py-24"><div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:px-8"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Seu link de agendamento</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Seu cliente escolhe. Você acompanha.</h2><p className="mt-4 max-w-xl leading-7 text-muted-foreground">Compartilhe o link público da sua barbearia e facilite a escolha de serviços, profissionais e horários disponíveis. Uma experiência mais prática para quem agenda e mais organização para quem atende.</p><ul className="mt-6 space-y-3 text-sm text-muted-foreground">{["Apresente seus serviços e valores","Mostre os horários disponíveis","Facilite o agendamento pelo celular"].map(x => <li key={x} className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />{x}</li>)}</ul><Link to="/cadastro" className="mt-7 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Criar minha conta <ArrowRight className="h-4 w-4" /></Link></div><div className="rounded-2xl border border-border bg-card p-5 shadow-xl"><div className="rounded-xl border border-border bg-background p-5"><div className="flex items-center gap-3 border-b border-border pb-4"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><Scissors className="h-5 w-5" /></span><div><p className="text-xs text-muted-foreground">PÁGINA DE AGENDAMENTO</p><p className="font-semibold">Sua barbearia</p></div></div><div className="mt-5"><p className="text-sm font-semibold">Escolha seu serviço</p>{[["Corte tradicional","R$ —"],["Barba","R$ —"],["Corte + barba","R$ —"]].map(([name,price]) => <div key={name} className="mt-2 flex items-center justify-between rounded-lg border border-border p-3 text-sm"><span>{name}</span><span className="text-xs text-muted-foreground">{price}</span></div>)}</div><div className="mt-4 rounded-lg bg-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground">Continuar agendamento</div><p className="mt-3 text-center text-[10px] text-muted-foreground">Prévia ilustrativa — os dados reais são configurados pela barbearia.</p></div></div></div></section>
 
-      <section id="pwa" className="scroll-mt-20 overflow-hidden border-b border-border bg-card/30 py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="grid items-center gap-12 lg:grid-cols-2"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Acesso onde você estiver</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Sua barbearia na palma da mão. Sem burocracia.</h2><p className="mt-4 max-w-xl leading-7 text-muted-foreground">Acesse pelo computador, tablet ou celular. No Android e no iPhone, você pode adicionar o acesso à tela inicial e abrir a plataforma como um aplicativo PWA.</p><div className="mt-7 grid gap-3 sm:grid-cols-3"><Device icon={Monitor} title="Computador" text="Gestão em tela ampla" /><Device icon={Smartphone} title="Android e iOS" text="Acesso no celular" /><Device icon={Tablet} title="Tablet" text="Mais espaço para visualizar" /></div><p className="mt-5 text-xs leading-5 text-muted-foreground">A disponibilidade da instalação e de recursos específicos pode variar conforme o navegador e o dispositivo.</p></div>
-          <div className="relative flex min-h-[470px] items-center justify-center"><div className="absolute h-72 w-72 rounded-full bg-primary/10 blur-3xl" /><div className="phone-shell relative z-10"><div className="phone-island" /><div className="phone-screen"><div className="flex items-center justify-between"><span className="text-[9px] font-bold tracking-widest">MINHA BARBEARIA</span><span className="h-2 w-2 rounded-full bg-primary" /></div><div className="phone-demo-stage"><div className="phone-panel phone-panel-one"><p className="text-[9px] text-white/50">BEM-VINDO DE VOLTA</p><p className="mt-2 text-base font-semibold">Sua agenda, sob controle.</p><div className="mt-4 grid grid-cols-2 gap-2"><div className="rounded-lg bg-white/10 p-2"><CalendarDays className="h-4 w-4 text-primary" /><p className="mt-2 text-[9px]">Agenda</p></div><div className="rounded-lg bg-white/10 p-2"><Users className="h-4 w-4 text-primary" /><p className="mt-2 text-[9px]">Clientes</p></div></div></div><div className="phone-panel phone-panel-two"><p className="text-[9px] text-white/50">AGENDAMENTO</p><p className="mt-2 text-sm font-semibold">Escolha um horário</p>{["09:00","10:30","14:00"].map(t => <div key={t} className="mt-2 rounded-md border border-primary/40 bg-primary/10 p-2 text-[10px]">{t} <span className="float-right text-primary">Disponível</span></div>)}</div><div className="phone-panel phone-panel-three"><div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary"><Check className="h-5 w-5" /></div><p className="mt-3 text-center text-sm font-semibold">Agendamento confirmado!</p><p className="mt-1 text-center text-[9px] text-white/55">Tudo certo. Até breve.</p></div></div><div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3"><p className="text-[9px] text-white/50">RESUMO DO DIA</p><div className="mt-2 flex items-center justify-between text-[10px]"><span>Atendimentos</span><span className="text-primary">Organizados</span></div></div><div className="mt-3 rounded-lg bg-primary px-3 py-2.5 text-center text-[10px] font-semibold text-primary-foreground">Abrir minha barbearia</div></div></div><div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background/90 px-4 py-2 text-[10px] text-muted-foreground shadow-lg"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Demonstração animada da experiência mobile</div></div>
-        </div></div></section>
+      <section id="pwa" className="scroll-mt-20 overflow-hidden border-b border-border bg-card/30 py-20 sm:py-24">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Veja o sistema funcionando</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Do primeiro contato à gestão completa.</h2>
+            <p className="mt-4 leading-7 text-muted-foreground">Uma demonstração em duas etapas: primeiro, seu cliente agenda pelo WhatsApp; depois, você acompanha e administra a barbearia pelo painel.</p>
+          </div>
+          <div className="mt-12 grid items-center gap-12 lg:grid-cols-[.85fr_1.15fr]">
+            <div className="space-y-7">
+              <div className="flex gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Smartphone className="h-5 w-5" /></span>
+                <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Vídeo 01 · 30 segundos</p><h3 className="mt-1 text-lg font-semibold">O cliente agenda sozinho</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">A conversa no WhatsApp, o link da barbearia, a escolha do serviço, do profissional e do horário. No final, a confirmação do agendamento.</p></div>
+              </div>
+              <div className="flex gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><BarChart3 className="h-5 w-5" /></span>
+                <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Vídeo 02 · 30 segundos</p><h3 className="mt-1 text-lg font-semibold">Você controla o negócio inteiro</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">Agenda, vendas presenciais, entradas, saídas, pagamentos e resultados reunidos em um painel de gestão.</p></div>
+              </div>
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <p className="text-sm font-semibold">Dois lados. Um só sistema.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">A demonstração alterna automaticamente entre a experiência do cliente e a visão do gestor, dentro do mesmo celular.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3"><Device icon={Monitor} title="Computador" text="Gestão em tela ampla" /><Device icon={Smartphone} title="Celular" text="Acesso de qualquer lugar" /><Device icon={Tablet} title="Tablet" text="Mais espaço para visualizar" /></div>
+            </div>
+            <ProductDemo />
+          </div>
+        </div>
+      </section>
 
       <section className="border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="grid items-center gap-10 lg:grid-cols-[.9fr_1.1fr]"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Mais clareza para decidir</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Entenda melhor o movimento do seu negócio.</h2><p className="mt-4 leading-7 text-muted-foreground">Tenha os registros da operação mais organizados para acompanhar atendimentos, vendas e informações financeiras em um só ambiente.</p></div><div className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><BarChart3 className="h-5 w-5" /></span><div><p className="font-semibold">Visão financeira</p><p className="text-xs text-muted-foreground">Acompanhe os dados registrados</p></div></div><div className="mt-5 grid grid-cols-3 gap-2">{["Vendas","Pagamentos","Despesas"].map(v => <div key={v} className="rounded-lg border border-border bg-background p-3 text-center"><p className="text-[10px] text-muted-foreground">{v}</p><p className="mt-2 text-xs font-semibold">Consulte</p></div>)}</div><div className="mt-4 flex h-24 items-end gap-2 rounded-lg border border-border bg-background p-3">{[35,55,42,70,58,85,64,92,73,100,78,88].map((v,i) => <div key={i} className="flex-1 rounded-t-sm bg-primary/70" style={{height:`${v}%`}} />)}</div><p className="mt-2 text-[10px] text-muted-foreground">Ilustração visual, sem representar dados reais de faturamento.</p></div></div></div></section>
 
