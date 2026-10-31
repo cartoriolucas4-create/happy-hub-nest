@@ -161,7 +161,11 @@ function Cadastro() {
       return;
     }
     toast.success("Conta criada! Vamos configurar sua barbearia.");
-    await navigate({ to: planoValido ? "/admin/assinatura" : "/admin/configurar", search: planoValido ? { plano: planoValido } : undefined, replace: true });
+    if (planoValido) {
+      await navigate({ to: "/admin/assinatura", search: { plano: planoValido }, replace: true });
+    } else {
+      await navigate({ to: "/admin/configurar", replace: true });
+    }
     } catch (error) {
       toast.error(signupErrorMessage(error, step));
     } finally {
