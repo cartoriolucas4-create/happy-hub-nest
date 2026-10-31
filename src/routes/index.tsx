@@ -235,7 +235,7 @@ function Landing() {
 
             <article className="relative z-10 flex flex-col rounded-2xl border-2 border-primary bg-gradient-to-b from-primary/[.12] via-background to-background p-5 shadow-[0_18px_55px_-22px_hsl(var(--primary)/.55)] md:my-[-10px] md:scale-[1.035] sm:p-6">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-lg">Melhor custo-benefício</div>
-              <div className="mt-2 flex items-center justify-between"><span className="text-sm font-semibold text-primary">Anual</span><span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold text-primary">ATÉ 69% OFF</span></div>
+              <div className="mt-2 flex items-center justify-between"><span className="text-sm font-semibold text-primary">Anual</span><span className="rounded-full bg-red-500/15 px-3 py-1.5 text-[11px] font-bold text-red-500">ATÉ 69% OFF</span></div>
               <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">A escolha inteligente para quem quer profissionalizar a gestão e economizar o ano inteiro.</p>
               <div className="mt-4"><p className="text-xs text-muted-foreground">De <span className="line-through">R$ 79,90/mês</span> por</p><div className="mt-1"><span className="text-3xl font-bold tracking-tight">R$ 25,00</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div></div>
               <div className="mt-2 inline-flex w-fit rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-500">69% OFF NA ASSINATURA</div>
