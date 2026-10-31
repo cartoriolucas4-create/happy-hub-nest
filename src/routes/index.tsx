@@ -203,7 +203,61 @@ function Landing() {
 
       <section className="border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="grid items-center gap-10 lg:grid-cols-[.9fr_1.1fr]"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Mais clareza para decidir</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Entenda melhor o movimento do seu negócio.</h2><p className="mt-4 leading-7 text-muted-foreground">Tenha os registros da operação mais organizados para acompanhar atendimentos, vendas e informações financeiras em um só ambiente.</p></div><div className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><BarChart3 className="h-5 w-5" /></span><div><p className="font-semibold">Visão financeira</p><p className="text-xs text-muted-foreground">Acompanhe os dados registrados</p></div></div><div className="mt-5 grid grid-cols-3 gap-2">{["Vendas","Pagamentos","Despesas"].map(v => <div key={v} className="rounded-lg border border-border bg-background p-3 text-center"><p className="text-[10px] text-muted-foreground">{v}</p><p className="mt-2 text-xs font-semibold">Consulte</p></div>)}</div><div className="mt-4 flex h-24 items-end gap-2 rounded-lg border border-border bg-background p-3">{[35,55,42,70,58,85,64,92,73,100,78,88].map((v,i) => <div key={i} className="flex-1 rounded-t-sm bg-primary/70" style={{height:`${v}%`}} />)}</div><p className="mt-2 text-[10px] text-muted-foreground">Ilustração visual, sem representar dados reais de faturamento.</p></div></div></div></section>
 
-      <section id="planos" className="scroll-mt-20 border-b border-border bg-card/30 py-20 sm:py-24"><div className="mx-auto max-w-4xl px-5 text-center lg:px-8"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Comece hoje</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Dê o próximo passo na gestão da sua barbearia.</h2><p className="mx-auto mt-4 max-w-2xl leading-7 text-muted-foreground">Crie sua conta e conheça a plataforma por dentro. Configure sua operação no seu ritmo e veja como centralizar a gestão pode facilitar sua rotina.</p><div className="mx-auto mt-8 max-w-xl rounded-2xl border border-primary/25 bg-background p-6 text-left shadow-xl sm:p-8"><div className="flex items-start gap-4"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Zap className="h-5 w-5" /></span><div><h3 className="font-semibold">Comece sem complicação</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">Acesse, configure seus serviços e profissionais e prepare seu link de agendamento.</p></div></div><Link to="/cadastro" className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg hover:bg-primary/90">Criar minha conta <ArrowRight className="h-4 w-4" /></Link><Link to="/login" className="mt-3 flex w-full items-center justify-center rounded-md border border-border px-6 py-3 text-sm font-semibold hover:border-primary/40">Já tenho uma conta</Link></div></div></section>
+      <section id="planos" className="scroll-mt-20 border-b border-border bg-card/25 py-16 sm:py-20">
+        <div className="mx-auto max-w-6xl px-5 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Planos e assinaturas</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Escolha o plano ideal para sua barbearia.</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">Todos os recursos da plataforma. Você escolhe apenas por quanto tempo quer assinar.</p>
+          </div>
+          <div className="mx-auto mt-10 grid max-w-5xl items-stretch gap-5 md:grid-cols-3 md:gap-4">
+            <article className="flex flex-col rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 sm:p-6">
+              <div className="flex items-center justify-between"><span className="text-sm font-semibold">Mensal</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">Flexibilidade</span></div>
+              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Para começar e manter o controle mês a mês.</p>
+              <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 59,99</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div>
+              <p className="mt-1 text-[11px] text-muted-foreground">Cobrança a cada 30 dias</p>
+              <div className="my-5 h-px bg-border" />
+              <ul className="flex-1 space-y-3 text-sm">
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Todos os recursos inclusos</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso pelo computador e celular</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Sem compromisso de longo prazo</li>
+              </ul>
+              <a href="/cadastro?plano=mensal" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary">Escolher mensal <ArrowRight className="h-4 w-4"/></a>
+            </article>
+
+            <article className="relative z-10 flex flex-col rounded-2xl border-2 border-primary bg-gradient-to-b from-primary/[.10] via-background to-background p-5 shadow-[0_18px_55px_-22px_hsl(var(--primary)/.55)] md:my-[-10px] md:scale-[1.035] sm:p-6">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-lg">Melhor custo-benefício</div>
+              <div className="mt-2 flex items-center justify-between"><span className="text-sm font-semibold text-primary">Anual</span><span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold text-primary">Economize 58%</span></div>
+              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Um ano inteiro de organização pelo menor custo mensal.</p>
+              <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 299,99</span><span className="ml-1 text-xs text-muted-foreground">/ ano</span></div>
+              <p className="mt-1 text-[11px] font-medium text-primary">Equivale a R$ 25,00 por mês</p>
+              <div className="my-5 h-px bg-primary/20" />
+              <ul className="flex-1 space-y-3 text-sm">
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Todos os recursos inclusos</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Economia de R$ 419,89 no ano</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Mais tranquilidade: 12 meses</li>
+              </ul>
+              <a href="/cadastro?plano=anual" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:bg-primary/90">Escolher anual <ArrowRight className="h-4 w-4"/></a>
+            </article>
+
+            <article className="flex flex-col rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 sm:p-6">
+              <div className="flex items-center justify-between"><span className="text-sm font-semibold">Semestral</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">6 meses</span></div>
+              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Equilíbrio entre economia e flexibilidade.</p>
+              <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 239,94</span><span className="ml-1 text-xs text-muted-foreground">/ semestre</span></div>
+              <p className="mt-1 text-[11px] font-medium text-primary">Equivale a R$ 39,99 por mês</p>
+              <div className="my-5 h-px bg-border" />
+              <ul className="flex-1 space-y-3 text-sm">
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Todos os recursos inclusos</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Economia de R$ 120,00 em 6 meses</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Renovação a cada 6 meses</li>
+              </ul>
+              <a href="/cadastro?plano=semestral" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary">Escolher semestral <ArrowRight className="h-4 w-4"/></a>
+            </article>
+          </div>
+          <p className="mt-8 text-center text-xs text-muted-foreground">Pagamento seguro pela InfinitePay. Após criar sua conta e configurar sua barbearia, você poderá concluir a assinatura.</p>
+          <div className="mt-4 flex justify-center"><Link to="/login" className="text-xs font-medium text-muted-foreground underline underline-offset-4 hover:text-primary">Já tem uma conta? Entrar</Link></div>
+        </div>
+      </section>
 
       <section id="faq" className="scroll-mt-20 border-b border-border py-20 sm:py-24"><div className="mx-auto max-w-4xl px-5 lg:px-8"><div className="text-center"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Dúvidas frequentes</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Tudo o que você precisa saber para começar.</h2></div><div className="mt-10 space-y-3">{faqs.map(([question,answer]) => <details key={question} className="group rounded-xl border border-border bg-card/50 p-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium"><span>{question}</span><ChevronRight className="h-4 w-4 shrink-0 text-primary transition-transform group-open:rotate-90" /></summary><p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">{answer}</p></details>)}</div></div></section>
 
