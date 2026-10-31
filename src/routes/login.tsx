@@ -47,7 +47,7 @@ function LoginPage() {
     void getAuthenticatedArea()
       .then(async (session): Promise<void> => {
         if (!active || !session) return;
-        const requestedPlan = session.user.user_metadata?.plano_solicitado;
+        const requestedPlan = session.user.user_metadata?.["plano_solicitado"];
         if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
           await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
         } else {
@@ -85,7 +85,7 @@ function LoginPage() {
         await supabase.auth.signOut().catch(() => undefined);
         throw new Error("A conta foi autenticada, mas não foi possível carregar suas permissões. Verifique se o banco de dados está conectado e atualizado.");
       }
-      const requestedPlan = session.user.user_metadata?.plano_solicitado;
+      const requestedPlan = session.user.user_metadata?.["plano_solicitado"];
       if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
         await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
       } else {
