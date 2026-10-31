@@ -57,9 +57,10 @@ const demoScenes = [
 function ProductDemo() {
   const [scene, setScene] = useState(0);
   useEffect(() => {
-    const timer = window.setInterval(() => setScene(current => (current + 1) % demoScenes.length), 4800);
-    return () => window.clearInterval(timer);
-  }, []);
+    const delay = scene < 5 ? 3360 : 4800;
+    const timer = window.setTimeout(() => setScene(current => (current + 1) % demoScenes.length), delay);
+    return () => window.clearTimeout(timer);
+  }, [scene]);
   const current = demoScenes[scene];
   const manager = current.phase === "manager";
   return <div className="product-demo-wrap">
@@ -68,7 +69,7 @@ function ProductDemo() {
       <div className="product-demo-island" />
       <div className="product-demo-status"><span>9:41</span><span>●●●　▰</span></div>
       <div className="product-demo-screen">
-        <div className="demo-touch-pointer" style={{ left: `${[76,82,72,70,50,78,76,74,72,76][scene]}%`, top: `${[62,48,68,72,76,58,52,68,66,60][scene]}%` }} />
+        <div key={scene} className="demo-touch-pointer" aria-hidden="true" style={{ left: `${[44,50,52,57,50,78,76,74,72,76][scene]}%`, top: `${[33,74,43,48,78,58,52,68,66,60][scene]}%` }} />
         {scene === 0 ? <div className="demo-whatsapp">
           <div className="demo-wa-header"><span className="demo-wa-back">‹</span><span className="demo-wa-avatar">MB</span><span className="min-w-0 flex-1"><b>Minha Barbearia</b><small>Perfil comercial</small></span><Video size={16}/><Phone size={15}/><MoreVertical size={16}/></div>
           <div className="demo-wa-chat"><div className="demo-wa-date">HOJE</div><div className="demo-wa-bubble">Olá! Tudo bem? 💈<br/>Agende seu próximo horário com a gente pelo link abaixo.</div><div className="demo-wa-link"><span>🔗</span><div><b>Agende seu horário</b><small>agendocorte.com/minhabarbearia</small></div></div><div className="demo-wa-time">14:32　<CheckCheck size={11}/></div><div className="demo-wa-reply">Quero agendar! <small>14:33　✓✓</small></div></div>
