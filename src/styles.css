@@ -270,3 +270,88 @@
     }
   }
 }
+
+
+/* Landing page: readable editorial typography while preserving the black-and-gold identity. */
+.landing-page h1,
+.landing-page h2,
+.landing-page h3,
+.landing-page .font-display {
+  font-family: "Inter", "Barlow", sans-serif;
+  letter-spacing: -0.035em;
+  font-weight: 650;
+}
+.landing-page h1 { line-height: 1.08; }
+.landing-page h2 { line-height: 1.16; }
+.landing-page p,
+.landing-page a,
+.landing-page button,
+.landing-page li,
+.landing-page summary { letter-spacing: normal; }
+.landing-brand {
+  display: inline-block;
+  font-family: "Inter", "Barlow", sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: .11em;
+  color: var(--foreground);
+}
+.landing-brand span { color: var(--primary); }
+.landing-enter { animation: landing-enter .75s cubic-bezier(.2,.7,.2,1) both; }
+.landing-delay { animation-delay: .12s; }
+@keyframes landing-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.phone-shell {
+  width: 224px;
+  height: 438px;
+  padding: 10px;
+  border: 3px solid #55534e;
+  border-radius: 2.3rem;
+  background: #090909;
+  box-shadow: 0 25px 70px #0009, 0 0 0 1px #ffffff14;
+}
+.phone-island {
+  position: absolute;
+  z-index: 2;
+  top: 15px;
+  left: 50%;
+  width: 76px;
+  height: 16px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #050505;
+}
+.phone-screen {
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1.8rem;
+  padding: 29px 12px 14px;
+  color: white;
+  background: radial-gradient(circle at 80% 10%, #a9874328, transparent 38%), #151513;
+}
+.phone-demo-stage { position: relative; height: 218px; margin-top: 16px; }
+.phone-panel {
+  position: absolute;
+  inset: 0;
+  padding: 16px 12px;
+  border: 1px solid #ffffff1a;
+  border-radius: 14px;
+  background: linear-gradient(145deg,#25231e,#111110);
+  opacity: 0;
+  animation: phone-scene 12s infinite;
+}
+.phone-panel-one { animation-delay: 0s; }
+.phone-panel-two { animation-delay: 4s; }
+.phone-panel-three { animation-delay: 8s; }
+@keyframes phone-scene {
+  0%, 4% { opacity: 0; transform: translateY(10px) scale(.98); }
+  8%, 27% { opacity: 1; transform: translateY(0) scale(1); }
+  33%, 100% { opacity: 0; transform: translateY(-8px) scale(.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-enter, .phone-panel { animation: none !important; }
+  .phone-panel-one { opacity: 1; }
+  .phone-panel-two, .phone-panel-three { display: none; }
+}
