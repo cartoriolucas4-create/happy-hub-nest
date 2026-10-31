@@ -108,7 +108,7 @@ function Landing() {
   return <div className="landing-page min-h-screen bg-background text-foreground">
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 lg:h-[72px] lg:px-8">
-        <a href="#inicio" className="shrink-0" aria-label="Minha Barbearia — início"><span className="landing-brand">MINHA <span>BARBEARIA</span></span></a>
+        <a href="#inicio" className="shrink-0" aria-label="Minha Barbearia — início"><img src="/minha-barbearia-logo.webp" alt="Minha Barbearia" className="h-12 w-auto max-w-[210px] object-contain sm:h-14 sm:max-w-[250px]" /></a>
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Navegação principal">
           <a href="#inicio" className="text-sm text-muted-foreground hover:text-foreground">Início</a><a href="#demonstracao" className="text-sm text-muted-foreground hover:text-foreground">Demonstração</a><a href="#recursos" className="text-sm text-muted-foreground hover:text-foreground">Recursos</a><a href="#pwa" className="text-sm text-muted-foreground hover:text-foreground">Aplicativo</a><a href="#planos" className="text-sm text-muted-foreground hover:text-foreground">Começar</a>
         </nav>
