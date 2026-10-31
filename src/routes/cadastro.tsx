@@ -40,6 +40,7 @@ function Cadastro() {
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState(false);
 
+  const planoAtual = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("plano") : null;
   const slugFinal = slugify(slugEditado ? slug : nomeBarbearia);
   const slugReservado = isReservedPublicSlug(slugFinal);
 
@@ -159,7 +160,7 @@ function Cadastro() {
           </p>
           <Link
             to="/login"
-            search={{ plano: new URLSearchParams(window.location.search).get("plano") || undefined }}
+            search={{ plano: planoAtual || undefined }}
             className="mt-8 inline-block rounded-sm bg-primary px-7 py-3 font-display tracking-widest text-primary-foreground"
           >
             IR PARA O LOGIN
