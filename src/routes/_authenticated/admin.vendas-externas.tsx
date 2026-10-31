@@ -163,6 +163,31 @@ function SaleDialog({ search, setSearch, filtered, addItem, cart, changeQuantity
 function ProductDialog({ form, setForm, onSave, saving }: { form: ProductForm; setForm: (v: ProductForm | null) => void; onSave: () => void; saving: boolean }) {
   const unitProfit = (money(form.price) || 0) - (money(form.costPrice) || 0);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [cameraBusy, setCameraBusy] = useState(false);
+  async function readCameraPhoto(file: File | undefined) {
+    if (!file) return;
+    setCameraBusy(true);
+    try {
+      if (!("BarcodeDetector" in window) || !("createImageBitmap" in window)) {
+        toast.error("Este navegador não consegue interpretar o código pela foto. Use Ler código ou digite o número.");
+        return;
+      }
+      const Detector = (window as any).BarcodeDetector;
+      const supported = await Detector.getSupportedFormats();
+      const formats = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf", "qr_code"].filter((x) => supported.includes(x));
+      const detector = new Detector({ formats });
+      const bitmap = await createImageBitmap(file);
+      try {
+        const results = await detector.detect(bitmap);
+        if (results?.[0]?.rawValue) {
+          setForm({ ...form, barcode: String(results[0].rawValue) });
+          toast.success("Código de barras identificado pela câmera.");
+        } else toast.error("Não encontrei um código legível na foto. Tente novamente com boa iluminação.");
+      } finally { bitmap.close(); }
+    } catch (e: any) { toast.error(e?.message ?? "Não foi possível ler a foto."); }
+    finally { setCameraBusy(false); if (cameraInputRef.current) cameraInputRef.current.value = ""; }
+  }
   return <Dialog title={form.id ? "Editar produto" : "Novo produto"} onClose={() => setForm(null)}>
     <label className="block text-sm">Nome<input className={input + " mt-1"} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
     <label className="mt-4 block text-sm">Preço de venda<input className={input + " mt-1"} value={form.price ? "R$ " + form.price : ""} onChange={(e) => setForm({ ...form, price: formatBrlInput(e.target.value) })} inputMode="numeric" placeholder="R$ 0,00" /></label>
@@ -173,9 +198,14 @@ function ProductDialog({ form, setForm, onSave, saving }: { form: ProductForm; s
       <label className="block text-sm">Código de barras (opcional)</label>
       <div className="mt-1 flex gap-2">
         <input className={input + " min-w-0 flex-1"} value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value.replace(/\\s+/g, "") })} placeholder="Digite ou leia o código" />
-        <button type="button" className={btnGhost + " shrink-0"} onClick={() => setScannerOpen(true)}><Barcode className="h-4 w-4" /><span className="hidden sm:inline">Ler código</span><Camera className="h-4 w-4 sm:hidden" /></button>
+        <button type="button" className={btnGhost + " shrink-0"} onClick={() => setScannerOpen(true)}><Barcode className="h-4 w-4" /><span className="hidden sm:inline">Ler código</span></button>
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">Use a câmera do celular ou um leitor USB/Bluetooth para preencher automaticamente.</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <button type="button" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/15" onClick={() => setScannerOpen(true)}><Barcode className="h-4 w-4" /> Leitor ao vivo</button>
+        <button type="button" disabled={cameraBusy} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:brightness-105 disabled:opacity-50" onClick={() => cameraInputRef.current?.click()}><Camera className="h-4 w-4" /> {cameraBusy ? "LENDO FOTO..." : "Abrir câmera"}</button>
+      </div>
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void readCameraPhoto(e.target.files?.[0])} />
+      <p className="mt-1 text-xs text-muted-foreground">No celular, “Abrir câmera” permite fotografar o código com a câmera traseira. Também funciona com leitor USB/Bluetooth.</p>
     </div>
     <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> Ativo</label>
     <div className="mt-6 flex justify-end gap-2"><button className={btnGhost} onClick={() => setForm(null)}>Cancelar</button><button className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground" disabled={saving} onClick={onSave}>{saving ? "SALVANDO..." : "SALVAR"}</button></div>
