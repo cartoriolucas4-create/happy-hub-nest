@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BrowserMultiFormatReader } from "@zxing/browser";
-import { ArrowUpRight, Banknote, Barcode, Check, ChevronDown, Minus, Package, Pencil, Plus, Receipt, Search, Scissors, ShoppingCart, Trash2, X, Camera } from "lucide-react";
+import { ArrowUpRight, Banknote, Barcode, Check, ChevronDown, Minus, Package, Pencil, Plus, Receipt, Search, Scissors, ShoppingCart, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, Empty, btnGhost, input } from "@/components/admin/AdminShell";
@@ -19,6 +18,24 @@ const emptyProduct: ProductForm = { name: "", description: "", price: "", costPr
 const emptyService: ServiceForm = { name: "", description: "", price: "", duration: "30", active: true };
 const fallbackPayments = ["Dinheiro", "Pix", "Cartão de débito", "Cartão de crédito", "Outro"];
 function money(value: string) { const number = Number(value.replace(/\./g, "").replace(",", ".")); return Number.isFinite(number) ? number : NaN; }
+function playBarcodeBeep() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const context = new AudioContextClass();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(1850, context.currentTime);
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.16, context.currentTime + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.12);
+    oscillator.connect(gain); gain.connect(context.destination);
+    oscillator.start(); oscillator.stop(context.currentTime + 0.13);
+    oscillator.onended = () => { void context.close(); };
+  } catch { /* áudio indisponível */ }
+}
+
 
 function CommissionPanel() {
   const { data: shop } = useShop();
@@ -134,7 +151,7 @@ function VendasExternas() {
   function closeSale() { setSaleOpen(false); setCart([]); setDiscount(""); setBarberId(""); setClientId(""); setPaymentMethod(""); setSearch(""); }
 
   const createSale = useMutation({ mutationFn: async () => { if (!cart.length) throw new Error("Adicione pelo menos um item."); if (!paymentMethod) throw new Error("Selecione a forma de pagamento."); if (discountValue > subtotal) throw new Error("O desconto não pode superar o subtotal."); const selected = paymentMethods.find((p: any) => p.name === paymentMethod); const { error } = await db.rpc("create_external_sale", { p_barber_id: barberId || null, p_client_id: clientId || null, p_payment_method: paymentMethod, p_payment_method_id: selected?.id ?? null, p_discount: discountValue, p_items: cart.map((item) => ({ service_id: item.service_id ?? null, product_id: item.product_id ?? null, quantity: item.quantity })) }); if (error) throw error; }, onSuccess: () => { toast.success("Venda realizada com sucesso."); closeSale(); qc.invalidateQueries({ queryKey: ["external-sales"] }); qc.invalidateQueries({ queryKey: ["external-sales-today"] }); qc.invalidateQueries({ queryKey: ["financial-summary"] }); qc.invalidateQueries({ queryKey: ["financial-summary-direct"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }, onError: (e: Error) => toast.error(e.message) });
-  const saveProduct = useMutation({ mutationFn: async (f: ProductForm) => { if (!shop) throw new Error("Barbearia não identificada."); const price = money(f.price); const costPrice = money(f.costPrice); if (!f.name.trim() || !Number.isFinite(price) || price < 0 || !Number.isFinite(costPrice) || costPrice < 0) throw new Error("Informe nome, preço e preço de custo válidos."); const barcode = f.barcode.trim().replace(/\\s+/g, "") || null; const payload = { barbershop_id: shop.id, name: f.name.trim(), description: f.description.trim() || null, price, cost_price: costPrice, active: f.active, barcode, updated_at: new Date().toISOString() }; const res = f.id ? await db.from("external_products").update(payload).eq("id", f.id).eq("barbershop_id", shop.id) : await db.from("external_products").insert(payload); if (res.error) throw res.error; }, onSuccess: () => { toast.success("Produto salvo!"); setProductForm(null); qc.invalidateQueries({ queryKey: ["external-products", shop?.id] }); }, onError: (e: Error) => toast.error(e.message) });
+  const saveProduct = useMutation({ mutationFn: async (f: ProductForm) => { if (!shop) throw new Error("Barbearia não identificada."); const price = money(f.price); const costPrice = money(f.costPrice); if (!f.name.trim() || !Number.isFinite(price) || price < 0 || !Number.isFinite(costPrice) || costPrice < 0) throw new Error("Informe nome, preço e preço de custo válidos."); const barcode = f.barcode.trim().replace(/\\s+/g, "") || null; const payload = { barbershop_id: shop.id, name: f.name.trim(), description: f.description.trim() || null, price, cost_price: costPrice, active: f.active, barcode, updated_at: new Date().toISOString() }; const res = f.id ? await db.from("external_products").update(payload).eq("id", f.id).eq("barbershop_id", shop.id) : await db.from("external_products").insert(payload); if (res.error) throw res.error; }, onSuccess: (_data: unknown, variables: ProductForm) => { if (variables.barcode.trim()) playBarcodeBeep(); toast.success("Produto salvo!"); setProductForm(null); qc.invalidateQueries({ queryKey: ["external-products", shop?.id] }); }, onError: (e: Error) => toast.error(e.message) });
   const deleteProduct = useMutation({ mutationFn: async (id: string) => { const { error } = await db.from("external_products").delete().eq("id", id).eq("barbershop_id", shop!.id); if (error) throw error; }, onSuccess: () => { toast.success("Produto excluído."); qc.invalidateQueries({ queryKey: ["external-products", shop?.id] }); }, onError: (e: Error) => toast.error(e.message) });
   const saveService = useMutation({ mutationFn: async (f: ServiceForm) => { if (!shop) throw new Error("Barbearia não identificada."); const price = money(f.price); const duration = Number(f.duration); if (!f.name.trim() || !Number.isFinite(price) || price < 0 || !Number.isInteger(duration) || duration < 5 || duration > 480) throw new Error("Informe nome, preço e duração válidos."); const { error } = await db.from("services").insert({ barbershop_id: shop.id, nome: f.name.trim(), descricao: f.description.trim() || null, preco: price, duracao_minutos: duration, ativo: f.active }); if (error) throw error; }, onSuccess: () => { toast.success("Serviço criado e disponível em Serviços e Vendas Externas."); setServiceForm(null); qc.invalidateQueries({ queryKey: ["external-services", shop?.id] }); qc.invalidateQueries({ queryKey: ["servicos", shop?.id] }); qc.invalidateQueries({ queryKey: ["agendar-base"] }); }, onError: (e: Error) => toast.error(e.message) });
   const cancelSale = useMutation({ mutationFn: async (id: string) => { const { error } = await db.rpc("cancel_external_sale", { p_sale_id: id }); if (error) throw error; }, onSuccess: () => { toast.success("Venda cancelada."); qc.invalidateQueries({ queryKey: ["external-sales"] }); qc.invalidateQueries({ queryKey: ["external-sales-today"] }); qc.invalidateQueries({ queryKey: ["financial-summary"] }); qc.invalidateQueries({ queryKey: ["financial-summary-direct"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }, onError: (e: Error) => toast.error(e.message) });
@@ -159,36 +176,11 @@ function VendasExternas() {
 
 function Metric({ icon: Icon, label, value, hint }: { icon: React.ElementType; label: string; value: string; hint: string }) { return <div className="rounded-xl border border-border bg-card p-4 sm:p-5"><div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span><ArrowUpRight className="h-4 w-4 text-muted-foreground/50" /></div><p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold tracking-tight">{value}</p><p className="mt-1 text-xs text-muted-foreground">{hint}</p></div>; }
 
-function SaleDialog({ search, setSearch, filtered, catalog, addItem, cart, changeQuantity, barberId, setBarberId, clientId, setClientId, paymentMethod, setPaymentMethod, paymentMethods, barbers, clients, discount, setDiscount, subtotal, discountValue, total, saving, onSubmit, onClose }: any) { const [scannerOpen, setScannerOpen] = useState(false); const handleBarcode = (code: string) => { const normalizedCode = code.trim().replace(/\\s+/g, ""); const product = catalog.find((item: CatalogItem) => item.kind === "product" && item.barcode?.trim() === normalizedCode) ?? null; if (product) { addItem(product); setScannerOpen(false); toast.success(`${product.name} adicionado à venda.`); } else { toast.error("Nenhum produto com esse código foi encontrado."); } }; return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-5" role="dialog" aria-modal="true"><div className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"><div className="flex items-center justify-between border-b border-border bg-card px-5 py-4 sm:px-6"><div><div className="flex items-center gap-2"><Receipt className="h-5 w-5 text-primary" /><h2 className="text-xl font-semibold">Nova venda</h2></div><p className="mt-1 text-xs text-muted-foreground">Venda presencial · nenhum agendamento será criado.</p></div><button className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground" onClick={onClose} aria-label="Fechar"><X className="h-5 w-5" /></button></div><div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[1fr_360px]"><div className="min-w-0 p-5 sm:p-6"><div className="flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input autoFocus value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar serviço ou produto..." className={`${input} pl-9`} /></div><button type="button" onClick={() => setScannerOpen(true)} className={`${btnGhost} rounded-lg`}><Barcode className="h-4 w-4" /> Ler código</button><button type="button" onClick={() => setSearch("")} className={`${btnGhost} rounded-lg`}><ChevronDown className="h-4 w-4" /> Ver catálogo</button></div><div className="mt-5 grid gap-3 sm:grid-cols-2">{filtered.map((item: CatalogItem) => <button key={`${item.kind}-${item.id}`} type="button" onClick={() => addItem(item)} className="flex items-center gap-3 rounded-xl border border-border p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">{item.kind === "service" ? <Scissors className="h-5 w-5" /> : <Package className="h-5 w-5" />}</span><span className="min-w-0 flex-1"><span className="block truncate font-medium">{item.name}</span><span className="block text-xs text-muted-foreground">{item.kind === "service" ? "Serviço" : "Produto"}</span></span><span className="font-semibold text-primary">{brl(item.price)}</span></button>)}{!filtered.length && <Empty>Nenhum item encontrado.</Empty>}</div></div><aside className="border-t border-border bg-card/50 p-5 sm:p-6 lg:border-l lg:border-t-0"><div className="flex items-center justify-between"><div><h3 className="font-semibold">Resumo da venda</h3><p className="text-xs text-muted-foreground">Confira antes de finalizar.</p></div><span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{cart.reduce((n: number, i: CartItem) => n + i.quantity, 0)} item(ns)</span></div><div className="mt-4 space-y-2">{cart.length ? cart.map((item: CartItem) => <div key={`${item.kind}-${item.id}`} className="rounded-lg border border-border bg-background p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{item.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{brl(item.price)} cada</p></div><p className="font-semibold">{brl(item.price * item.quantity)}</p></div><div className="mt-2 flex items-center justify-end gap-2"><button type="button" onClick={() => changeQuantity(item.id, item.kind, -1)} className="rounded-md border border-border p-1.5 hover:border-primary"><Minus className="h-3.5 w-3.5" /></button><span className="w-5 text-center text-sm">{item.quantity}</span><button type="button" onClick={() => changeQuantity(item.id, item.kind, 1)} className="rounded-md border border-border p-1.5 hover:border-primary"><Plus className="h-3.5 w-3.5" /></button></div></div>) : <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground"><ShoppingCart className="mx-auto mb-2 h-6 w-6" />Adicione itens ao carrinho.</div>}</div><div className="mt-5 space-y-3"><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Barbeiro<select value={barberId} onChange={(e) => setBarberId(e.target.value)} className={`${input} mt-1`}><option value="">Selecionar (opcional)</option>{barbers.map((b: any) => <option key={b.id} value={b.id}>{b.nome}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cliente<select value={clientId} onChange={(e) => setClientId(e.target.value)} className={`${input} mt-1`}><option value="">Sem cliente</option>{clients.map((c: any) => <option key={c.id} value={c.id}>{c.nome}{c.telefone ? ` · ${c.telefone}` : ""}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Forma de pagamento<select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={`${input} mt-1`}><option value="">Selecionar forma</option>{(paymentMethods.length ? paymentMethods.map((p: any) => p.name) : fallbackPayments).map((p: string) => <option key={p} value={p}>{p}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Desconto<input value={discount} onChange={(e) => setDiscount(e.target.value.replace(/[^0-9,.]/g, ""))} placeholder="R$ 0,00" inputMode="decimal" className={`${input} mt-1`} /></label></div><div className="mt-5 border-t border-border pt-4 text-sm"><div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{brl(subtotal)}</span></div><div className="mt-2 flex justify-between text-muted-foreground"><span>Desconto</span><span>- {brl(discountValue)}</span></div><div className="mt-3 flex items-end justify-between"><span className="font-semibold">Total</span><span className="text-2xl font-bold text-primary">{brl(total)}</span></div></div><button disabled={saving || !cart.length} onClick={onSubmit} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-semibold tracking-wide text-primary-foreground shadow-lg shadow-primary/10 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"><Check className="h-4 w-4" />{saving ? "FINALIZANDO..." : "FINALIZAR VENDA"}</button></aside></div></div></div>; }
+function SaleDialog({ search, setSearch, filtered, catalog, addItem, cart, changeQuantity, barberId, setBarberId, clientId, setClientId, paymentMethod, setPaymentMethod, paymentMethods, barbers, clients, discount, setDiscount, subtotal, discountValue, total, saving, onSubmit, onClose }: any) { const [scannerOpen, setScannerOpen] = useState(false); const handleBarcode = (code: string) => { const normalizedCode = code.trim().replace(/\\s+/g, ""); const product = catalog.find((item: CatalogItem) => item.kind === "product" && item.barcode?.trim() === normalizedCode) ?? null; if (product) { addItem(product); playBarcodeBeep(); toast.success(`${product.name} adicionado ao carrinho.`); } else { toast.error("Nenhum produto com esse código foi encontrado."); } }; return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-5" role="dialog" aria-modal="true"><div className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"><div className="flex items-center justify-between border-b border-border bg-card px-5 py-4 sm:px-6"><div><div className="flex items-center gap-2"><Receipt className="h-5 w-5 text-primary" /><h2 className="text-xl font-semibold">Nova venda</h2></div><p className="mt-1 text-xs text-muted-foreground">Venda presencial · nenhum agendamento será criado.</p></div><button className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground" onClick={onClose} aria-label="Fechar"><X className="h-5 w-5" /></button></div><div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[1fr_360px]"><div className="min-w-0 p-5 sm:p-6"><div className="flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input autoFocus value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar serviço ou produto..." className={`${input} pl-9`} /></div><button type="button" onClick={() => setScannerOpen(true)} className={`${btnGhost} rounded-lg`}><Barcode className="h-4 w-4" /> Ler código</button><button type="button" onClick={() => setSearch("")} className={`${btnGhost} rounded-lg`}><ChevronDown className="h-4 w-4" /> Ver catálogo</button></div><div className="mt-5 grid gap-3 sm:grid-cols-2">{filtered.map((item: CatalogItem) => <button key={`${item.kind}-${item.id}`} type="button" onClick={() => addItem(item)} className="flex items-center gap-3 rounded-xl border border-border p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">{item.kind === "service" ? <Scissors className="h-5 w-5" /> : <Package className="h-5 w-5" />}</span><span className="min-w-0 flex-1"><span className="block truncate font-medium">{item.name}</span><span className="block text-xs text-muted-foreground">{item.kind === "service" ? "Serviço" : "Produto"}</span></span><span className="font-semibold text-primary">{brl(item.price)}</span></button>)}{!filtered.length && <Empty>Nenhum item encontrado.</Empty>}</div></div><aside className="border-t border-border bg-card/50 p-5 sm:p-6 lg:border-l lg:border-t-0"><div className="flex items-center justify-between"><div><h3 className="font-semibold">Resumo da venda</h3><p className="text-xs text-muted-foreground">Confira antes de finalizar.</p></div><span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{cart.reduce((n: number, i: CartItem) => n + i.quantity, 0)} item(ns)</span></div><div className="mt-4 space-y-2">{cart.length ? cart.map((item: CartItem) => <div key={`${item.kind}-${item.id}`} className="rounded-lg border border-border bg-background p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{item.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{brl(item.price)} cada</p></div><p className="font-semibold">{brl(item.price * item.quantity)}</p></div><div className="mt-2 flex items-center justify-end gap-2"><button type="button" onClick={() => changeQuantity(item.id, item.kind, -1)} className="rounded-md border border-border p-1.5 hover:border-primary"><Minus className="h-3.5 w-3.5" /></button><span className="w-5 text-center text-sm">{item.quantity}</span><button type="button" onClick={() => changeQuantity(item.id, item.kind, 1)} className="rounded-md border border-border p-1.5 hover:border-primary"><Plus className="h-3.5 w-3.5" /></button></div></div>) : <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground"><ShoppingCart className="mx-auto mb-2 h-6 w-6" />Adicione itens ao carrinho.</div>}</div><div className="mt-5 space-y-3"><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Barbeiro<select value={barberId} onChange={(e) => setBarberId(e.target.value)} className={`${input} mt-1`}><option value="">Selecionar (opcional)</option>{barbers.map((b: any) => <option key={b.id} value={b.id}>{b.nome}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cliente<select value={clientId} onChange={(e) => setClientId(e.target.value)} className={`${input} mt-1`}><option value="">Sem cliente</option>{clients.map((c: any) => <option key={c.id} value={c.id}>{c.nome}{c.telefone ? ` · ${c.telefone}` : ""}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Forma de pagamento<select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={`${input} mt-1`}><option value="">Selecionar forma</option>{(paymentMethods.length ? paymentMethods.map((p: any) => p.name) : fallbackPayments).map((p: string) => <option key={p} value={p}>{p}</option>)}</select></label><label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Desconto<input value={discount} onChange={(e) => setDiscount(e.target.value.replace(/[^0-9,.]/g, ""))} placeholder="R$ 0,00" inputMode="decimal" className={`${input} mt-1`} /></label></div><div className="mt-5 border-t border-border pt-4 text-sm"><div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{brl(subtotal)}</span></div><div className="mt-2 flex justify-between text-muted-foreground"><span>Desconto</span><span>- {brl(discountValue)}</span></div><div className="mt-3 flex items-end justify-between"><span className="font-semibold">Total</span><span className="text-2xl font-bold text-primary">{brl(total)}</span></div></div><button disabled={saving || !cart.length} onClick={onSubmit} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-semibold tracking-wide text-primary-foreground shadow-lg shadow-primary/10 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"><Check className="h-4 w-4" />{saving ? "FINALIZANDO..." : "FINALIZAR VENDA"}</button></aside></div></div></div>; }
 
 function ProductDialog({ form, setForm, onSave, saving }: { form: ProductForm; setForm: (v: ProductForm | null) => void; onSave: () => void; saving: boolean }) {
   const unitProfit = (money(form.price) || 0) - (money(form.costPrice) || 0);
   const [scannerOpen, setScannerOpen] = useState(false);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [cameraBusy, setCameraBusy] = useState(false);
-  async function readCameraPhoto(file: File | undefined) {
-    if (!file) return;
-    setCameraBusy(true);
-    try {
-      if (!("BarcodeDetector" in window) || !("createImageBitmap" in window)) {
-        toast.error("Este navegador não consegue interpretar o código pela foto. Use Ler código ou digite o número.");
-        return;
-      }
-      const Detector = (window as any).BarcodeDetector;
-      const supported = await Detector.getSupportedFormats();
-      const formats = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf", "qr_code"].filter((x) => supported.includes(x));
-      const detector = new Detector({ formats });
-      const bitmap = await createImageBitmap(file);
-      try {
-        const results = await detector.detect(bitmap);
-        if (results?.[0]?.rawValue) {
-          setForm({ ...form, barcode: String(results[0].rawValue) });
-          toast.success("Código de barras identificado pela câmera.");
-        } else toast.error("Não encontrei um código legível na foto. Tente novamente com boa iluminação.");
-      } finally { bitmap.close(); }
-    } catch (e: any) { toast.error(e?.message ?? "Não foi possível ler a foto."); }
-    finally { setCameraBusy(false); if (cameraInputRef.current) cameraInputRef.current.value = ""; }
-  }
   return <Dialog title={form.id ? "Editar produto" : "Novo produto"} onClose={() => setForm(null)}>
     <label className="block text-sm">Nome<input className={input + " mt-1"} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
     <label className="mt-4 block text-sm">Preço de venda<input className={input + " mt-1"} value={form.price ? "R$ " + form.price : ""} onChange={(e) => setForm({ ...form, price: formatBrlInput(e.target.value) })} inputMode="numeric" placeholder="R$ 0,00" /></label>
@@ -199,14 +191,9 @@ function ProductDialog({ form, setForm, onSave, saving }: { form: ProductForm; s
       <label className="block text-sm">Código de barras (opcional)</label>
       <div className="mt-1 flex gap-2">
         <input className={input + " min-w-0 flex-1"} value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value.replace(/\\s+/g, "") })} placeholder="Digite ou leia o código" />
-        <button type="button" className={btnGhost + " shrink-0"} onClick={() => setScannerOpen(true)}><Barcode className="h-4 w-4" /><span className="hidden sm:inline">Ler código</span></button>
+        <button type="button" className={btnGhost + " shrink-0"} onClick={() => setScannerOpen(true)}><Barcode className="h-4 w-4" /><span className="hidden sm:inline">Ativar leitor</span></button>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <button type="button" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/15" onClick={() => setScannerOpen(true)}><Barcode className="h-4 w-4" /> Leitor ao vivo</button>
-        <button type="button" disabled={cameraBusy} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:brightness-105 disabled:opacity-50" onClick={() => cameraInputRef.current?.click()}><Camera className="h-4 w-4" /> {cameraBusy ? "LENDO FOTO..." : "Abrir câmera"}</button>
-      </div>
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void readCameraPhoto(e.target.files?.[0])} />
-      <p className="mt-1 text-xs text-muted-foreground">No celular, “Abrir câmera” permite fotografar o código com a câmera traseira. Também funciona com leitor USB/Bluetooth.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Ative o leitor USB/Bluetooth e bipe o código. O campo será preenchido automaticamente, sem abrir o teclado do celular.</p>
     </div>
     <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> Ativo</label>
     <div className="mt-6 flex justify-end gap-2"><button className={btnGhost} onClick={() => setForm(null)}>Cancelar</button><button className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground" disabled={saving} onClick={onSave}>{saving ? "SALVANDO..." : "SALVAR"}</button></div>
@@ -214,57 +201,31 @@ function ProductDialog({ form, setForm, onSave, saving }: { form: ProductForm; s
   </Dialog>;
 }
 function BarcodeScanner({ onDetected, onClose }: { onDetected: (code: string) => void; onClose: () => void }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const [manual, setManual] = useState("");
-  const [cameraReady, setCameraReady] = useState(false);
   const onDetectedRef = useRef(onDetected);
   onDetectedRef.current = onDetected;
-  const lastCodeRef = useRef("");
-  useEffect(() => {
-    let controls: { stop: () => void } | undefined;
-    let active = true;
-    const reader = new BrowserMultiFormatReader();
-    const start = async () => {
-      try {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          setError("A câmera exige acesso seguro (HTTPS) e suporte do navegador.");
-          return;
-        }
-        controls = await reader.decodeFromVideoDevice(undefined, videoRef.current!, (result, scanError) => {
-          if (!active || !result) return;
-          const code = result.getText().trim();
-          if (!code || code === lastCodeRef.current) return;
-          lastCodeRef.current = code;
-          active = false;
-          onDetectedRef.current(code);
-        });
-        if (active) setCameraReady(true);
-      } catch (e: any) {
-        setError(e?.name === "NotAllowedError" ? "Permita o acesso à câmera para ler o código." : e?.message ?? "Não foi possível abrir a câmera.");
-      }
-    };
-    if (videoRef.current) void start();
-    return () => { active = false; controls?.stop(); };
-  }, []);
-  return <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/85 p-3 sm:p-4" role="dialog" aria-modal="true">
-    <div className="w-full max-w-lg overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3"><div><h3 className="text-lg font-semibold">Leitor de código de barras</h3><p className="text-xs text-muted-foreground">Aponte a câmera para o código do produto</p></div><button type="button" className={btnGhost} onClick={onClose}><X className="h-4 w-4" /></button></div>
-      <div className="relative mt-3 mx-3 overflow-hidden rounded-lg bg-black">
-        <video ref={videoRef} className="aspect-[4/3] w-full object-cover" playsInline muted />
-        <div className="pointer-events-none absolute inset-x-[8%] top-1/2 -translate-y-1/2">
-          <div className="h-16 rounded-lg border border-red-500/80 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
-          <div className="absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 bg-red-500 shadow-[0_0_8px_2px_rgba(239,68,68,0.9)] animate-pulse" />
-        </div>
-        {!cameraReady && !error && <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm text-white">Iniciando câmera...</div>}
-      </div>
-      <div className="px-4 pb-4 pt-3">
-        <p className="text-sm text-muted-foreground">{error || "Enquadre o código dentro da área e alinhe as barras com a linha vermelha."}</p>
-        <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (manual.trim()) onDetected(manual.trim()); }}>
-          <input autoFocus className={input + " min-w-0 flex-1"} value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Leitor USB/Bluetooth ou digite o código" />
-          <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit" disabled={!manual.trim()}>Usar</button>
+  const focusReader = () => { requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true })); };
+  useEffect(() => { focusReader(); }, []);
+  const submitCode = (value: string) => {
+    const code = value.trim().replace(/\\s+/g, "");
+    if (!code) return;
+    playBarcodeBeep();
+    onDetectedRef.current(code);
+    setManual("");
+    focusReader();
+  };
+  return <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-3 sm:p-4" role="dialog" aria-modal="true">
+    <div className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3"><div><h3 className="text-lg font-semibold">Leitor de código de barras</h3><p className="text-xs text-muted-foreground">Leitor USB/Bluetooth pronto para uso</p></div><button type="button" className={btnGhost} onClick={onClose}><X className="h-4 w-4" /></button></div>
+      <div className="p-4">
+        <div className="rounded-xl border border-primary/40 bg-primary/5 p-4 text-center"><Barcode className="mx-auto h-10 w-10 text-primary" /><p className="mt-2 font-semibold">Aguardando leitura...</p><p className="mt-1 text-xs text-muted-foreground">Bipe o produto. O código será capturado automaticamente.</p></div>
+        <form className="mt-4" onSubmit={(e) => { e.preventDefault(); submitCode(manual); }}>
+          <label className="mb-1 block text-sm font-medium">Campo de leitura</label>
+          <input ref={inputRef} autoFocus inputMode="none" autoComplete="off" autoCorrect="off" spellCheck={false} className={input + " w-full text-lg tracking-wider"} value={manual} onChange={(e) => setManual(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submitCode(manual); } }} placeholder="Pronto para receber o código" />
+          <button className="mt-3 w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground" type="submit" disabled={!manual.trim()}>Confirmar código digitado</button>
         </form>
-        <p className="mt-2 text-xs text-muted-foreground">Também aceita leitor USB/Bluetooth: clique no campo de código e pressione Enter após a leitura.</p>
+        <p className="mt-3 text-xs text-muted-foreground">O campo fica selecionado automaticamente e o teclado virtual é desativado. Na tela de venda, você pode bipar vários produtos seguidos sem fechar o leitor.</p>
       </div>
     </div>
   </div>;
