@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ComprarRouteImport } from './routes/comprar'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
@@ -17,6 +18,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugAgendarRouteImport } from './routes/$slug.agendar'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAssinaturaRouteImport } from './routes/_authenticated/admin.assinatura'
 import { Route as AuthenticatedAdminAgendaRouteImport } from './routes/_authenticated/admin.agenda'
 import { Route as AuthenticatedAdminAgendamentosRouteImport } from './routes/_authenticated/admin.agendamentos'
 import { Route as AuthenticatedAdminAutorizacaoRouteImport } from './routes/_authenticated/admin.autorizacao'
@@ -77,6 +79,16 @@ const SlugAgendarRoute = SlugAgendarRouteImport.update({
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ComprarRoute = ComprarRouteImport.update({
+  id: '/comprar',
+  path: '/comprar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminAssinaturaRoute = AuthenticatedAdminAssinaturaRouteImport.update({
+  id: '/admin/assinatura',
+  path: '/admin/assinatura',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminAgendaRoute =
@@ -213,6 +225,10 @@ const AuthenticatedSuperAdminClientesIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
+  '/comprar': typeof ComprarRoute
+  '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
+  '/comprar': typeof ComprarRoute
+  '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/$slug/agendar': typeof SlugAgendarRoute
@@ -282,6 +298,7 @@ export interface FileRoutesById {
   '/$slug/agendar': typeof SlugAgendarRoute
   '/$slug/': typeof SlugIndexRoute
   '/_authenticated/admin/agenda': typeof AuthenticatedAdminAgendaRoute
+  '/_authenticated/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/_authenticated/admin/agendamentos': typeof AuthenticatedAdminAgendamentosRoute
   '/_authenticated/admin/autorizacao': typeof AuthenticatedAdminAutorizacaoRoute
   '/_authenticated/admin/barbeiros': typeof AuthenticatedAdminBarbeirosRoute
@@ -310,6 +327,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cadastro'
+    | '/comprar'
+    | '/admin/assinatura'
+    | '/comprar'
+    | '/admin/assinatura'
     | '/login'
     | '/reset-password'
     | '/$slug/agendar'
@@ -378,6 +399,7 @@ export interface FileRouteTypes {
     | '/$slug/agendar'
     | '/$slug/'
     | '/_authenticated/admin/agenda'
+    | '/_authenticated/admin/assinatura'
     | '/_authenticated/admin/agendamentos'
     | '/_authenticated/admin/autorizacao'
     | '/_authenticated/admin/barbeiros'
@@ -406,6 +428,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   CadastroRoute: typeof CadastroRoute
+  ComprarRoute: typeof ComprarRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SlugAgendarRoute: typeof SlugAgendarRoute
@@ -470,6 +493,20 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/comprar': {
+      id: '/comprar'
+      path: '/comprar'
+      fullPath: '/comprar'
+      preLoaderRoute: typeof ComprarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/assinatura': {
+      id: '/_authenticated/admin/assinatura'
+      path: '/admin/assinatura'
+      fullPath: '/admin/assinatura'
+      preLoaderRoute: typeof AuthenticatedAdminAssinaturaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/agenda': {
@@ -630,6 +667,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminAssinaturaRoute: typeof AuthenticatedAdminAssinaturaRoute
   AuthenticatedAdminAgendaRoute: typeof AuthenticatedAdminAgendaRoute
   AuthenticatedAdminAgendamentosRoute: typeof AuthenticatedAdminAgendamentosRoute
   AuthenticatedAdminAutorizacaoRoute: typeof AuthenticatedAdminAutorizacaoRoute
@@ -654,6 +692,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminAssinaturaRoute: AuthenticatedAdminAssinaturaRoute,
   AuthenticatedAdminAgendaRoute: AuthenticatedAdminAgendaRoute,
   AuthenticatedAdminAgendamentosRoute: AuthenticatedAdminAgendamentosRoute,
   AuthenticatedAdminAutorizacaoRoute: AuthenticatedAdminAutorizacaoRoute,
@@ -683,6 +722,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  ComprarRoute: ComprarRoute,
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CadastroRoute: CadastroRoute,
