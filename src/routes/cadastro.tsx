@@ -100,6 +100,10 @@ function Cadastro() {
       return;
     }
 
+    const params = new URLSearchParams(window.location.search);
+    const planoSolicitado = params.get("plano");
+    const planoValido = planoSolicitado === "mensal" || planoSolicitado === "semestral" || planoSolicitado === "anual" ? planoSolicitado : null;
+
     setLoading(true);
     let step: "slug" | "auth" = "slug";
     try {
@@ -125,6 +129,7 @@ function Cadastro() {
           telefone: telefone.trim(),
           barbershop_nome: nomeBarbearia.trim(),
           barbershop_slug: slugFinal,
+          plano_solicitado: planoValido,
         },
       },
     });
@@ -134,7 +139,7 @@ function Cadastro() {
       return;
     }
     toast.success("Conta criada! Vamos configurar sua barbearia.");
-    await navigate({ to: "/admin/configurar", replace: true });
+    await navigate({ to: planoValido ? "/admin/assinatura" : "/admin/configurar", search: planoValido ? { plano: planoValido } : undefined, replace: true });
     } catch (error) {
       toast.error(signupErrorMessage(error, step));
     } finally {
@@ -154,6 +159,7 @@ function Cadastro() {
           </p>
           <Link
             to="/login"
+            search={{ plano: new URLSearchParams(window.location.search).get("plano") || undefined }}
             className="mt-8 inline-block rounded-sm bg-primary px-7 py-3 font-display tracking-widest text-primary-foreground"
           >
             IR PARA O LOGIN
