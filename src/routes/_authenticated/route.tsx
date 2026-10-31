@@ -7,6 +7,14 @@ export const Route = createFileRoute("/_authenticated")({
     const session = await getAuthenticatedArea();
     if (!session) throw redirect({ to: "/login" });
     const wantsSuperAdmin = location.pathname.startsWith("/super-admin");
+    if (session.area === "barbershop" && !location.pathname.startsWith("/admin/assinatura")) {
+      const { data: licenseRows, error: licenseError } = await (await import("@/integrations/supabase/client")).supabase.rpc("minha_licenca");
+      if (licenseError) throw licenseError;
+      const license = Array.isArray(licenseRows) ? licenseRows[0] : null;
+      if (license?.status === "expired") {
+        throw redirect({ to: "/admin/assinatura", search: { trial: "expirado" } as any, replace: true });
+      }
+    }
     if (
       (session.area === "super-admin" && !wantsSuperAdmin) ||
       (session.area !== "super-admin" && wantsSuperAdmin)
