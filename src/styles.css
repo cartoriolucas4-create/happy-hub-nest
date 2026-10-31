@@ -453,3 +453,7 @@
 @media(min-width:1024px) { .product-demo-wrap { grid-template-columns:330px minmax(0,1fr); align-items:center; gap:28px; } }
 @media(max-width:639px) { .product-demo-phone { width:min(100%,310px); height:620px; border-radius:38px; }.product-demo-caption { padding:15px; } }
 @media(prefers-reduced-motion:reduce) { .product-demo-phone { scroll-behavior:auto; } }
+
+@keyframes demo-scene-in { from { opacity:0; transform:translateY(8px) scale(.99); } to { opacity:1; transform:translateY(0) scale(1); } }
+.product-demo-screen > div { animation:demo-scene-in .42s cubic-bezier(.2,.7,.2,1) both; }
+@media(prefers-reduced-motion:reduce) { .product-demo-screen > div { animation:none!important; } }
