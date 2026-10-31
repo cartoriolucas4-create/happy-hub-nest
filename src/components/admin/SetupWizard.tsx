@@ -66,7 +66,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
     const formatted = formatBrlInput(raw);
     let caret = 0;
     let digitsFound = 0;
-    const digitsBeforeCursor = raw.slice(0, cursor).replace(/\D/g, "").length;
+    while (caret < formatted.length && digitsFound < digitsBeforeCursor) {
       if (/\d/.test(formatted[caret])) digitsFound += 1;
       caret += 1;
     }
