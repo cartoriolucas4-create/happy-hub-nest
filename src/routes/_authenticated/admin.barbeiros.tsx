@@ -103,6 +103,15 @@ function Barbeiros() {
           active: true,
         });
         if (addRule.error) throw addRule.error;
+
+        // Reprocessa atendimentos já confirmados/concluídos que ainda não tinham regra.
+        // O trigger usa ON CONFLICT DO NOTHING, preservando comissões históricas existentes.
+        const syncExisting = await supabase.from("appointments")
+          .update({ status: "confirmado" })
+          .eq("barbershop_id", shop.id)
+          .eq("barber_id", id!)
+          .in("status", ["confirmado", "concluido"]);
+        if (syncExisting.error) throw syncExisting.error;
       }
 
       const verify = await supabase.from("barbers").select("id,nome,telefone,descricao,foto_url,ativo").eq("id", id!).eq("barbershop_id", shop.id).single();
