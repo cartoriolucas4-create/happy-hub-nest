@@ -48,7 +48,8 @@ function Cadastro() {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!active || !sessionData.session?.user) return;
       await supabase.auth.updateUser({ data: { compra_order_nsu: compra } });
-      const { data: claim, error } = await supabase.rpc("claim_paid_public_checkout", { p_order_nsu: compra });
+      const { data: claimData, error } = await (supabase as any).rpc("claim_paid_public_checkout", { p_order_nsu: compra });
+      const claim = claimData as { ok?: boolean; reason?: string } | null;
       if (!active) return;
       if (!error && claim?.ok) {
         window.location.assign("/admin");
