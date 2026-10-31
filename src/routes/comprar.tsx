@@ -32,7 +32,9 @@ function ComprarPage() {
       if (typeof data?.checkout_url !== "string" || !data.checkout_url.startsWith("https://")) {
         throw new Error(data?.details || data?.error || "Não foi possível gerar o pagamento.");
       }
-      window.location.assign(data.checkout_url);
+      const checkoutWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
+      if (checkoutWindow) checkoutWindow.location.href = data.checkout_url;
+      else throw new Error("O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.");
     } catch (e) {
       console.error("[Compra pública] erro ao iniciar checkout", e);
       setError("Não foi possível iniciar o pagamento. Tente novamente em instantes.");
