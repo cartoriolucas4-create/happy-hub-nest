@@ -40,6 +40,25 @@ function Cadastro() {
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState(false);
 
+  useEffect(() => {
+    const compra = new URLSearchParams(window.location.search).get("compra");
+    if (!compra) return;
+    let active = true;
+    void (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!active || !sessionData.session?.user) return;
+      await supabase.auth.updateUser({ data: { compra_order_nsu: compra } });
+      const { data: claim, error } = await supabase.rpc("claim_paid_public_checkout", { p_order_nsu: compra });
+      if (!active) return;
+      if (!error && claim?.ok) {
+        window.location.assign("/admin");
+      } else if (!error && claim?.reason === "barbershop_not_created") {
+        window.location.assign("/admin/configurar");
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   const planoAtual = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("plano") : null;
   const slugFinal = slugify(slugEditado ? slug : nomeBarbearia);
   const slugReservado = isReservedPublicSlug(slugFinal);
