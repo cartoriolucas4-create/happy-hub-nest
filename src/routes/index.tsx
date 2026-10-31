@@ -57,7 +57,7 @@ const demoScenes = [
 function ProductDemo() {
   const [scene, setScene] = useState(0);
   useEffect(() => {
-    const timer = window.setInterval(() => setScene(current => (current + 1) % demoScenes.length), 6000);
+    const timer = window.setInterval(() => setScene(current => (current + 1) % demoScenes.length), 4800);
     return () => window.clearInterval(timer);
   }, []);
   const current = demoScenes[scene];
@@ -68,6 +68,7 @@ function ProductDemo() {
       <div className="product-demo-island" />
       <div className="product-demo-status"><span>9:41</span><span>●●●　▰</span></div>
       <div className="product-demo-screen">
+        <div className="demo-touch-pointer" style={{ left: `${[76,82,72,70,50,78,76,74,72,76][scene]}%`, top: `${[62,48,68,72,76,58,52,68,66,60][scene]}%` }} />
         {scene === 0 ? <div className="demo-whatsapp">
           <div className="demo-wa-header"><span className="demo-wa-back">‹</span><span className="demo-wa-avatar">MB</span><span className="min-w-0 flex-1"><b>Minha Barbearia</b><small>Perfil comercial</small></span><Video size={16}/><Phone size={15}/><MoreVertical size={16}/></div>
           <div className="demo-wa-chat"><div className="demo-wa-date">HOJE</div><div className="demo-wa-bubble">Olá! Tudo bem? 💈<br/>Agende seu próximo horário com a gente pelo link abaixo.</div><div className="demo-wa-link"><span>🔗</span><div><b>Agende seu horário</b><small>agendocorte.com/minhabarbearia</small></div></div><div className="demo-wa-time">14:32　<CheckCheck size={11}/></div><div className="demo-wa-reply">Quero agendar! <small>14:33　✓✓</small></div></div>
@@ -92,7 +93,7 @@ function ProductDemo() {
       </div>
     </div>
     <div className="product-demo-caption">
-      <div className="flex items-center justify-between gap-3"><span className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Demonstração automática · 60s</span><span className="text-[10px] text-muted-foreground">{manager ? "02 / 02 · GESTOR" : "01 / 02 · CLIENTE"}</span></div>
+      <div className="flex items-center justify-between gap-3"><span className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Uma jornada do agendamento à gestão</span><span className="text-[10px] text-muted-foreground">{manager ? "02 / 02 · GESTOR" : "01 / 02 · CLIENTE"}</span></div>
       <h3 className="mt-2 text-lg font-semibold">{current.label}</h3><p className="mt-1 min-h-10 text-sm leading-6 text-muted-foreground">{current.caption}</p>
       <div className="mt-4 flex gap-1.5">{demoScenes.map((s,i)=><button key={s.label} type="button" aria-label={`Ir para etapa ${i+1}: ${s.label}`} onClick={()=>setScene(i)} className={`h-1.5 flex-1 rounded-full transition-colors ${i===scene?"bg-primary":"bg-border"}`}/>)}</div>
       <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground"><span>CLIENTE</span><span>GESTOR</span></div>
