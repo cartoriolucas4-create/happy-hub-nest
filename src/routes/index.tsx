@@ -221,7 +221,7 @@ function Landing() {
               <div className="mt-4"><p className="text-xs text-muted-foreground">De <span className="line-through">R$ 79,90/mês</span> por</p><div className="mt-1"><span className="text-3xl font-bold tracking-tight">R$ 59,90</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div></div>
               <div className="mt-2 inline-flex w-fit rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-500">25% OFF NA ASSINATURA</div>
               <p className="mt-2 text-[11px] text-muted-foreground">Economize R$ 20,00 por mês em relação ao preço normal.</p>
-              <div className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 53,91</strong><span className="block">Total com desconto no Pix</span></div>
+              <div className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 53,91 / mês</strong></div>
               <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-primary"><CreditCard className="h-4 w-4"/> Ou parcele em até 12x sem juros no cartão de crédito.</p>
               <div className="my-5 h-px bg-border" />
               <ul className="flex-1 space-y-3 text-sm">
@@ -237,11 +237,9 @@ function Landing() {
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-lg">Melhor custo-benefício</div>
               <div className="mt-2 flex items-center justify-between"><span className="text-sm font-semibold text-primary">Anual</span><span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold text-primary">ATÉ 69% OFF</span></div>
               <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">A escolha inteligente para quem quer profissionalizar a gestão e economizar o ano inteiro.</p>
-              <div className="mt-4"><p className="text-xs text-muted-foreground">De <span className="line-through">R$ 958,80</span> por</p><div className="mt-1"><span className="text-3xl font-bold tracking-tight">R$ 25,00</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div></div>
-              <div className="mt-1 text-[11px] text-muted-foreground">R$ 300,00 no total por 12 meses</div>
+              <div className="mt-4"><p className="text-xs text-muted-foreground">De <span className="line-through">R$ 79,90/mês</span> por</p><div className="mt-1"><span className="text-3xl font-bold tracking-tight">R$ 25,00</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div></div>
               <div className="mt-2 inline-flex w-fit rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-500">69% OFF NA ASSINATURA</div>
-              <p className="mt-2 text-[11px] text-muted-foreground">Você economiza R$ 658,80 em relação ao preço normal.</p>
-              <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 270,00 no total</strong><span className="block">Equivalente a R$ 22,50/mês</span></div>
+              <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 22,50 / mês</strong></div>
               <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-primary"><CreditCard className="h-4 w-4"/> Ou parcele em até 12x sem juros no cartão de crédito.</p>
               <div className="my-5 h-px bg-primary/20" />
               <ul className="flex-1 space-y-3 text-sm">
@@ -260,11 +258,9 @@ function Landing() {
             <article className="flex flex-col rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 sm:p-6">
               <div className="flex items-center justify-between"><span className="text-sm font-semibold">Semestral</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">6 meses</span></div>
               <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Para quem busca um período maior de organização com economia intermediária.</p>
-              <div className="mt-4"><p className="text-xs text-muted-foreground">De <span className="line-through">R$ 479,40</span> por</p><div className="mt-1"><span className="text-3xl font-bold tracking-tight">R$ 39,90</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div></div>
-              <p className="mt-1 text-[11px] text-muted-foreground">R$ 239,40 no total por 6 meses</p>
+              <div className="mt-4"><p className="text-xs text-muted-foreground">De <span className="line-through">R$ 79,90/mês</span> por</p><div className="mt-1"><span className="text-3xl font-bold tracking-tight">R$ 39,90</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div></div>
               <div className="mt-2 inline-flex w-fit rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-500">50% OFF NA ASSINATURA</div>
-              <p className="mt-2 text-[11px] text-muted-foreground">Economize R$ 240,00 em relação ao preço normal.</p>
-              <div className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 215,46 no total</strong><span className="block">Equivalente a R$ 35,91/mês</span></div>
+              <div className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-600 dark:text-emerald-400"><span className="font-bold">◆ PIX · MAIS 10% OFF</span><strong className="mt-1 block text-base">R$ 35,91 / mês</strong></div>
               <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-primary"><CreditCard className="h-4 w-4"/> Ou parcele em até 12x sem juros no cartão de crédito.</p>
               <div className="my-5 h-px bg-border" />
               <ul className="flex-1 space-y-3 text-sm">
