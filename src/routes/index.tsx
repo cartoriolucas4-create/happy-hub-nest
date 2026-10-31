@@ -66,13 +66,34 @@ function Landing() {
             <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground"><span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-primary" />Acesso pelo navegador</span><span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-primary" />Computador e celular</span><span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-primary" />Sua rotina em um só lugar</span></div>
           </div>
           <div className="relative mx-auto w-full max-w-[620px] landing-enter landing-delay">
-            <div className="absolute -inset-6 rounded-[2rem] bg-primary/10 blur-3xl" />
-            <div className="relative rounded-2xl border border-white/10 bg-[#10100f]/95 p-3 shadow-2xl backdrop-blur-xl sm:p-5">
-              <div className="flex items-center justify-between border-b border-white/10 px-2 pb-4"><div><p className="text-xs text-white/50">PAINEL DE GESTÃO</p><p className="mt-1 text-lg font-semibold text-white">Visão geral da barbearia</p></div><span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-semibold tracking-wider text-primary">MINHA BARBEARIA</span></div>
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"><DashboardTile icon={CalendarDays} title="Agenda" value="Atendimentos" /><DashboardTile icon={DollarSign} title="Financeiro" value="Movimentações" /><DashboardTile icon={Users} title="Clientes" value="Cadastros" /><DashboardTile icon={UserCog} title="Equipe" value="Profissionais" /></div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-[1.2fr_.8fr]"><div className="rounded-xl border border-white/10 bg-black/30 p-4"><div className="mb-3 flex items-center justify-between"><span className="text-sm font-semibold text-white">Agenda do dia</span><CalendarClock className="h-4 w-4 text-primary" /></div>{[["09:00","Corte tradicional","Confirmado"],["10:30","Corte + barba","Confirmado"],["14:00","Acabamento","Próximo"]].map(([time,service,status]) => <div key={time} className="mb-2 flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.03] p-3"><span className="text-xs font-semibold text-primary">{time}</span><div className="min-w-0 flex-1"><p className="truncate text-xs font-medium text-white">{service}</p><p className="mt-1 text-[10px] text-white/45">Atendimento</p></div><span className="text-[9px] text-white/55">{status}</span></div>)}</div><div className="rounded-xl border border-white/10 bg-black/30 p-4"><p className="text-xs font-semibold text-white">Tudo conectado</p><div className="mt-4 space-y-3">{[["Agenda","Organização"],["Clientes","Histórico"],["Equipe","Profissionais"],["Vendas","Financeiro"]].map(([a,b]) => <div key={a} className="flex items-center gap-2 text-xs"><span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary"><Check className="h-3.5 w-3.5" /></span><span className="text-white">{a}<span className="block text-[10px] text-white/45">{b}</span></span></div>)}</div></div></div>
-            </div>
-            <p className="relative mt-3 text-center text-[11px] text-muted-foreground">Prévia ilustrativa da experiência de gestão</p>
+            <div className="absolute -inset-10 rounded-[2rem] bg-primary/15 blur-3xl" />
+            <div className="dashboard-showcase relative">
+              <div className="dashboard-window">
+                <div className="flex items-center justify-between border-b border-white/10 px-4 pb-4 sm:px-5">
+                  <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary"><Scissors className="h-4 w-4" /></span><div><p className="text-[10px] tracking-wider text-white/45">MINHA BARBEARIA</p><p className="text-sm font-semibold text-white">Painel de controle</p></div></div>
+                  <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-semibold text-emerald-300">● AO VIVO</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 p-3 sm:gap-3 sm:p-5">
+                  <div className="dashboard-metric"><p>Agendamentos</p><strong>24</strong><span>+ hoje</span></div>
+                  <div className="dashboard-metric"><p>Faturamento</p><strong>R$ 1.280</strong><span>movimentação</span></div>
+                  <div className="dashboard-metric"><p>Clientes</p><strong>186</strong><span>cadastrados</span></div>
+                </div>
+                <div className="grid gap-3 px-3 pb-4 sm:grid-cols-[1.15fr_.85fr] sm:px-5">
+                  <div className="rounded-xl border border-white/10 bg-white/[.035] p-3 sm:p-4">
+                    <div className="mb-3 flex items-center justify-between"><div><p className="text-xs font-semibold text-white">Próximos horários</p><p className="mt-1 text-[9px] text-white/40">Agenda de hoje</p></div><CalendarDays className="h-4 w-4 text-primary" /></div>
+                    {[["09:00","Corte tradicional","Lucas"],["10:30","Corte + barba","Marcos"],["11:30","Degradê","Rafael"]].map(([time,service,person],i)=><div key={time} className="dashboard-appointment"><span className="text-[10px] font-bold text-primary">{time}</span><span className="min-w-0 flex-1"><b>{service}</b><small>{person}</small></span><i className={i===2?"is-next":""}>{i===2?"Próximo":"Confirmado"}</i></div>)}
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/[.035] p-3 sm:p-4">
+                    <div className="flex items-center justify-between"><p className="text-xs font-semibold text-white">Movimento</p><BarChart3 className="h-4 w-4 text-primary" /></div>
+                    <div className="dashboard-bars"><span style={{height:"34%"}}/><span style={{height:"52%"}}/><span style={{height:"43%"}}/><span style={{height:"70%"}}/><span style={{height:"58%"}}/><span style={{height:"88%"}}/><span style={{height:"100%"}}/><span style={{height:"76%"}}/></div>
+                    <div className="mt-2 flex justify-between text-[9px] text-white/35"><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span></div>
+                  </div>
+                </div>
+              </div>
+              <div className="dashboard-float dashboard-float-booking"><span className="dashboard-float-icon"><CalendarClock className="h-4 w-4" /></span><span><b>Novo agendamento</b><small>Cliente confirmou às 14:30</small></span><Check className="ml-auto h-4 w-4 text-emerald-300" /></div>
+              <div className="dashboard-float dashboard-float-payment"><span className="dashboard-float-icon"><DollarSign className="h-4 w-4" /></span><span><b>Pagamento recebido</b><small>Serviço concluído · R$ 45,00</small></span><span className="ml-auto text-[10px] font-bold text-emerald-300">+ R$ 45</span></div>
+              <div className="dashboard-float dashboard-float-team"><span className="dashboard-avatar">LR</span><span><b>Equipe em atividade</b><small>3 profissionais atendendo</small></span></div>
+            </div>            <p className="relative mt-3 text-center text-[11px] text-muted-foreground">Prévia ilustrativa da experiência de gestão</p>
           </div>
         </div>
       </section>
