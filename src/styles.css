@@ -457,3 +457,57 @@
 @keyframes demo-scene-in { from { opacity:0; transform:translateY(8px) scale(.99); } to { opacity:1; transform:translateY(0) scale(1); } }
 .product-demo-screen > div { animation:demo-scene-in .42s cubic-bezier(.2,.7,.2,1) both; }
 @media(prefers-reduced-motion:reduce) { .product-demo-screen > div { animation:none!important; } }
+
+
+/* A demonstração deve parecer uma navegação contínua, não uma sequência de slides. */
+.product-demo-screen { position:relative; isolation:isolate; }
+.product-demo-screen > div:not(.demo-touch-pointer) {
+  animation: demo-flow-transition .72s cubic-bezier(.22,.72,.18,1) both;
+  transform-origin:center;
+  will-change:transform,opacity,filter;
+}
+@keyframes demo-flow-transition {
+  0% { opacity:0; transform:translateX(22px) scale(.985); filter:blur(2px); }
+  55% { opacity:1; filter:blur(0); }
+  100% { opacity:1; transform:translateX(0) scale(1); filter:blur(0); }
+}
+.demo-touch-pointer {
+  position:absolute;
+  z-index:8;
+  width:23px;
+  height:23px;
+  border:2px solid #f2d48a;
+  border-radius:50%;
+  background:#c6a45a55;
+  box-shadow:0 0 0 5px #c6a45a22,0 3px 14px #0008;
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  transition:left .85s cubic-bezier(.2,.75,.2,1),top .85s cubic-bezier(.2,.75,.2,1);
+  animation:demo-tap-pulse 1.8s ease-in-out infinite;
+}
+.demo-touch-pointer::after {
+  content:"";
+  position:absolute;
+  right:-5px;
+  bottom:-4px;
+  width:7px;
+  height:7px;
+  border:1px solid #17140e;
+  border-radius:50%;
+  background:#f2d48a;
+}
+@keyframes demo-tap-pulse {
+  0%,100% { box-shadow:0 0 0 4px #c6a45a20,0 3px 14px #0008; }
+  50% { box-shadow:0 0 0 10px #c6a45a08,0 3px 14px #0008; }
+}
+.demo-wa-link,.demo-gold-button,.demo-barber,.demo-times span,.demo-payment-pills span {
+  transition:transform .25s ease, border-color .25s ease, filter .25s ease;
+}
+.demo-wa-link { animation:demo-link-highlight 4.8s ease-in-out infinite; }
+@keyframes demo-link-highlight {
+  0%,55%,100% { transform:scale(1); filter:brightness(1); }
+  65%,78% { transform:scale(1.025); filter:brightness(1.08); }
+}
+@media(prefers-reduced-motion:reduce) {
+  .product-demo-screen > div:not(.demo-touch-pointer),.demo-touch-pointer,.demo-wa-link { animation:none!important; transition:none!important; }
+}
