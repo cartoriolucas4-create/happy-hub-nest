@@ -89,19 +89,30 @@ function Configuracoes() {
     try {
       const path = await uploadMedia(shop.id, kind, file);
       const url = await mediaUrl(path);
-      if (kind === "logo") { setForm({ ...form, logo_url: path }); setLogoPreview(url); }
-      else { setForm({ ...form, cover_url: path }); setCoverPreview(url); }
-      toast.success("Imagem enviada. Clique em salvar para publicar.");
+      const field = kind === "logo" ? "logo_url" : "cover_url";
+      const { error } = await supabase.from("barbershops").update({ [field]: path }).eq("id", shop.id);
+      if (error) throw error;
+      setForm((current) => current ? { ...current, [field]: path } : current);
+      if (kind === "logo") setLogoPreview(url); else setCoverPreview(url);
+      await qc.invalidateQueries({ queryKey: ["shop"] });
+      toast.success("Imagem enviada e salva com sucesso.");
     } catch (e) { toast.error((e as Error).message); }
     finally { setEnviando(null); }
   }
 
-  function removerImagem(kind: "logo" | "capa") {
-    if (!form) return;
+  async function removerImagem(kind: "logo" | "capa") {
+    if (!form || !shop) return;
     const isLogo = kind === "logo";
-    if (isLogo) { setLogoPreview(null); setForm({ ...form, logo_url: "" }); if (logoInputRef.current) logoInputRef.current.value = ""; }
-    else { setCoverPreview(null); setForm({ ...form, cover_url: "" }); if (coverInputRef.current) coverInputRef.current.value = ""; }
-    toast.success(`${isLogo ? "Logo" : "Capa"} removida. Clique em salvar para publicar.`);
+    const field = isLogo ? "logo_url" : "cover_url";
+    try {
+      const { error } = await supabase.from("barbershops").update({ [field]: null }).eq("id", shop.id);
+      if (error) throw error;
+      setForm((current) => current ? { ...current, [field]: "" } : current);
+      if (isLogo) { setLogoPreview(null); if (logoInputRef.current) logoInputRef.current.value = ""; }
+      else { setCoverPreview(null); if (coverInputRef.current) coverInputRef.current.value = ""; }
+      await qc.invalidateQueries({ queryKey: ["shop"] });
+      toast.success("Imagem removida.");
+    } catch (e) { toast.error((e as Error).message); }
   }
 
   if (!form) return <AdminShell title="Configurações">Carregando...</AdminShell>;
