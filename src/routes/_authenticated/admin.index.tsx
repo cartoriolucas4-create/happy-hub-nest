@@ -105,7 +105,7 @@ function Dashboard() {
       if (!reportWindow) throw new Error("O navegador bloqueou a janela do relatório. Permita pop-ups para este site e tente novamente.");
       reportWindow.document.write("<!doctype html><title>Preparando relatório</title><body style='font-family:Arial;padding:32px;background:#111;color:#fff'>Preparando seu relatório...</body>");
       const db = supabase as any;
-      let aq = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method_id,barber_id,service_id").eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
+      // Consulta-base sem embeds: os nomes de serviços e profissionais são buscados separadamente abaixo.\n      // Isso evita a ambiguidade do PostgREST quando há mais de uma FK entre appointments e services.\n      let aq = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method_id,barber_id,service_id", { head: false }).eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
       if (reportStatus) aq = aq.eq("status", reportStatus); else aq = aq.in("status", ["confirmado","concluido"]);
 
       const [a,s,cost,cust] = await Promise.all([
