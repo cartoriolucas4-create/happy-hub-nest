@@ -511,3 +511,38 @@
 @media(prefers-reduced-motion:reduce) {
   .product-demo-screen > div:not(.demo-touch-pointer),.demo-touch-pointer,.demo-wa-link { animation:none!important; transition:none!important; }
 }
+
+
+/* Toque visível alinhado aos alvos reais da interface demonstrativa. */
+.demo-touch-pointer {
+  animation:demo-pointer-press 1.05s ease-in-out infinite;
+}
+.demo-touch-pointer::before {
+  content:"";
+  position:absolute;
+  inset:-7px;
+  border:1px solid #f2d48a;
+  border-radius:50%;
+  opacity:0;
+  animation:demo-click-ripple 1.65s ease-out infinite;
+}
+@keyframes demo-pointer-press {
+  0%,100% { transform:translate(-50%,-50%) scale(1); }
+  42%,58% { transform:translate(-50%,-50%) scale(.78); }
+}
+@keyframes demo-click-ripple {
+  0% { transform:scale(.65); opacity:0; }
+  18% { opacity:.75; }
+  75%,100% { transform:scale(1.65); opacity:0; }
+}
+.demo-wa-link {
+  position:relative;
+  border-radius:10px;
+  box-shadow:0 0 0 2px #c6a45a22,0 5px 16px #00000012;
+}
+.demo-booking .demo-gold-button {
+  box-shadow:0 4px 14px #c6a45a30;
+}
+@media(prefers-reduced-motion:reduce) {
+  .demo-touch-pointer,.demo-touch-pointer::before { animation:none!important; }
+}
