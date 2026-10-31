@@ -119,7 +119,8 @@ function VendasExternas() {
     ...services.filter((s: any) => s.ativo).map((s: any) => ({ id: s.id, name: s.nome, price: Number(s.preco), kind: "service" as const, service_id: s.id, duration: Number(s.duracao_minutos ?? 0) })),
     ...products.filter((p: any) => p.active).map((p: any) => ({ id: p.id, name: p.name, price: Number(p.price), kind: "product" as const, product_id: p.id, barcode: p.barcode ?? null })),
   ], [services, products]);
-  const filtered = catalog.filter((item) => item.name.toLowerCase().includes(search.toLowerCase().trim()));
+  const normalizedSearch = search.toLowerCase().trim();
+  const filtered = catalog.filter((item) => item.name.toLowerCase().includes(normalizedSearch) || (item.barcode ?? "").toLowerCase().includes(normalizedSearch));
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.max(0, money(discount) || 0);
   const total = Math.max(0, subtotal - discountValue);
@@ -185,6 +186,8 @@ function BarcodeScanner({ onDetected, onClose }: { onDetected: (code: string) =>
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState("");
   const [manual, setManual] = useState("");
+  const onDetectedRef = useRef(onDetected);
+  onDetectedRef.current = onDetected;
   useEffect(() => {
     let stream: MediaStream | null = null;
     let frame = 0;
@@ -207,7 +210,7 @@ function BarcodeScanner({ onDetected, onClose }: { onDetected: (code: string) =>
           if (stopped || !videoRef.current) return;
           try {
             const results = await detector.detect(videoRef.current);
-            if (results?.[0]?.rawValue) { stopped = true; onDetected(String(results[0].rawValue)); return; }
+            if (results?.[0]?.rawValue) { stopped = true; onDetectedRef.current(String(results[0].rawValue)); return; }
           } catch { /* aguarda o próximo quadro */ }
           if (!stopped) frame = requestAnimationFrame(scan);
         };
@@ -218,7 +221,7 @@ function BarcodeScanner({ onDetected, onClose }: { onDetected: (code: string) =>
     };
     void start();
     return () => { stopped = true; cancelAnimationFrame(frame); stream?.getTracks().forEach((t) => t.stop()); };
-  }, [onDetected]);
+  }, []);
   return <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4" role="dialog" aria-modal="true">
     <div className="w-full max-w-md rounded-xl border border-border bg-background p-5 shadow-2xl">
       <div className="flex items-center justify-between"><h3 className="text-lg font-semibold">Leitor de código de barras</h3><button type="button" className={btnGhost} onClick={onClose}><X className="h-4 w-4" /></button></div>
