@@ -1,5 +1,10 @@
 # Roadmap
 
+## Painel Geral exclusivo — nova solicitação
+- [ ] Auditar painel existente, autorização exclusiva, fontes reais de assinaturas InfinitePay e políticas.
+- [ ] Evoluir indicadores, clientes, licenças, assinaturas, relatórios e auditoria sem alterar pagamentos/clientes comuns.
+- [ ] Validar administrador/cliente comum e ajustes de 11 dias em dados isolados; confirmar autorização da conta sem inventar credenciais.
+
 ## Assinatura SaaS InfinitePay — solicitação atual
 - [ ] Integrar checkout autenticado, pedidos persistidos e confirmação independente/idempotente compatível com licenças existentes.
 - [ ] Adicionar planos e retorno com status real, testes das regras e verificação mobile.
