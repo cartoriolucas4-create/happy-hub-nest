@@ -41,7 +41,7 @@ function AssinaturaPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("plano");
-    if (requested && requested in PLANS && (requested !== "teste_admin_30d" || window.location.pathname && true)) setPlan(requested as Plan);
+    if (requested && requested in PLANS && requested !== "teste_admin_30d") setPlan(requested as Plan);
     const order = params.get("order_nsu");
     if (order) setOrderNsu(order);
     if (params.get("assinatura") === "retorno") setMessage("Estamos confirmando seu pagamento com a InfinitePay. Esta página será atualizada automaticamente.");
