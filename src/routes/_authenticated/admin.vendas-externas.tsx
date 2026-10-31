@@ -72,6 +72,9 @@ function CommissionPanel() {
       const serviceMap = new Map((serviceRows ?? []).map((x: any) => [x.id, x]));
       return result.map((item: any) => ({ ...item, barbers: barberMap.get(item.barber_id) ?? null, services: serviceMap.get(item.service_id) ?? null }));
     },
+    // Mantém o painel sincronizado mesmo quando a comissão é gerada em outra aba/dispositivo.
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
   const { data: barbers = [] } = useQuery({ queryKey: ["commission-barbers", shop?.id], enabled: Boolean(shop?.id), queryFn: async () => { const { data, error } = await db.from("barbers").select("id,nome").eq("barbershop_id", shop!.id).order("nome"); if (error) throw error; return data ?? []; } });
   const { data: paymentMethods = [] } = useQuery({ queryKey: ["commission-payment-methods", shop?.id], enabled: Boolean(shop?.id), queryFn: async () => { const { data, error } = await db.from("payment_methods").select("id,name").eq("barbershop_id", shop!.id).eq("active", true).order("display_order"); if (error) throw error; return data ?? []; } });
