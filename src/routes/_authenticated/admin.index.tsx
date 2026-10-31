@@ -98,15 +98,19 @@ function Dashboard() {
   const online = Number(finance?.online_revenue ?? 0); const external = Number(finance?.external_revenue ?? 0); const expenses = Number(finance?.expenses ?? 0); const productCost = Number(finance?.product_cost ?? 0); const revenue = Number(finance?.total_revenue ?? online + external); const profit = Number(finance?.net_profit ?? revenue - expenses - productCost);
   const gerarRelatorio = async () => {
     if (!shop || !reportDe || !reportAte || reportDe > reportAte) return;
+    let reportWindow: Window | null = null;
     setReportLoading(true);
     try {
+      reportWindow = window.open("", "_blank", "width=1200,height=900");
+      if (!reportWindow) throw new Error("O navegador bloqueou a janela do relatório. Permita pop-ups para este site e tente novamente.");
+      reportWindow.document.write("<!doctype html><title>Preparando relatório</title><body style='font-family:Arial;padding:32px;background:#111;color:#fff'>Preparando seu relatório...</body>");
       const db = supabase as any;
-      let aq = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method_id,barber_id,service_id,barbers(nome),services(nome)").eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
+      let aq = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method_id,barber_id,service_id").eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
       if (reportStatus) aq = aq.eq("status", reportStatus); else aq = aq.in("status", ["confirmado","concluido"]);
 
       const [a,s,cost,cust] = await Promise.all([
         aq,
-        db.from("external_sales").select("id,total,subtotal,discount,sold_at,payment_method,status,barbers(nome),customers(nome)").eq("barbershop_id", shop.id).gte("sold_at", reportDe+"T00:00:00-03:00").lte("sold_at", reportAte+"T23:59:59.999-03:00").order("sold_at"),
+        db.from("external_sales").select("id,total,subtotal,discount,sold_at,payment_method,status,barber_id,client_id").eq("barbershop_id", shop.id).gte("sold_at", reportDe+"T00:00:00-03:00").lte("sold_at", reportAte+"T23:59:59.999-03:00").order("sold_at"),
         db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop.id).gte("cost_date", reportDe).lte("cost_date", reportAte).order("cost_date"),
         db.from("customers").select("id",{count:"exact",head:true}).eq("barbershop_id",shop.id),
       ]);
@@ -123,10 +127,25 @@ function Dashboard() {
         : { data: [], error: null };
       if (paymentError) throw new Error("Meios de pagamento: " + supabaseErrorMessage(paymentError));
       const paymentMap = new Map<string, string>((paymentRows ?? []).map((x:any): [string, string] => [x.id, x.name]));
-      const appointmentsForReport = ((a.data ?? []) as ReportAppointment[]).map((x) => ({
-        ...x,
-        payment_method: x.payment_method_id ? paymentMap.get(x.payment_method_id) ?? "Não informado" : "Não informado",
-      }));
+      const appointmentRows = (a.data ?? []) as (ReportAppointment & { barber_id?: string | null; service_id?: string | null })[];
+      const saleRows = (s.data ?? []) as (ReportSale & { barber_id?: string | null; client_id?: string | null })[];
+      const barberIds = [...new Set(appointmentRows.map((x) => x.barber_id).filter(Boolean))] as string[];
+      const serviceIds = [...new Set(appointmentRows.map((x) => x.service_id).filter(Boolean))] as string[];
+      const saleBarberIds = [...new Set(saleRows.map((x) => x.barber_id).filter(Boolean))] as string[];
+      const customerIds = [...new Set(saleRows.map((x) => x.client_id).filter(Boolean))] as string[];
+      const [barberRows, serviceRows, saleBarbers, customerRows] = await Promise.all([
+        barberIds.length ? db.from("barbers").select("id,nome").eq("barbershop_id", shop.id).in("id", barberIds) : Promise.resolve({data:[],error:null}),
+        serviceIds.length ? db.from("services").select("id,nome").eq("barbershop_id", shop.id).in("id", serviceIds) : Promise.resolve({data:[],error:null}),
+        saleBarberIds.length ? db.from("barbers").select("id,nome").eq("barbershop_id", shop.id).in("id", saleBarberIds) : Promise.resolve({data:[],error:null}),
+        customerIds.length ? db.from("customers").select("id,nome").eq("barbershop_id", shop.id).in("id", customerIds) : Promise.resolve({data:[],error:null}),
+      ]);
+      for (const [label, result] of [["Profissionais dos agendamentos",barberRows],["Serviços",serviceRows],["Profissionais das vendas",saleBarbers],["Clientes das vendas",customerRows]] as const) if(result.error) throw new Error(label + ": " + result.error.message);
+      const barberMap = new Map((barberRows.data ?? []).map((x:any) => [x.id,x.nome]));
+      const serviceMap = new Map((serviceRows.data ?? []).map((x:any) => [x.id,x.nome]));
+      const saleBarberMap = new Map((saleBarbers.data ?? []).map((x:any) => [x.id,x.nome]));
+      const customerMap = new Map((customerRows.data ?? []).map((x:any) => [x.id,x.nome]));
+      const appointmentsForReport = appointmentRows.map((x) => ({ ...x, barbers: { nome: x.barber_id ? barberMap.get(x.barber_id) ?? "" : "" }, services: { nome: x.service_id ? serviceMap.get(x.service_id) ?? "Serviço" : "Serviço" }, payment_method: x.payment_method_id ? paymentMap.get(x.payment_method_id) ?? "Não informado" : "Não informado" }));
+      const salesForReport = saleRows.map((x) => ({ ...x, barbers: { nome: x.barber_id ? saleBarberMap.get(x.barber_id) ?? "" : "" }, customers: { nome: x.client_id ? customerMap.get(x.client_id) ?? "" : "" } }));
 
       let enriched: ReportCommission[] = [];
       let commissionWarning = "";
@@ -146,10 +165,11 @@ function Dashboard() {
         enriched=cr.map(x=>({...x,barbers:bm.get(x.barber_id)??null,services:x.service_id?sm.get(x.service_id)??null:null}));
       }
 
-      emitReportPdf(shop.nome,reportDe,reportAte,appointmentsForReport,(s.data??[]) as ReportSale[],enriched,(cost.data??[]) as ReportCost[],cust.count??0,reportStatus);
+      emitReportPdf(reportWindow,shop.nome,reportDe,reportAte,appointmentsForReport,salesForReport,enriched,(cost.data??[]) as ReportCost[],cust.count??0,reportStatus);
       setReportOpen(false);
       if (commissionWarning) window.alert("Relatório gerado, mas houve uma limitação:\n\n" + commissionWarning);
     } catch(error){
+      if (reportWindow && !reportWindow.closed) reportWindow.close();
       const detail = error instanceof Error ? error.message : (error as any)?.message || (error as any)?.details || JSON.stringify(error);
       window.alert("Não foi possível gerar o relatório completo.\n\n" + detail);
     } finally { setReportLoading(false); }
