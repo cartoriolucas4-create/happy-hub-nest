@@ -22,6 +22,7 @@ function AssinaturaPage() {
   const shop = shopData as any;
   const [plan, setPlan] = useState<Plan>("anual");
   const [canUseTestPlan, setCanUseTestPlan] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [paid, setPaid] = useState(false);
@@ -31,10 +32,11 @@ function AssinaturaPage() {
     let active = true;
     void supabase.auth.getUser().then(({ data }) => {
       if (!active) return;
-      const allowed = String(data.user?.email ?? "").toLowerCase() === "cartoriolucas4@gmail.com";
+      const allowed = String(data.user?.email ?? "").trim().toLowerCase() === "cartoriolucas4@gmail.com";
       setCanUseTestPlan(allowed);
       if (allowed) setPlan("teste_admin_30d");
-    });
+      setAuthChecked(true);
+    }).catch(() => { if (active) setAuthChecked(true); });
     return () => { active = false; };
   }, []);
 
@@ -64,7 +66,7 @@ function AssinaturaPage() {
   }, [orderNsu]);
 
   const selected = useMemo(() => PLANS[plan], [plan]);
-  const visiblePlans = (Object.keys(PLANS) as Plan[]).filter((key) => key !== "teste_admin_30d" || canUseTestPlan);
+  const visiblePlans = (Object.keys(PLANS) as Plan[]).filter((key) => key !== "teste_admin_30d" || (authChecked && canUseTestPlan));
 
   async function iniciarPagamento() {
     if (loading) return;
@@ -101,7 +103,7 @@ function AssinaturaPage() {
       {new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("trial") === "expirado" && <div role="alert" className="mt-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-5"><p className="font-semibold text-amber-500">Seu período de teste gratuito terminou.</p><p className="mt-1 text-sm text-muted-foreground">Para continuar usando sua barbearia, escolha um plano e realize o pagamento. Após a confirmação, seu acesso será liberado automaticamente.</p></div>}
       {shopLoading ? <p className="mt-8 text-sm text-muted-foreground">Carregando sua barbearia...</p> : shopError || !shop ? <div className="mt-8 rounded-xl border border-destructive/30 p-5 text-sm">Não foi possível localizar sua barbearia. Acesse a configuração inicial e tente novamente.</div> :
       <><div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{visiblePlans.map(key => <button key={key} type="button" onClick={() => setPlan(key)} className={`rounded-xl border p-5 text-left transition ${plan===key?"border-primary bg-primary/5 ring-2 ring-primary/20":"border-border bg-card hover:border-primary/50"}`} aria-pressed={plan===key}><span className="text-sm font-semibold">{PLANS[key].label}</span><strong className="mt-3 block text-2xl">{PLANS[key].price}</strong><span className="mt-1 block text-xs text-muted-foreground">{PLANS[key].detail}</span>{plan===key && <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary"><CheckCircle2 className="h-4 w-4"/> Selecionado</span>}</button>)}</div>
-      {canUseTestPlan && <div className="mt-5 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm"><strong className="text-amber-500">Teste administrativo exclusivo</strong><p className="mt-1 text-muted-foreground">Sua conta está configurada com 10 dias restantes de avaliação. Se o pagamento de R$ 1,00 for confirmado pela InfinitePay, serão acrescentados 30 dias após o fim desse período, totalizando cerca de 40 dias a partir de hoje.</p></div>}<div className="mt-6 rounded-xl border border-border bg-card p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Plano selecionado</p><p className="mt-1 text-lg font-semibold">{selected.label}</p><p className="text-xs text-muted-foreground">{selected.detail}</p></div><strong className="text-2xl">{selected.price}</strong></div><button type="button" onClick={iniciarPagamento} disabled={loading} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{loading ? <><Loader2 className="h-4 w-4 animate-spin"/> GERANDO CHECKOUT...</> : <>PAGAR COM INFINITEPAY <CreditCard className="h-4 w-4"/></>}</button><div className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary"/> A liberação depende da confirmação do pagamento pelo servidor. O redirecionamento de retorno não libera acesso por si só.</div></div></>}
+      {authChecked && canUseTestPlan && <div className="mt-5 rounded-xl border-2 border-amber-500/60 bg-amber-500/10 p-4 text-sm"><strong className="text-amber-500">PLANO DE TESTE ADMINISTRATIVO — R$ 1,00</strong><p className="mt-1 text-muted-foreground">Sua conta está configurada com 10 dias restantes de avaliação. Se o pagamento de R$ 1,00 for confirmado pela InfinitePay, serão acrescentados 30 dias após o fim desse período, totalizando cerca de 40 dias a partir de hoje.</p></div>}<div className="mt-6 rounded-xl border border-border bg-card p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Plano selecionado</p><p className="mt-1 text-lg font-semibold">{selected.label}</p><p className="text-xs text-muted-foreground">{selected.detail}</p></div><strong className="text-2xl">{selected.price}</strong></div><button type="button" onClick={iniciarPagamento} disabled={loading} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{loading ? <><Loader2 className="h-4 w-4 animate-spin"/> GERANDO CHECKOUT...</> : <>PAGAR COM INFINITEPAY <CreditCard className="h-4 w-4"/></>}</button><div className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary"/> A liberação depende da confirmação do pagamento pelo servidor. O redirecionamento de retorno não libera acesso por si só.</div></div></>}
       {message && <div className="mt-5 flex items-start gap-2 rounded-lg border border-border bg-card p-4 text-sm"><Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-primary"/><span>{message}</span></div>}
       {paid && <div className="mt-5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm text-emerald-500">Sua assinatura está ativa. <Link to="/admin" className="underline">Ir para o painel</Link></div>}
       <p className="mt-8 text-center text-xs text-muted-foreground">A InfinitePay não realiza renovação recorrente automática nesta integração. Para renovar, será necessário efetuar um novo pagamento antes do vencimento.</p>
