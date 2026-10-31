@@ -108,7 +108,7 @@ function Landing() {
   return <div className="landing-page min-h-screen bg-background text-foreground">
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 lg:h-[72px] lg:px-8">
-        <a href="#inicio" className="flex shrink-0 items-center gap-2.5" aria-label="Minha Barbearia — início"><img src="/minha-barbearia-logo.webp" alt="Minha Barbearia" className="h-11 w-auto max-w-[220px] object-contain object-left" /></a>
+        <a href="#inicio" className="flex shrink-0 flex-col justify-center leading-[0.82] font-serif font-black tracking-[0.045em]" aria-label="Minha Barbearia — início"><span className="text-[1.35rem] text-white sm:text-[1.65rem]">MINHA</span><span className="mt-1 text-[1.05rem] text-primary sm:text-[1.3rem]">BARBEARIA</span></a>
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Navegação principal">
           <a href="#inicio" className="text-sm text-muted-foreground hover:text-foreground">Início</a><a href="#demonstracao" className="text-sm text-muted-foreground hover:text-foreground">Demonstração</a><a href="#recursos" className="text-sm text-muted-foreground hover:text-foreground">Recursos</a><a href="#pwa" className="text-sm text-muted-foreground hover:text-foreground">Aplicativo</a><a href="#planos" className="text-sm text-muted-foreground hover:text-foreground">Começar</a>
         </nav>
