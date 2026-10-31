@@ -261,7 +261,7 @@ function BarcodeScanner({ onDetected, onClose }: { onDetected: (code: string) =>
       <div className="px-4 pb-4 pt-3">
         <p className="text-sm text-muted-foreground">{error || "Enquadre o código dentro da área e alinhe as barras com a linha vermelha."}</p>
         <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (manual.trim()) onDetected(manual.trim()); }}>
-          <input className={input + " min-w-0 flex-1"} value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Ou digite o código manualmente" />
+          <input autoFocus className={input + " min-w-0 flex-1"} value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Leitor USB/Bluetooth ou digite o código" />
           <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit" disabled={!manual.trim()}>Usar</button>
         </form>
         <p className="mt-2 text-xs text-muted-foreground">Também aceita leitor USB/Bluetooth: clique no campo de código e pressione Enter após a leitura.</p>
