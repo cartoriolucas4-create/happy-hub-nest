@@ -41,3 +41,4 @@ begin
 end; $$;
 revoke all on function public.confirm_infinitepay_subscription(text,text,text,text,jsonb) from public,anon,authenticated;
 grant execute on function public.confirm_infinitepay_subscription(text,text,text,text,jsonb) to service_role;
+grant all privileges on table public.subscription_orders to service_role;
