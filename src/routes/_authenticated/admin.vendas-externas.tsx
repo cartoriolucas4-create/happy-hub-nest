@@ -46,7 +46,8 @@ function CommissionPanel() {
   const hojeIso = new Date(hoje.getTime() - hoje.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const [de, setDe] = useState(`${hojeIso.slice(0, 8)}01`);
   const dataLimitePadrao = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 30);
-  const atePadraoIso = `${dataLimitePadrao.getFullYear()}-${String(dataLimitePadrao.getMonth() + 1).padStart(2, "0")}-${String(dataLimitePadrao.getDate()).padStart(2, "0")}`;\n  const [ate, setAte] = useState(atePadraoIso);
+  const atePadraoIso = `${dataLimitePadrao.getFullYear()}-${String(dataLimitePadrao.getMonth() + 1).padStart(2, "0")}-${String(dataLimitePadrao.getDate()).padStart(2, "0")}`;
+  const [ate, setAte] = useState(atePadraoIso);
   const [barberId, setBarberId] = useState("");
   const [status, setStatus] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
