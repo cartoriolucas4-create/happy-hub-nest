@@ -24,12 +24,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     { title: "Minha Barbearia | Gestão completa para barbearias" },
     { property: "og:url", content: CANONICAL_ORIGIN },
     { name: "description", content: "Plataforma de agendamento online para barbearias: agenda, equipe, serviços e clientes em um só lugar." },
-    { name: "author", content: "Lovable" }, { property: "og:title", content: "Minha Barbearia | Gestão para barbearias" },
-    { property: "og:description", content: "Gerencie sua barbearia e receba agendamentos online 24h." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "twitter:site", content: "@Lovable" },
+    { name: "author", content: "Minha Barbearia" }, { property: "og:title", content: "Minha Barbearia | Gestão para barbearias" },
+    { property: "og:description", content: "Gerencie sua barbearia e receba agendamentos online 24h." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
   ], links: [
     { rel: "canonical", href: CANONICAL_ORIGIN },
     { rel: "stylesheet", href: appCss }, { rel: "preconnect", href: "https://fonts.googleapis.com" }, { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-    { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" }, { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" }, { rel: "icon", href: "/favicon.png?v=2", type: "image/png", sizes: "64x64" }, { rel: "apple-touch-icon", href: "/favicon.png?v=2" },
   ] }),
   shellComponent: RootShell, component: RootComponent, notFoundComponent: NotFoundComponent, errorComponent: ErrorComponent,
 });
@@ -194,7 +194,25 @@ function BrlInputController() {
   return null;
 }
 
+function CleanTrackingParams() {
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    let changed = false;
+    for (const key of [...url.searchParams.keys()]) {
+      if (key.toLowerCase().startsWith("utm_")) {
+        url.searchParams.delete(key);
+        changed = true;
+      }
+    }
+    if (changed) {
+      const cleanUrl = `${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState(window.history.state, "", cleanUrl);
+    }
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  return <QueryClientProvider client={queryClient}><PublicAccentController /><BrlInputController /><PublicSetupGate><Outlet /></PublicSetupGate><Toaster /></QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}><CleanTrackingParams /><PublicAccentController /><BrlInputController /><PublicSetupGate><Outlet /></PublicSetupGate><Toaster /></QueryClientProvider>;
 }
