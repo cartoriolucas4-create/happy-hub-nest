@@ -17,7 +17,8 @@ const PLANS = {
 type Plan = keyof typeof PLANS;
 
 function AssinaturaPage() {
-  const { data: shop, isLoading: shopLoading, error: shopError } = useShop();
+  const { data: shopData, isLoading: shopLoading, error: shopError } = useShop();
+  const shop = shopData as any;
   const [plan, setPlan] = useState<Plan>("anual");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -37,7 +38,7 @@ function AssinaturaPage() {
     if (!orderNsu) return;
     let active = true;
     const check = async () => {
-      const { data, error } = await supabase.from("subscription_orders").select("status, plan").eq("order_nsu", orderNsu).maybeSingle();
+      const { data, error } = await (supabase as any).from("subscription_orders").select("status, plan").eq("order_nsu", orderNsu).maybeSingle();
       if (!active) return;
       if (error) { setMessage("Pagamento recebido? Ainda estamos aguardando a confirmação segura do provedor."); return; }
       if (data?.status === "paid") { setPaid(true); setMessage("Pagamento confirmado! Sua licença já foi atualizada."); }
