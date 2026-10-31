@@ -196,9 +196,14 @@ export function whatsappSuporte(mensagem: string, numero = SUPORTE_WHATSAPP) {
 export function useIsSuperAdmin() {
   return useQuery({
     queryKey: ["is-super-admin"],
-    staleTime: 5 * 60_000,
+    // A permissão pode ser concedida pelo banco enquanto a sessão está aberta.
+    // Sempre revalida ao montar/voltar à aba para não manter um "false" antigo em cache.
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
       if (!auth.user) return false;
       const { data, error } = await supabase.rpc("has_role", {
         _user_id: auth.user.id,
