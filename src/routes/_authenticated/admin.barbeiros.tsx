@@ -106,12 +106,12 @@ function Barbeiros() {
 
         // Reprocessa atendimentos já confirmados/concluídos que ainda não tinham regra.
         // O trigger usa ON CONFLICT DO NOTHING, preservando comissões históricas existentes.
-        const syncExisting = await supabase.from("appointments")
-          .update({ status: "confirmado" })
-          .eq("barbershop_id", shop.id)
-          .eq("barber_id", id!)
-          .in("status", ["confirmado", "concluido"]);
-        if (syncExisting.error) throw syncExisting.error;
+        const [syncConfirmed, syncCompleted] = await Promise.all([
+          supabase.from("appointments").update({ status: "confirmado" }).eq("barbershop_id", shop.id).eq("barber_id", id!).eq("status", "confirmado"),
+          supabase.from("appointments").update({ status: "concluido" }).eq("barbershop_id", shop.id).eq("barber_id", id!).eq("status", "concluido"),
+        ]);
+        if (syncConfirmed.error) throw syncConfirmed.error;
+        if (syncCompleted.error) throw syncCompleted.error;
       }
 
       const verify = await supabase.from("barbers").select("id,nome,telefone,descricao,foto_url,ativo").eq("id", id!).eq("barbershop_id", shop.id).single();
