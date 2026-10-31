@@ -227,8 +227,6 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/comprar': typeof ComprarRoute
   '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
-  '/comprar': typeof ComprarRoute
-  '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/$slug/agendar': typeof SlugAgendarRoute
@@ -260,6 +258,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
+  '/comprar': typeof ComprarRoute
+  '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/$slug/agendar': typeof SlugAgendarRoute
@@ -329,8 +329,6 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/comprar'
     | '/admin/assinatura'
-    | '/comprar'
-    | '/admin/assinatura'
     | '/login'
     | '/reset-password'
     | '/$slug/agendar'
@@ -360,6 +358,8 @@ export interface FileRouteTypes {
     | '/super-admin/clientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/comprar'
+    | '/admin/assinatura'
     | '/'
     | '/cadastro'
     | '/login'
@@ -487,6 +487,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/$slug/agendar'
       preLoaderRoute: typeof SlugAgendarRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/comprar': {
+      id: '/comprar'
+      path: '/comprar'
+      fullPath: '/comprar'
+      preLoaderRoute: typeof ComprarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/assinatura': {
+      id: '/_authenticated/admin/assinatura'
+      path: '/admin/assinatura'
+      fullPath: '/admin/assinatura'
+      preLoaderRoute: typeof AuthenticatedAdminAssinaturaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
