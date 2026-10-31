@@ -355,3 +355,49 @@
   .phone-panel-one { opacity: 1; }
   .phone-panel-two, .phone-panel-three { display: none; }
 }
+
+
+/* Animated product dashboard showcase — landing hero only. */
+.dashboard-showcase { isolation:isolate; padding:12px 0 38px; }
+.dashboard-window {
+  position:relative; z-index:1; overflow:hidden; border:1px solid #ffffff20;
+  border-radius:20px; background:linear-gradient(145deg,#171715f5,#090909f7);
+  box-shadow:0 32px 90px #000b,0 0 55px #c6a45a18,inset 0 1px #ffffff12;
+  backdrop-filter:blur(18px); transform:perspective(1100px) rotateY(-5deg) rotateX(2deg);
+  animation:dashboard-hover 7s ease-in-out infinite;
+}
+.dashboard-metric { min-width:0; border:1px solid #ffffff12; border-radius:11px; background:#ffffff08; padding:10px; }
+.dashboard-metric p { overflow:hidden; color:#ffffff70; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.dashboard-metric strong { display:block; margin-top:6px; color:#fff; font-size:clamp(13px,2vw,21px); letter-spacing:-.04em; }
+.dashboard-metric span { display:block; margin-top:2px; color:#c7aa69; font-size:8px; }
+.dashboard-appointment { display:flex; align-items:center; gap:8px; border-top:1px solid #ffffff0d; padding:10px 0; }
+.dashboard-appointment b,.dashboard-appointment small { display:block; overflow:hidden; color:#fff; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.dashboard-appointment small { margin-top:3px; color:#ffffff55; font-size:8px; }
+.dashboard-appointment i { flex-shrink:0; border-radius:99px; background:#4ade8018; padding:4px 6px; color:#86efac; font-size:7px; font-style:normal; }
+.dashboard-appointment i.is-next { background:#c6a45a20; color:#e6c77e; }
+.dashboard-bars { display:flex; height:105px; align-items:end; gap:6px; margin-top:15px; border-bottom:1px solid #ffffff20; }
+.dashboard-bars span { flex:1; min-height:8px; border-radius:5px 5px 1px 1px; background:linear-gradient(180deg,#e4c77f,#9c7937); transform-origin:bottom; animation:bar-grow 1.2s cubic-bezier(.2,.8,.2,1) both; }
+.dashboard-bars span:nth-child(2n) { animation-delay:.12s; }
+.dashboard-float { position:absolute; z-index:2; display:flex; align-items:center; gap:9px; max-width:245px; border:1px solid #ffffff20; border-radius:13px; background:linear-gradient(135deg,#24231fef,#111110f5); padding:11px 13px; box-shadow:0 15px 45px #0009; backdrop-filter:blur(14px); animation:float-card 5s ease-in-out infinite; }
+.dashboard-float b,.dashboard-float small { display:block; white-space:nowrap; }
+.dashboard-float b { color:#fff; font-size:10px; }
+.dashboard-float small { margin-top:3px; color:#ffffff65; font-size:8px; }
+.dashboard-float-icon { display:flex; width:30px; height:30px; flex-shrink:0; align-items:center; justify-content:center; border-radius:9px; background:#c6a45a20; color:#dfbf73; }
+.dashboard-float-booking { top:2%; right:-2%; }
+.dashboard-float-payment { bottom:4%; left:-5%; animation-delay:-1.8s; }
+.dashboard-float-team { right:0; bottom:-1%; animation-delay:-3.2s; }
+.dashboard-avatar { display:flex; width:30px; height:30px; align-items:center; justify-content:center; border-radius:50%; background:#c6a45a25; color:#e5c77d; font-size:9px; font-weight:800; }
+@keyframes dashboard-hover { 0%,100% { transform:perspective(1100px) rotateY(-5deg) rotateX(2deg) translateY(0); } 50% { transform:perspective(1100px) rotateY(-3deg) rotateX(1deg) translateY(-7px); } }
+@keyframes float-card { 0%,100% { transform:translateY(0) rotate(0); } 50% { transform:translateY(-9px) rotate(-1deg); } }
+@keyframes bar-grow { from { transform:scaleY(.08); opacity:.4; } to { transform:scaleY(1); opacity:1; } }
+@media(max-width:639px) {
+  .dashboard-showcase { padding:10px 3px 35px; }
+  .dashboard-window { transform:none; animation:none; border-radius:15px; }
+  .dashboard-float { max-width:205px; padding:9px 10px; }
+  .dashboard-float-booking { right:-2px; top:0; }
+  .dashboard-float-payment { left:-2px; bottom:0; }
+  .dashboard-float-team { display:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .dashboard-window,.dashboard-float,.dashboard-bars span { animation:none!important; }
+}
