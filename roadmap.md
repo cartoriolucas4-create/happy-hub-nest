@@ -1,5 +1,11 @@
 # Roadmap
 
+## Assinatura SaaS InfinitePay — solicitação atual
+- [ ] Integrar checkout autenticado, pedidos persistidos e confirmação independente/idempotente compatível com licenças existentes.
+- [ ] Adicionar planos e retorno com status real, testes das regras e verificação mobile.
+- [ ] Aplicar migration e validar fluxo real — bloqueado pelo Lovable Cloud pausado, sem autorização para reativar.
+- [ ] Disponibilizar processamento de pagamentos em hospedagem com servidor — GitHub Pages é estático; novas Edge Functions não são permitidas pela arquitetura atual.
+
 ## Cadastro em produção — solicitação atual
 - [ ] Reativar o serviço de contas pausado — exige solicitação explícita do usuário para retomar Lovable Cloud.
 - [ ] Permitir `https://agendocorte.com/**` e `https://www.agendocorte.com/**` em Auth settings → Advanced — lista não editável pelas ferramentas disponíveis.
