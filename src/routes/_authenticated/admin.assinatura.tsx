@@ -55,21 +55,26 @@ function AssinaturaPage() {
   async function iniciarPagamento() {
     if (loading) return;
     setLoading(true); setMessage("");
+    // Open the tab synchronously during the click. Opening it after await is blocked by browsers.
+    const checkoutWindow = window.open("about:blank", "_blank");
+    if (!checkoutWindow) {
+      setMessage("O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.");
+      setLoading(false);
+      return;
+    }
+    checkoutWindow.opener = null;
     try {
       const { data, error } = await supabase.functions.invoke("infinitepay-create-checkout", { body: { plan } });
       if (error) throw error;
       const url = data?.checkout_url;
       if (typeof url !== "string" || !url.startsWith("https://")) throw new Error(data?.error || "Não foi possível gerar o checkout.");
-      const checkoutWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
-      if (checkoutWindow) {
-        checkoutWindow.location.href = url;
-      } else {
-        setMessage("O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.");
-        setLoading(false);
-      }
+      checkoutWindow.location.replace(url);
+      setLoading(false);
     } catch (error) {
       console.error("[Assinatura] Falha ao criar checkout:", error);
-      setMessage("Não foi possível iniciar o pagamento. Confira sua conexão e tente novamente. Se persistir, contate o suporte.");
+      checkoutWindow.close();
+      const detail = error instanceof Error ? error.message : String(error);
+      setMessage("A InfinitePay não conseguiu gerar o checkout. " + detail);
       setLoading(false);
     }
   }
