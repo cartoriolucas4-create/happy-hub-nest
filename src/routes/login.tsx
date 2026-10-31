@@ -51,12 +51,7 @@ function LoginPage() {
         if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
           await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
         } else {
-          const requestedPlan = session.user.user_metadata?.plano_solicitado;
-      if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
-        await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
-      } else {
-        await navigate({ to: homeForArea(session.area), replace: true });
-      }
+          await navigate({ to: homeForArea(session.area), replace: true });
         }
       })
       .catch((error) => {
@@ -90,7 +85,12 @@ function LoginPage() {
         await supabase.auth.signOut().catch(() => undefined);
         throw new Error("A conta foi autenticada, mas não foi possível carregar suas permissões. Verifique se o banco de dados está conectado e atualizado.");
       }
-      await navigate({ to: homeForArea(session.area), replace: true });
+      const requestedPlan = session.user.user_metadata?.plano_solicitado;
+      if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
+        await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
+      } else {
+        await navigate({ to: homeForArea(session.area), replace: true });
+      }
     } catch (error) {
       console.error("[Login] Falha ao entrar:", error);
       toast.error(readableAuthError(error, "login"));
