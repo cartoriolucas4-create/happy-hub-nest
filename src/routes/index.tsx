@@ -222,7 +222,7 @@ function Landing() {
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso pelo computador e celular</li>
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Sem compromisso de longo prazo</li>
               </ul>
-              <a href="/cadastro?plano=mensal" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary">Escolher mensal <ArrowRight className="h-4 w-4"/></a>
+              <a href="/comprar?plano=mensal" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary">Escolher mensal <ArrowRight className="h-4 w-4"/></a>
             </article>
 
             <article className="relative z-10 flex flex-col rounded-2xl border-2 border-primary bg-gradient-to-b from-primary/[.10] via-background to-background p-5 shadow-[0_18px_55px_-22px_hsl(var(--primary)/.55)] md:my-[-10px] md:scale-[1.035] sm:p-6">
@@ -237,7 +237,7 @@ function Landing() {
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Economia de R$ 419,89 no ano</li>
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Mais tranquilidade: 12 meses</li>
               </ul>
-              <a href="/cadastro?plano=anual" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:bg-primary/90">Escolher anual <ArrowRight className="h-4 w-4"/></a>
+              <a href="/comprar?plano=anual" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:bg-primary/90">Escolher anual <ArrowRight className="h-4 w-4"/></a>
             </article>
 
             <article className="flex flex-col rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 sm:p-6">
@@ -251,10 +251,10 @@ function Landing() {
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Economia de R$ 120,00 em 6 meses</li>
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Renovação a cada 6 meses</li>
               </ul>
-              <a href="/cadastro?plano=semestral" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary">Escolher semestral <ArrowRight className="h-4 w-4"/></a>
+              <a href="/comprar?plano=semestral" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary">Escolher semestral <ArrowRight className="h-4 w-4"/></a>
             </article>
           </div>
-          <p className="mt-8 text-center text-xs text-muted-foreground">Pagamento seguro pela InfinitePay. Após criar sua conta e configurar sua barbearia, você poderá concluir a assinatura.</p>
+          <p className="mt-8 text-center text-xs text-muted-foreground">Pagamento seguro pela InfinitePay. Escolha seu plano, pague e crie sua conta em seguida.</p>
           <div className="mt-4 flex justify-center"><Link to="/login" className="text-xs font-medium text-muted-foreground underline underline-offset-4 hover:text-primary">Já tem uma conta? Entrar</Link></div>
         </div>
       </section>
