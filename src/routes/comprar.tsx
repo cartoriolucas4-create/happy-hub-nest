@@ -26,18 +26,27 @@ function ComprarPage() {
   async function checkout() {
     if (loading) return;
     setLoading(true); setError("");
+    // Open synchronously from the click so Chrome does not block the payment tab.
+    const checkoutWindow = window.open("about:blank", "_blank");
+    if (!checkoutWindow) {
+      setError("O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.");
+      setLoading(false);
+      return;
+    }
+    checkoutWindow.opener = null;
     try {
       const { data, error: invokeError } = await supabase.functions.invoke("infinitepay-public-checkout", { body: { plan } });
       if (invokeError) throw invokeError;
       if (typeof data?.checkout_url !== "string" || !data.checkout_url.startsWith("https://")) {
         throw new Error(data?.details || data?.error || "Não foi possível gerar o pagamento.");
       }
-      const checkoutWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
-      if (checkoutWindow) checkoutWindow.location.href = data.checkout_url;
-      else throw new Error("O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.");
+      checkoutWindow.location.replace(data.checkout_url);
+      setLoading(false);
     } catch (e) {
       console.error("[Compra pública] erro ao iniciar checkout", e);
-      setError("Não foi possível iniciar o pagamento. Tente novamente em instantes.");
+      checkoutWindow.close();
+      const detail = e instanceof Error ? e.message : String(e);
+      setError("A InfinitePay não conseguiu gerar o checkout. " + detail);
       setLoading(false);
     }
   }
