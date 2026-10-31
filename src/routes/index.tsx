@@ -205,56 +205,93 @@ function Landing() {
 
       <section id="planos" className="scroll-mt-20 border-b border-border bg-card/25 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-5 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto max-w-3xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Planos e assinaturas</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Escolha o plano ideal para sua barbearia.</h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">Todos os recursos da plataforma. Você escolhe apenas por quanto tempo quer assinar.</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Sua barbearia completa, por um valor que cabe no seu negócio.</h2>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground sm:text-base">Tenha agenda, equipe, clientes, vendas e financeiro organizados em uma única plataforma. Todos os planos oferecem acesso aos recursos; quanto maior o período, menor o investimento mensal.</p>
+            <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary">
+              <CreditCard className="h-4 w-4" /> 10% DE DESCONTO NO PAGAMENTO VIA PIX — EM TODOS OS PLANOS
+            </div>
           </div>
-          <div className="mx-auto mt-10 grid max-w-5xl items-stretch gap-5 md:grid-cols-3 md:gap-4">
+
+          <div className="mx-auto mt-12 grid max-w-5xl items-stretch gap-5 md:grid-cols-3 md:gap-4">
             <article className="flex flex-col rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 sm:p-6">
-              <div className="flex items-center justify-between"><span className="text-sm font-semibold">Mensal</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">Flexibilidade</span></div>
-              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Para começar e manter o controle mês a mês.</p>
+              <div className="flex items-center justify-between"><span className="text-sm font-semibold">Mensal</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">Mais flexibilidade</span></div>
+              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Ideal para começar a organizar a operação sem compromisso de longo prazo.</p>
               <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 59,99</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div>
               <p className="mt-1 text-[11px] text-muted-foreground">Cobrança a cada 30 dias</p>
+              <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary">R$ 53,99 no Pix · 10% de desconto</div>
               <div className="my-5 h-px bg-border" />
               <ul className="flex-1 space-y-3 text-sm">
-                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Todos os recursos inclusos</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso a todos os módulos da plataforma</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Agenda, clientes e profissionais</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Controle financeiro e vendas</li>
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso pelo computador e celular</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Sem compromisso de longo prazo</li>
               </ul>
               <a href="/comprar?plano=mensal" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary">Escolher mensal <ArrowRight className="h-4 w-4"/></a>
             </article>
 
-            <article className="relative z-10 flex flex-col rounded-2xl border-2 border-primary bg-gradient-to-b from-primary/[.10] via-background to-background p-5 shadow-[0_18px_55px_-22px_hsl(var(--primary)/.55)] md:my-[-10px] md:scale-[1.035] sm:p-6">
+            <article className="relative z-10 flex flex-col rounded-2xl border-2 border-primary bg-gradient-to-b from-primary/[.12] via-background to-background p-5 shadow-[0_18px_55px_-22px_hsl(var(--primary)/.55)] md:my-[-10px] md:scale-[1.035] sm:p-6">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-lg">Melhor custo-benefício</div>
               <div className="mt-2 flex items-center justify-between"><span className="text-sm font-semibold text-primary">Anual</span><span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold text-primary">Economize 58%</span></div>
-              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Um ano inteiro de organização pelo menor custo mensal.</p>
+              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">A escolha inteligente para quem quer profissionalizar a gestão e economizar o ano inteiro.</p>
               <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 299,99</span><span className="ml-1 text-xs text-muted-foreground">/ ano</span></div>
-              <p className="mt-1 text-[11px] font-medium text-primary">Equivale a R$ 25,00 por mês</p>
+              <p className="mt-1 text-[11px] font-semibold text-primary">Apenas R$ 25,00 por mês</p>
+              <div className="mt-3 rounded-lg bg-primary/15 px-3 py-2 text-xs font-bold text-primary">R$ 269,99 no Pix · 10% de desconto</div>
+              <p className="mt-2 text-[11px] text-muted-foreground">Você economiza R$ 419,89 em relação a 12 mensalidades.</p>
               <div className="my-5 h-px bg-primary/20" />
               <ul className="flex-1 space-y-3 text-sm">
-                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Todos os recursos inclusos</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Economia de R$ 419,89 no ano</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Mais tranquilidade: 12 meses</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Todos os recursos da plataforma</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Uso ilimitado da plataforma durante a vigência</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Cadastro ilimitado de produtos e serviços</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Gestão de agenda, equipe, clientes e vendas</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Controle financeiro, despesas e relatórios</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Link de agendamento para seus clientes</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Mais economia: equivalente a R$ 25/mês</li>
               </ul>
-              <a href="/comprar?plano=anual" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:bg-primary/90">Escolher anual <ArrowRight className="h-4 w-4"/></a>
+              <a href="/comprar?plano=anual" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:bg-primary/90">Garantir plano anual <ArrowRight className="h-4 w-4"/></a>
+              <p className="mt-2 text-center text-[10px] font-medium text-primary">A opção mais econômica para sua barbearia</p>
             </article>
 
             <article className="flex flex-col rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 sm:p-6">
               <div className="flex items-center justify-between"><span className="text-sm font-semibold">Semestral</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">6 meses</span></div>
-              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Equilíbrio entre economia e flexibilidade.</p>
+              <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Para quem busca um período maior de organização com economia intermediária.</p>
               <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 239,94</span><span className="ml-1 text-xs text-muted-foreground">/ semestre</span></div>
               <p className="mt-1 text-[11px] font-medium text-primary">Equivale a R$ 39,99 por mês</p>
+              <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary">R$ 215,95 no Pix · 10% de desconto</div>
+              <p className="mt-2 text-[11px] text-muted-foreground">Economia de R$ 120,00 em comparação a 6 mensalidades.</p>
               <div className="my-5 h-px bg-border" />
               <ul className="flex-1 space-y-3 text-sm">
-                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Todos os recursos inclusos</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Economia de R$ 120,00 em 6 meses</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Renovação a cada 6 meses</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso a todos os módulos da plataforma</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Agenda, clientes e profissionais</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Controle financeiro e vendas</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso por 6 meses</li>
               </ul>
               <a href="/comprar?plano=semestral" className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:text-primary">Escolher semestral <ArrowRight className="h-4 w-4"/></a>
             </article>
           </div>
-          <p className="mt-8 text-center text-xs text-muted-foreground">Pagamento seguro pela InfinitePay. Escolha seu plano, pague e crie sua conta em seguida.</p>
+
+          <div className="mx-auto mt-14 max-w-5xl">
+            <div className="text-center"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Uma plataforma completa</p><h3 className="mt-2 text-2xl font-semibold tracking-tight">Tudo o que sua barbearia precisa para funcionar melhor.</h3><p className="mt-2 text-sm text-muted-foreground">Os recursos abaixo estão disponíveis em todos os planos.</p></div>
+            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {resources.map(([Icon, title, description]) => <div key={title} className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">{title}</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p></div>)}
+              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Receipt className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Vendas presenciais</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Registre vendas realizadas diretamente no balcão.</p></div>
+              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Wallet className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Despesas e custos</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Registre gastos e acompanhe os custos da operação.</p></div>
+              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><BarChart3 className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Indicadores e relatórios</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Tenha uma visão organizada dos resultados registrados.</p></div>
+              <div className="rounded-xl border border-border bg-background p-4"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Smartphone className="h-4 w-4"/></span><h4 className="mt-3 text-sm font-semibold">Acesso em qualquer tela</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">Use no computador, tablet ou celular, de onde estiver.</p></div>
+            </div>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-5xl rounded-2xl border border-border bg-background p-5 sm:p-7">
+            <div className="text-center"><h3 className="text-xl font-semibold">Por que o plano anual compensa mais?</h3><p className="mt-2 text-sm text-muted-foreground">Você mantém a operação organizada por 12 meses e paga muito menos pelo mesmo conjunto de recursos.</p></div>
+            <div className="mt-6 grid gap-4 text-center sm:grid-cols-3">
+              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Mensalidade equivalente</p><p className="mt-1 text-2xl font-bold">R$ 25,00</p><p className="mt-1 text-xs text-muted-foreground">no plano anual</p></div>
+              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Economia em 12 meses</p><p className="mt-1 text-2xl font-bold text-primary">R$ 419,89</p><p className="mt-1 text-xs text-muted-foreground">comparado ao mensal</p></div>
+              <div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Desconto adicional no Pix</p><p className="mt-1 text-2xl font-bold text-primary">10%</p><p className="mt-1 text-xs text-muted-foreground">em qualquer período</p></div>
+            </div>
+            <div className="mt-6 text-center"><a href="/comprar?plano=anual" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Quero economizar com o anual <ArrowRight className="h-4 w-4"/></a></div>
+          </div>
+          <p className="mt-8 text-center text-xs text-muted-foreground">Pagamento processado com segurança pela InfinitePay. O desconto de 10% no Pix é aplicado ao valor do plano no pagamento.</p>
           <div className="mt-4 flex justify-center"><Link to="/login" className="text-xs font-medium text-muted-foreground underline underline-offset-4 hover:text-primary">Já tem uma conta? Entrar</Link></div>
         </div>
       </section>
