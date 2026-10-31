@@ -7,6 +7,16 @@ import { AdminShell, Empty, btnGhost, input } from "@/components/admin/AdminShel
 import { useShop } from "@/lib/shop";
 import { addDays, brDate, brl, hhmm, STATUS_LABEL, statusClass, todayIso, DIAS } from "@/lib/barber";
 
+function withTimeout<T>(promise: PromiseLike<T>, ms = 12000): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<T>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error("A consulta demorou mais que 12 segundos. Verifique sua conexão e tente novamente.")), ms);
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+  });
+}
+
 export const Route = createFileRoute("/_authenticated/admin/agenda")({
   head: () => ({
     meta: [
@@ -23,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/admin/agenda")({
 });
 
 function Agenda() {
-  const { data: shop } = useShop();
+  const { data: shop, isLoading: shopLoading, isError: shopError, error: shopLoadError, refetch: reloadShop } = useShop();
   const hoje = todayIso();
   const [dia, setDia] = useState(hoje);
   const [modo, setModo] = useState<"dia" | "semana">("semana");
@@ -43,23 +53,32 @@ function Agenda() {
     },
   });
 
-  const { data: lista, isLoading } = useQuery({
+  const { data: lista, isLoading, isError, error: listaError, refetch: recarregarAgenda, isFetching } = useQuery({
     queryKey: ["agenda", shop?.id, inicio, fim, barbeiro],
     enabled: Boolean(shop?.id),
+    retry: 1,
     queryFn: async () => {
-      let q = supabase
-        .from("appointments")
-        .select("*, barbers(nome), services(nome)")
-        .eq("barbershop_id", shop!.id)
-        .gte("data", inicio)
-        .lte("data", fim)
-        .neq("status", "cancelado")
-        .order("data")
-        .order("hora_inicio");
+      if (!shop?.id) throw new Error("Não foi possível identificar a barbearia desta conta.");
+      let q = supabase.from("appointments")
+        .select("id, barbershop_id, customer_id, barber_id, service_id, cliente_nome, cliente_telefone, data, hora_inicio, hora_fim, valor, status, observacao, payment_method_id, payment_method_nome")
+        .eq("barbershop_id", shop.id).gte("data", inicio).lte("data", fim)
+        .neq("status", "cancelado").order("data").order("hora_inicio");
       if (barbeiro) q = q.eq("barber_id", barbeiro);
-      const { data, error } = await q;
-      if (error) throw error;
-      return data;
+      const result = await withTimeout(q);
+      if (result.error) throw new Error(`Falha ao consultar appointments: ${result.error.message} [${result.error.code ?? "sem código"}] ${result.error.details ?? ""}`);
+      const rows = result.data ?? [];
+      if (!rows.length) return [];
+      const barberIds = [...new Set(rows.map((a) => a.barber_id).filter(Boolean))];
+      const serviceIds = [...new Set(rows.map((a) => a.service_id).filter(Boolean))];
+      const [barbersResult, servicesResult] = await withTimeout(Promise.all([
+        barberIds.length ? supabase.from("barbers").select("id, nome").in("id", barberIds) : Promise.resolve({ data: [], error: null }),
+        serviceIds.length ? supabase.from("services").select("id, nome").in("id", serviceIds) : Promise.resolve({ data: [], error: null }),
+      ]));
+      if (barbersResult.error) throw new Error(`Falha ao consultar barbeiros: ${barbersResult.error.message} [${barbersResult.error.code ?? "sem código"}]`);
+      if (servicesResult.error) throw new Error(`Falha ao consultar serviços: ${servicesResult.error.message} [${servicesResult.error.code ?? "sem código"}]`);
+      const barberMap = new Map((barbersResult.data ?? []).map((b) => [b.id, b.nome]));
+      const serviceMap = new Map((servicesResult.data ?? []).map((s) => [s.id, s.nome]));
+      return rows.map((a) => ({ ...a, barbers: { nome: barberMap.get(a.barber_id) ?? "" }, services: { nome: serviceMap.get(a.service_id) ?? "Serviço" } }));
     },
   });
 
@@ -165,13 +184,12 @@ function Agenda() {
         </div>
       </div>
 
-      {isLoading && (
-        <div className="mt-6">
-          <Empty>Carregando...</Empty>
-        </div>
-      )}
+      {shopLoading && <div className="mt-6"><Empty>Carregando dados da barbearia...</Empty></div>}
+      {shopError && <div className="mt-6 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm"><p className="font-medium text-destructive">Não foi possível identificar a barbearia.</p><p className="mt-1 text-muted-foreground">{shopLoadError instanceof Error ? shopLoadError.message : "Falha ao carregar os dados da conta."}</p><button type="button" className={`${btnGhost} mt-3`} onClick={() => reloadShop()}>TENTAR NOVAMENTE</button></div>}
+      {Boolean(shop?.id) && isLoading && <div className="mt-6"><Empty>Carregando agenda...</Empty></div>}
+      {Boolean(shop?.id) && isError && <div className="mt-6 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm"><p className="font-medium text-destructive">Não foi possível carregar a agenda.</p><p className="mt-1 text-muted-foreground">{listaError instanceof Error ? listaError.message : typeof listaError === "string" ? listaError : JSON.stringify(listaError) || "Erro desconhecido."}</p><button type="button" className={`${btnGhost} mt-3`} disabled={isFetching} onClick={() => recarregarAgenda()}>{isFetching ? "TENTANDO NOVAMENTE..." : "TENTAR NOVAMENTE"}</button></div>}
 
-      <div className={`mt-6 grid gap-4 ${modo === "semana" ? "lg:grid-cols-2" : ""}`}>
+      {Boolean(shop?.id) && !isLoading && !isError && <div className={`mt-6 grid gap-4 ${modo === "semana" ? "lg:grid-cols-2" : ""}`}>
         {dias.map((d) => {
           const doDia = (lista ?? []).filter((a) => a.data === d);
           const [, , dd] = d.split("-");
@@ -211,7 +229,7 @@ function Agenda() {
             </div>
           );
         })}
-      </div>
+      </div>}
     </AdminShell>
   );
 }
