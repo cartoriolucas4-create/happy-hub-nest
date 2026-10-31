@@ -219,8 +219,8 @@ function Landing() {
               <div className="flex items-center justify-between"><span className="text-sm font-semibold">Mensal</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">Mais flexibilidade</span></div>
               <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Ideal para começar a organizar a operação sem compromisso de longo prazo.</p>
               <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 59,99</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div>
-              <p className="mt-1 text-[11px] text-muted-foreground">Cobrança a cada 30 dias</p>
-              <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary">R$ 53,99 no Pix · 10% de desconto</div>
+              <p className="mt-1 text-[11px] text-muted-foreground">Valor mensal · pagamento a cada 30 dias</p>
+              <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary">No Pix: R$ 53,99 · 10% de desconto</div>
               <div className="my-5 h-px bg-border" />
               <ul className="flex-1 space-y-3 text-sm">
                 <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-primary"/> Acesso a todos os módulos da plataforma</li>
@@ -235,9 +235,9 @@ function Landing() {
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-lg">Melhor custo-benefício</div>
               <div className="mt-2 flex items-center justify-between"><span className="text-sm font-semibold text-primary">Anual</span><span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold text-primary">Economize 58%</span></div>
               <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">A escolha inteligente para quem quer profissionalizar a gestão e economizar o ano inteiro.</p>
-              <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 299,99</span><span className="ml-1 text-xs text-muted-foreground">/ ano</span></div>
-              <p className="mt-1 text-[11px] font-semibold text-primary">Apenas R$ 25,00 por mês</p>
-              <div className="mt-3 rounded-lg bg-primary/15 px-3 py-2 text-xs font-bold text-primary">R$ 269,99 no Pix · 10% de desconto</div>
+              <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 25,00</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div>
+              <p className="mt-1 text-[11px] text-muted-foreground">Total do plano: R$ 299,99 por 12 meses</p>
+              <div className="mt-3 rounded-lg bg-primary/15 px-3 py-2 text-xs font-bold text-primary">No Pix: R$ 269,99 no total · equivalente a R$ 22,50/mês</div>
               <p className="mt-2 text-[11px] text-muted-foreground">Você economiza R$ 419,89 em relação a 12 mensalidades.</p>
               <div className="my-5 h-px bg-primary/20" />
               <ul className="flex-1 space-y-3 text-sm">
@@ -256,9 +256,9 @@ function Landing() {
             <article className="flex flex-col rounded-2xl border border-border bg-background p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 sm:p-6">
               <div className="flex items-center justify-between"><span className="text-sm font-semibold">Semestral</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">6 meses</span></div>
               <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">Para quem busca um período maior de organização com economia intermediária.</p>
-              <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 239,94</span><span className="ml-1 text-xs text-muted-foreground">/ semestre</span></div>
-              <p className="mt-1 text-[11px] font-medium text-primary">Equivale a R$ 39,99 por mês</p>
-              <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary">R$ 215,95 no Pix · 10% de desconto</div>
+              <div className="mt-5"><span className="text-3xl font-bold tracking-tight">R$ 39,99</span><span className="ml-1 text-xs text-muted-foreground">/ mês</span></div>
+              <p className="mt-1 text-[11px] text-muted-foreground">Total do plano: R$ 239,94 por 6 meses</p>
+              <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary">No Pix: R$ 215,95 no total · equivalente a R$ 35,99/mês</div>
               <p className="mt-2 text-[11px] text-muted-foreground">Economia de R$ 120,00 em comparação a 6 mensalidades.</p>
               <div className="my-5 h-px bg-border" />
               <ul className="flex-1 space-y-3 text-sm">
