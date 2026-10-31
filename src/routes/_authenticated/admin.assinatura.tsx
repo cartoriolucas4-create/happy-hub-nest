@@ -59,7 +59,13 @@ function AssinaturaPage() {
       if (error) throw error;
       const url = data?.checkout_url;
       if (typeof url !== "string" || !url.startsWith("https://")) throw new Error(data?.error || "Não foi possível gerar o checkout.");
-      window.location.assign(url);
+      const checkoutWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
+      if (checkoutWindow) {
+        checkoutWindow.location.href = url;
+      } else {
+        setMessage("O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.");
+        setLoading(false);
+      }
     } catch (error) {
       console.error("[Assinatura] Falha ao criar checkout:", error);
       setMessage("Não foi possível iniciar o pagamento. Confira sua conexão e tente novamente. Se persistir, contate o suporte.");
@@ -71,7 +77,8 @@ function AssinaturaPage() {
     <div className="mx-auto max-w-3xl">
       <Link to="/admin" className="text-sm text-muted-foreground underline underline-offset-4">Voltar ao painel</Link>
       <div className="mt-8 flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><CreditCard className="h-5 w-5"/></span><div><p className="text-xs font-semibold uppercase tracking-[.2em] text-primary">Minha Barbearia</p><h1 className="text-3xl font-semibold">Escolha sua assinatura</h1></div></div>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Selecione o plano. Você será direcionado ao checkout seguro da InfinitePay e o acesso será liberado após a confirmação automática do pagamento.</p>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Selecione o plano. O checkout seguro da InfinitePay será aberto em uma nova aba; esta página permanecerá aberta para você continuar usando o sistema.</p>
+      {new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("trial") === "expirado" && <div role="alert" className="mt-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-5"><p className="font-semibold text-amber-500">Seu período de teste gratuito terminou.</p><p className="mt-1 text-sm text-muted-foreground">Para continuar usando sua barbearia, escolha um plano e realize o pagamento. Após a confirmação, seu acesso será liberado automaticamente.</p></div>}
       {shopLoading ? <p className="mt-8 text-sm text-muted-foreground">Carregando sua barbearia...</p> : shopError || !shop ? <div className="mt-8 rounded-xl border border-destructive/30 p-5 text-sm">Não foi possível localizar sua barbearia. Acesse a configuração inicial e tente novamente.</div> :
       <><div className="mt-8 grid gap-3 sm:grid-cols-3">{(Object.keys(PLANS) as Plan[]).map(key => <button key={key} type="button" onClick={() => setPlan(key)} className={`rounded-xl border p-5 text-left transition ${plan===key?"border-primary bg-primary/5 ring-2 ring-primary/20":"border-border bg-card hover:border-primary/50"}`} aria-pressed={plan===key}><span className="text-sm font-semibold">{PLANS[key].label}</span><strong className="mt-3 block text-2xl">{PLANS[key].price}</strong><span className="mt-1 block text-xs text-muted-foreground">{PLANS[key].detail}</span>{plan===key && <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary"><CheckCircle2 className="h-4 w-4"/> Selecionado</span>}</button>)}</div>
       <div className="mt-6 rounded-xl border border-border bg-card p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Plano selecionado</p><p className="mt-1 text-lg font-semibold">{selected.label}</p><p className="text-xs text-muted-foreground">{selected.detail}</p></div><strong className="text-2xl">{selected.price}</strong></div><button type="button" onClick={iniciarPagamento} disabled={loading} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{loading ? <><Loader2 className="h-4 w-4 animate-spin"/> GERANDO CHECKOUT...</> : <>PAGAR COM INFINITEPAY <CreditCard className="h-4 w-4"/></>}</button><div className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary"/> A liberação depende da confirmação do pagamento pelo servidor. O redirecionamento de retorno não libera acesso por si só.</div></div></>}
