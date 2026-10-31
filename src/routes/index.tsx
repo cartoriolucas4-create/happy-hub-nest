@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import {
   ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, Clock3,
   CreditCard, DollarSign, Link2, Menu, Monitor, Scissors, Smartphone,
-  Tablet, UserCog, Users, X, BarChart3, ShieldCheck, Zap, CircleHelp,\n  Phone, Video, MoreVertical, CheckCheck, Send, MessageCircle,\n  CalendarCheck, Wallet, TrendingUp, Receipt, ArrowDownLeft, ArrowUpRight,
+  Tablet, UserCog, Users, X, BarChart3, ShieldCheck, Zap, CircleHelp,
+  Phone, Video, MoreVertical, CheckCheck, Send, MessageCircle,
+  CalendarCheck, Wallet, TrendingUp, Receipt, ArrowDownLeft, ArrowUpRight,
 } from "lucide-react";
 import heroImg from "@/assets/hero-barbearia.jpg";
 
