@@ -182,11 +182,11 @@ function Landing() {
             <div className="space-y-7">
               <div className="flex gap-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Smartphone className="h-5 w-5" /></span>
-                <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Vídeo 01 · 30 segundos</p><h3 className="mt-1 text-lg font-semibold">O cliente agenda sozinho</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">A conversa no WhatsApp, o link da barbearia, a escolha do serviço, do profissional e do horário. No final, a confirmação do agendamento.</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Uma experiência simples para o seu cliente</p><h3 className="mt-1 text-lg font-semibold">Mais facilidade para agendar. Menos mensagens para você responder.</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">Seu cliente encontra os serviços, escolhe quem vai atender e reserva o melhor horário em poucos passos — a qualquer hora, direto pelo celular. Uma experiência prática que valoriza sua barbearia e ajuda a transformar interesse em agendamento.</p></div>
               </div>
               <div className="flex gap-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><BarChart3 className="h-5 w-5" /></span>
-                <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Vídeo 02 · 30 segundos</p><h3 className="mt-1 text-lg font-semibold">Você controla o negócio inteiro</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">Agenda, vendas presenciais, entradas, saídas, pagamentos e resultados reunidos em um painel de gestão.</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Sua barbearia na palma da mão</p><h3 className="mt-1 text-lg font-semibold">Tenha clareza da operação e controle de cada resultado.</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">Acompanhe a agenda, organize vendas, registre entradas e despesas e entenda como o negócio está performando. Tudo conectado em um só lugar, para você tomar decisões com mais segurança e cuidar do crescimento da sua barbearia.</p></div>
               </div>
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                 <p className="text-sm font-semibold">Dois lados. Um só sistema.</p>
