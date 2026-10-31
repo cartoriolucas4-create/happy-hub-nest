@@ -7,7 +7,8 @@ type Period = "today" | "7d" | "30d" | "custom";
 const chartColors = { blue: "#3b82f6", cyan: "#06b6d4", purple: "#8b5cf6", pink: "#ec4899", green: "#22c55e", amber: "#f59e0b", red: "#f43f5e" };
 const currencyTick = (value: number) => Number(value).toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
 const tooltipCurrency = (value: number | string) => brl(Number(value));
-const tooltipStyle = { borderRadius: 14, border: "1px solid rgba(148, 163, 184, 0.28)", background: "rgba(15, 23, 42, 0.98)", color: "#ffffff", boxShadow: "0 16px 40px rgba(0,0,0,.45)" };\nconst tooltipTextStyle = { color: "#ffffff", fill: "#ffffff", fontWeight: 600 };
+const tooltipStyle = { borderRadius: 14, border: "1px solid rgba(148, 163, 184, 0.28)", background: "rgba(15, 23, 42, 0.98)", color: "#ffffff", boxShadow: "0 16px 40px rgba(0,0,0,.45)" };
+const tooltipTextStyle = { color: "#ffffff", fill: "#ffffff", fontWeight: 600 };
 function daysBetween(from: string, to: string) { const start = new Date(`${from}T12:00:00`); const end = new Date(`${to}T12:00:00`); return Math.round((end.getTime() - start.getTime()) / 86400000); }
 export function DashboardCharts({ appointments, finance, period, from, to }: { appointments: ChartAppointment[]; finance?: FinanceSummary | null; period: Period; from: string; to: string }) {
   const confirmed = appointments.filter(a => (a.status === "confirmado" || a.status === "concluido") && Boolean(a.payment_received_at));
