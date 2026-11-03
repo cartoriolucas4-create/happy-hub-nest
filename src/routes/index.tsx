@@ -243,7 +243,7 @@ function Landing() {
             <p className="mt-4 leading-7 text-muted-foreground">Uma demonstração em duas etapas: primeiro, seu cliente agenda pelo WhatsApp; depois, você acompanha e administra a barbearia pelo painel.</p>
           </div>
           <div className="mt-12 grid items-center gap-12 lg:grid-cols-[.85fr_1.15fr]">
-            <div className="space-y-7">
+            <div className="hidden space-y-7 lg:block">
               <div className="flex gap-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Smartphone className="h-5 w-5" /></span>
                 <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Uma experiência simples para o seu cliente</p><h3 className="mt-1 text-lg font-semibold">Mais facilidade para agendar. Menos mensagens para você responder.</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">Seu cliente encontra os serviços, escolhe quem vai atender e reserva o melhor horário em poucos passos — a qualquer hora, direto pelo celular. Uma experiência prática que valoriza sua barbearia e ajuda a transformar interesse em agendamento.</p></div>
