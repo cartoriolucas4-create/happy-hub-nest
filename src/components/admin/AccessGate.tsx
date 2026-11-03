@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Clock, Lock, MessageCircle, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Clock, CreditCard, Lock, MessageCircle, ShieldCheck } from "lucide-react";
 import { dataHoraBr, formatarRestante, montarMensagemSuporte, serverOffset, useCountdown, useIsSuperAdmin, useLicense, useSupportIdentity, useSupportMessageTemplate, useSupportWhatsapp, whatsappSuporte, type Licenca, type SupportMessageData } from "@/lib/license";
 import { useShop } from "@/lib/shop";
 
@@ -67,7 +68,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
       <Lock className="mx-auto h-8 w-8 text-destructive" aria-hidden="true" /><h2 className="mt-5 text-2xl">{bloqueado ? "ACESSO BLOQUEADO" : "SEU ACESSO EXPIROU"}</h2>
       <p className="mt-3 text-sm text-muted-foreground">{bloqueado ? "Seu acesso está temporariamente bloqueado. Entre em contato com o suporte." : licenca.access_expires_at ? "Seu período de acesso terminou. Entre em contato para renovar." : "Seu período gratuito de 24 horas terminou. Para continuar utilizando o sistema, entre em contato com nossa equipe para ativar seu acesso."}</p>
       <p className="mt-3 text-xs text-muted-foreground">Nenhum dado da sua barbearia foi excluído. Ao liberarmos o acesso, tudo continua disponível.</p><p className="mt-1 text-xs text-muted-foreground">Venceu em {dataHoraBr(licenca.expires_at)}</p>
-      <div className="mt-7 flex flex-wrap items-center justify-center gap-3"><a href={whatsappSuporte(mensagem, supportWhatsapp)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-display text-sm tracking-widest text-primary-foreground hover:bg-primary/90"><MessageCircle className="h-4 w-4" aria-hidden="true" />{expirado && licenca.access_expires_at ? "RENOVAR ACESSO" : "ENTRAR EM CONTATO"}</a><button onClick={() => queryClient.invalidateQueries()} className="rounded-md border border-border px-5 py-3 text-sm hover:border-primary hover:text-primary">Já liberei, atualizar</button></div>
+      <div className="mt-7 flex flex-wrap items-center justify-center gap-3">{expirado ? <Link to="/admin/assinatura" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-display text-sm tracking-widest text-primary-foreground hover:bg-primary/90"><CreditCard className="h-4 w-4" aria-hidden="true" />VER PLANOS E ASSINAR</Link> : <a href={whatsappSuporte(mensagem, supportWhatsapp)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-display text-sm tracking-widest text-primary-foreground hover:bg-primary/90"><MessageCircle className="h-4 w-4" aria-hidden="true" />ENTRAR EM CONTATO</a>}<button onClick={() => queryClient.invalidateQueries()} className="rounded-md border border-border px-5 py-3 text-sm hover:border-primary hover:text-primary">Já liberei, atualizar</button></div>
     </div>
   );
 }
