@@ -10,17 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ComprarRouteImport } from './routes/comprar'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as ComprarRouteImport } from './routes/comprar'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugAgendarRouteImport } from './routes/$slug.agendar'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as AuthenticatedAdminAssinaturaRouteImport } from './routes/_authenticated/admin.assinatura'
 import { Route as AuthenticatedAdminAgendaRouteImport } from './routes/_authenticated/admin.agenda'
 import { Route as AuthenticatedAdminAgendamentosRouteImport } from './routes/_authenticated/admin.agendamentos'
+import { Route as AuthenticatedAdminAssinaturaRouteImport } from './routes/_authenticated/admin.assinatura'
 import { Route as AuthenticatedAdminAutorizacaoRouteImport } from './routes/_authenticated/admin.autorizacao'
 import { Route as AuthenticatedAdminBarbeirosRouteImport } from './routes/_authenticated/admin.barbeiros'
 import { Route as AuthenticatedAdminBloqueiosRouteImport } from './routes/_authenticated/admin.bloqueios'
@@ -56,6 +56,11 @@ const CadastroRoute = CadastroRouteImport.update({
   path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComprarRoute = ComprarRouteImport.update({
+  id: '/comprar',
+  path: '/comprar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -81,16 +86,6 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ComprarRoute = ComprarRouteImport.update({
-  id: '/comprar',
-  path: '/comprar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAdminAssinaturaRoute = AuthenticatedAdminAssinaturaRouteImport.update({
-  id: '/admin/assinatura',
-  path: '/admin/assinatura',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedAdminAgendaRoute =
   AuthenticatedAdminAgendaRouteImport.update({
     id: '/admin/agenda',
@@ -101,6 +96,12 @@ const AuthenticatedAdminAgendamentosRoute =
   AuthenticatedAdminAgendamentosRouteImport.update({
     id: '/admin/agendamentos',
     path: '/admin/agendamentos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAssinaturaRoute =
+  AuthenticatedAdminAssinaturaRouteImport.update({
+    id: '/admin/assinatura',
+    path: '/admin/assinatura',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminAutorizacaoRoute =
@@ -226,13 +227,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/comprar': typeof ComprarRoute
-  '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/$slug/agendar': typeof SlugAgendarRoute
   '/$slug/': typeof SlugIndexRoute
   '/admin/agenda': typeof AuthenticatedAdminAgendaRoute
   '/admin/agendamentos': typeof AuthenticatedAdminAgendamentosRoute
+  '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/admin/autorizacao': typeof AuthenticatedAdminAutorizacaoRoute
   '/admin/barbeiros': typeof AuthenticatedAdminBarbeirosRoute
   '/admin/bloqueios': typeof AuthenticatedAdminBloqueiosRoute
@@ -259,13 +260,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/comprar': typeof ComprarRoute
-  '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/$slug/agendar': typeof SlugAgendarRoute
   '/$slug': typeof SlugIndexRoute
   '/admin/agenda': typeof AuthenticatedAdminAgendaRoute
   '/admin/agendamentos': typeof AuthenticatedAdminAgendamentosRoute
+  '/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/admin/autorizacao': typeof AuthenticatedAdminAutorizacaoRoute
   '/admin/barbeiros': typeof AuthenticatedAdminBarbeirosRoute
   '/admin/bloqueios': typeof AuthenticatedAdminBloqueiosRoute
@@ -293,13 +294,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/cadastro': typeof CadastroRoute
+  '/comprar': typeof ComprarRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/$slug/agendar': typeof SlugAgendarRoute
   '/$slug/': typeof SlugIndexRoute
   '/_authenticated/admin/agenda': typeof AuthenticatedAdminAgendaRoute
-  '/_authenticated/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/_authenticated/admin/agendamentos': typeof AuthenticatedAdminAgendamentosRoute
+  '/_authenticated/admin/assinatura': typeof AuthenticatedAdminAssinaturaRoute
   '/_authenticated/admin/autorizacao': typeof AuthenticatedAdminAutorizacaoRoute
   '/_authenticated/admin/barbeiros': typeof AuthenticatedAdminBarbeirosRoute
   '/_authenticated/admin/bloqueios': typeof AuthenticatedAdminBloqueiosRoute
@@ -328,13 +330,13 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/comprar'
-    | '/admin/assinatura'
     | '/login'
     | '/reset-password'
     | '/$slug/agendar'
     | '/$slug/'
     | '/admin/agenda'
     | '/admin/agendamentos'
+    | '/admin/assinatura'
     | '/admin/autorizacao'
     | '/admin/barbeiros'
     | '/admin/bloqueios'
@@ -358,16 +360,16 @@ export interface FileRouteTypes {
     | '/super-admin/clientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/comprar'
-    | '/admin/assinatura'
     | '/'
     | '/cadastro'
+    | '/comprar'
     | '/login'
     | '/reset-password'
     | '/$slug/agendar'
     | '/$slug'
     | '/admin/agenda'
     | '/admin/agendamentos'
+    | '/admin/assinatura'
     | '/admin/autorizacao'
     | '/admin/barbeiros'
     | '/admin/bloqueios'
@@ -394,13 +396,14 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/cadastro'
+    | '/comprar'
     | '/login'
     | '/reset-password'
     | '/$slug/agendar'
     | '/$slug/'
     | '/_authenticated/admin/agenda'
-    | '/_authenticated/admin/assinatura'
     | '/_authenticated/admin/agendamentos'
+    | '/_authenticated/admin/assinatura'
     | '/_authenticated/admin/autorizacao'
     | '/_authenticated/admin/barbeiros'
     | '/_authenticated/admin/bloqueios'
@@ -460,6 +463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comprar': {
+      id: '/comprar'
+      path: '/comprar'
+      fullPath: '/comprar'
+      preLoaderRoute: typeof ComprarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -488,39 +498,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SlugAgendarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/comprar': {
-      id: '/comprar'
-      path: '/comprar'
-      fullPath: '/comprar'
-      preLoaderRoute: typeof ComprarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/admin/assinatura': {
-      id: '/_authenticated/admin/assinatura'
-      path: '/admin/assinatura'
-      fullPath: '/admin/assinatura'
-      preLoaderRoute: typeof AuthenticatedAdminAssinaturaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/comprar': {
-      id: '/comprar'
-      path: '/comprar'
-      fullPath: '/comprar'
-      preLoaderRoute: typeof ComprarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/admin/assinatura': {
-      id: '/_authenticated/admin/assinatura'
-      path: '/admin/assinatura'
-      fullPath: '/admin/assinatura'
-      preLoaderRoute: typeof AuthenticatedAdminAssinaturaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/agenda': {
@@ -535,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/agendamentos'
       fullPath: '/admin/agendamentos'
       preLoaderRoute: typeof AuthenticatedAdminAgendamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/assinatura': {
+      id: '/_authenticated/admin/assinatura'
+      path: '/admin/assinatura'
+      fullPath: '/admin/assinatura'
+      preLoaderRoute: typeof AuthenticatedAdminAssinaturaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/autorizacao': {
@@ -681,9 +670,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminAssinaturaRoute: typeof AuthenticatedAdminAssinaturaRoute
   AuthenticatedAdminAgendaRoute: typeof AuthenticatedAdminAgendaRoute
   AuthenticatedAdminAgendamentosRoute: typeof AuthenticatedAdminAgendamentosRoute
+  AuthenticatedAdminAssinaturaRoute: typeof AuthenticatedAdminAssinaturaRoute
   AuthenticatedAdminAutorizacaoRoute: typeof AuthenticatedAdminAutorizacaoRoute
   AuthenticatedAdminBarbeirosRoute: typeof AuthenticatedAdminBarbeirosRoute
   AuthenticatedAdminBloqueiosRoute: typeof AuthenticatedAdminBloqueiosRoute
@@ -706,9 +695,9 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminAssinaturaRoute: AuthenticatedAdminAssinaturaRoute,
   AuthenticatedAdminAgendaRoute: AuthenticatedAdminAgendaRoute,
   AuthenticatedAdminAgendamentosRoute: AuthenticatedAdminAgendamentosRoute,
+  AuthenticatedAdminAssinaturaRoute: AuthenticatedAdminAssinaturaRoute,
   AuthenticatedAdminAutorizacaoRoute: AuthenticatedAdminAutorizacaoRoute,
   AuthenticatedAdminBarbeirosRoute: AuthenticatedAdminBarbeirosRoute,
   AuthenticatedAdminBloqueiosRoute: AuthenticatedAdminBloqueiosRoute,
@@ -736,10 +725,10 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  ComprarRoute: ComprarRoute,
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CadastroRoute: CadastroRoute,
+  ComprarRoute: ComprarRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SlugAgendarRoute: SlugAgendarRoute,
