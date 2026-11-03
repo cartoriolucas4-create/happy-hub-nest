@@ -68,8 +68,8 @@ function Agenda() {
       if (result.error) throw new Error(`Falha ao consultar appointments: ${result.error.message} [${result.error.code ?? "sem código"}] ${result.error.details ?? ""}`);
       const rows = result.data ?? [];
       if (!rows.length) return [];
-      const barberIds = [...new Set(rows.map((a) => a.barber_id).filter(Boolean))];
-      const serviceIds = [...new Set(rows.map((a) => a.service_id).filter(Boolean))];
+      const barberIds = [...new Set(rows.map((a) => a.barber_id).filter((id): id is string => Boolean(id)))];
+      const serviceIds = [...new Set(rows.map((a) => a.service_id).filter((id): id is string => Boolean(id)))];
       const [barbersResult, servicesResult] = await withTimeout(Promise.all([
         barberIds.length ? supabase.from("barbers").select("id, nome").in("id", barberIds) : Promise.resolve({ data: [], error: null }),
         serviceIds.length ? supabase.from("services").select("id, nome").in("id", serviceIds) : Promise.resolve({ data: [], error: null }),
@@ -78,7 +78,7 @@ function Agenda() {
       if (servicesResult.error) throw new Error(`Falha ao consultar serviços: ${servicesResult.error.message} [${servicesResult.error.code ?? "sem código"}]`);
       const barberMap = new Map((barbersResult.data ?? []).map((b) => [b.id, b.nome]));
       const serviceMap = new Map((servicesResult.data ?? []).map((s) => [s.id, s.nome]));
-      return rows.map((a) => ({ ...a, barbers: { nome: barberMap.get(a.barber_id) ?? "" }, services: { nome: serviceMap.get(a.service_id) ?? "Serviço" } }));
+      return rows.map((a) => ({ ...a, barbers: { nome: a.barber_id ? barberMap.get(a.barber_id) ?? "" : "" }, services: { nome: a.service_id ? serviceMap.get(a.service_id) ?? "Serviço" : "Serviço" } }));
     },
   });
 

@@ -289,7 +289,7 @@ function Barbeiros() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button aria-label="Editar" className="text-muted-foreground hover:text-primary" onClick={() => setForm({ id: b.id, nome: b.nome.toUpperCase(), telefone: b.telefone ?? "", descricao: b.descricao ?? "", foto_url: b.foto_url ?? "", ativo: b.ativo, servicos, commission_type: commission?.commission_type ?? "", commission_value: commission ? String(commission.commission_value) : "" })}>
+                <button aria-label="Editar" className="text-muted-foreground hover:text-primary" onClick={() => setForm({ id: b.id, nome: b.nome.toUpperCase(), telefone: b.telefone ?? "", descricao: b.descricao ?? "", foto_url: b.foto_url ?? "", ativo: b.ativo, servicos, commission_type: (commission?.commission_type ?? "") as Form["commission_type"], commission_value: commission ? String(commission.commission_value) : "" })}>
                   <Pencil className="h-4 w-4" />
                 </button>
                 <button aria-label="Excluir" disabled={excluir.isPending} className="text-muted-foreground hover:text-destructive disabled:opacity-50" onClick={() => { if (confirm(`Excluir definitivamente o barbeiro "${b.nome}"? Os agendamentos vinculados também serão excluídos. Esta ação não pode ser desfeita.`)) excluir.mutate({ id: b.id, nome: b.nome }); }}>
