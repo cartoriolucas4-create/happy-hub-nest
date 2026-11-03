@@ -90,7 +90,7 @@ function Configuracoes() {
       const path = await uploadMedia(shop.id, kind, file);
       const url = await mediaUrl(path);
       const field = kind === "logo" ? "logo_url" : "cover_url";
-      const { error } = await supabase.from("barbershops").update({ [field]: path }).eq("id", shop.id);
+      const { error } = await supabase.from("barbershops").update(kind === "logo" ? { logo_url: path } : { cover_url: path }).eq("id", shop.id);
       if (error) throw error;
       setForm((current) => current ? { ...current, [field]: path } : current);
       if (kind === "logo") setLogoPreview(url); else setCoverPreview(url);
@@ -105,7 +105,7 @@ function Configuracoes() {
     const isLogo = kind === "logo";
     const field = isLogo ? "logo_url" : "cover_url";
     try {
-      const { error } = await supabase.from("barbershops").update({ [field]: null }).eq("id", shop.id);
+      const { error } = await supabase.from("barbershops").update(kind === "logo" ? { logo_url: null } : { cover_url: null }).eq("id", shop.id);
       if (error) throw error;
       setForm((current) => current ? { ...current, [field]: "" } : current);
       if (isLogo) { setLogoPreview(null); if (logoInputRef.current) logoInputRef.current.value = ""; }

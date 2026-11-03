@@ -67,7 +67,7 @@ export function SetupWizard({ shopId }: { shopId: string }) {
     let caret = 0;
     let digitsFound = 0;
     while (caret < formatted.length && digitsFound < digitsBeforeCursor) {
-      if (/\d/.test(formatted[caret])) digitsFound += 1;
+      if (/\d/.test(formatted.charAt(caret))) digitsFound += 1;
       caret += 1;
     }
     pendingPriceCaret.current = caret;
