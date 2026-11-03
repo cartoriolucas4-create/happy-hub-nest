@@ -386,6 +386,14 @@
 .dashboard-float-booking { top:2%; right:-2%; }
 .dashboard-float-payment { bottom:4%; left:-5%; animation-delay:-1.8s; }
 .dashboard-float-team { right:0; bottom:-1%; animation-delay:-3.2s; }
+.dashboard-notification-cycle { opacity:0; animation:notification-cycle 12s ease-in-out infinite; pointer-events:none; }
+.dashboard-notification-2 { animation-delay:-4s; }
+.dashboard-notification-3 { animation-delay:-8s; }
+@keyframes notification-cycle {
+  0%,4% { opacity:0; transform:translateY(10px) scale(.96); }
+  9%,25% { opacity:1; transform:translateY(0) scale(1); }
+  31%,100% { opacity:0; transform:translateY(-8px) scale(.97); }
+}
 .dashboard-avatar { display:flex; width:30px; height:30px; align-items:center; justify-content:center; border-radius:50%; background:#c6a45a25; color:#e5c77d; font-size:9px; font-weight:800; }
 @keyframes dashboard-hover { 0%,100% { transform:perspective(1100px) rotateY(-5deg) rotateX(2deg) translateY(0); } 50% { transform:perspective(1100px) rotateY(-3deg) rotateX(1deg) translateY(-7px); } }
 @keyframes float-card { 0%,100% { transform:translateY(0) rotate(0); } 50% { transform:translateY(-9px) rotate(-1deg); } }
