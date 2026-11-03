@@ -154,8 +154,24 @@ function Landing() {
                   </div>
                 </div>
               </div>
-              <div className="dashboard-float dashboard-float-booking"><span className="dashboard-float-icon"><CalendarClock className="h-4 w-4" /></span><span><b>Novo agendamento</b><small>Cliente confirmou às 14:30</small></span><Check className="ml-auto h-4 w-4 text-emerald-300" /></div>
-              <div className="dashboard-float dashboard-float-payment"><span className="dashboard-float-icon"><DollarSign className="h-4 w-4" /></span><span><b>Pagamento recebido</b><small>Serviço concluído · R$ 45,00</small></span><span className="ml-auto text-[10px] font-bold text-emerald-300">+ R$ 45</span></div>
+              <div className="dashboard-float dashboard-float-booking dashboard-notification-cycle">
+                <span className="dashboard-float-icon"><CalendarClock className="h-4 w-4" /></span><span><b>Novo agendamento</b><small>Lucas · Corte tradicional · 14:30</small></span><Check className="ml-auto h-4 w-4 text-emerald-300" />
+              </div>
+              <div className="dashboard-float dashboard-float-booking dashboard-notification-cycle dashboard-notification-2">
+                <span className="dashboard-float-icon"><CalendarClock className="h-4 w-4" /></span><span><b>Horário reservado</b><small>Marcos · Corte + barba · 15:00</small></span><Check className="ml-auto h-4 w-4 text-emerald-300" />
+              </div>
+              <div className="dashboard-float dashboard-float-booking dashboard-notification-cycle dashboard-notification-3">
+                <span className="dashboard-float-icon"><CalendarClock className="h-4 w-4" /></span><span><b>Agendamento confirmado</b><small>Rafael · Degradê · 15:30</small></span><Check className="ml-auto h-4 w-4 text-emerald-300" />
+              </div>
+              <div className="dashboard-float dashboard-float-payment dashboard-notification-cycle">
+                <span className="dashboard-float-icon"><DollarSign className="h-4 w-4" /></span><span><b>Pagamento recebido</b><small>Corte tradicional · R$ 45,00</small></span><span className="ml-auto text-[10px] font-bold text-emerald-300">+ R$ 45</span>
+              </div>
+              <div className="dashboard-float dashboard-float-payment dashboard-notification-cycle dashboard-notification-2">
+                <span className="dashboard-float-icon"><DollarSign className="h-4 w-4" /></span><span><b>Nova venda registrada</b><small>Produto · R$ 35,00</small></span><span className="ml-auto text-[10px] font-bold text-emerald-300">+ R$ 35</span>
+              </div>
+              <div className="dashboard-float dashboard-float-payment dashboard-notification-cycle dashboard-notification-3">
+                <span className="dashboard-float-icon"><DollarSign className="h-4 w-4" /></span><span><b>Venda presencial</b><small>Finalizada no balcão · R$ 60,00</small></span><span className="ml-auto text-[10px] font-bold text-emerald-300">+ R$ 60</span>
+              </div>
               <div className="dashboard-float dashboard-float-team"><span className="dashboard-avatar">LR</span><span><b>Equipe em atividade</b><small>3 profissionais atendendo</small></span></div>
             </div>            <p className="relative mt-3 text-center text-[11px] text-muted-foreground">Prévia ilustrativa da experiência de gestão</p>
           </div>
