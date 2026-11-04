@@ -45,19 +45,16 @@ export function AdminShell({ title, subtitle, actions, children }: { title: stri
 
   useEffect(() => {
     if (!shop?.id) return;
+    // Realtime events mark cached data as stale without triggering a
+    // burst of refetches across every active screen.
     const invalidate = () => {
-      void queryClient.invalidateQueries();
-      void queryClient.refetchQueries({ type: "active" });
+      void queryClient.invalidateQueries({ refetchType: "none" });
     };
     const channel = supabase
       .channel(`admin-live-sync-${shop.id}`)
       .on("postgres_changes", { event: "*", schema: "public" }, invalidate)
       .subscribe();
-    const interval = window.setInterval(() => {
-      void queryClient.refetchQueries({ type: "active" });
-    }, 1000);
     return () => {
-      window.clearInterval(interval);
       void supabase.removeChannel(channel);
     };
   }, [shop?.id, queryClient]);
