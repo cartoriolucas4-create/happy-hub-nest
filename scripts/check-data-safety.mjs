@@ -50,7 +50,7 @@ const files = changedFiles();
 const violations = [];
 
 for (const path of files) {
-  if (!/^(supabase\/migrations\/.*\.sql|src\/.*\.(?:[cm]?[jt]sx?))$/i.test(path)) continue;
+  if (path === "scripts/check-data-safety.mjs" || !/^(supabase\/(?:migrations\/.*\.sql|functions\/.*)|src\/.*\.(?:[cm]?[jt]sx?)|scripts\/.*|\.github\/workflows\/.*|package\.json)$/i.test(path)) continue;
   let content;
   try {
     content = await readFile(path, "utf8");
