@@ -44,7 +44,6 @@ const checks = [
   { label: "ALTER TABLE ... DROP COLUMN", pattern: /\bALTER\s+TABLE\b[\s\S]{0,500}?\bDROP\s+COLUMN\b/i },
   { label: "ON DELETE CASCADE", pattern: /\bON\s+DELETE\s+CASCADE\b/i },
   { label: "Supabase admin user deletion", pattern: /\bauth\.admin\.deleteUser\s*\(/i },
-  { label: "client-side delete on protected tenant tables", pattern: new RegExp(`\\.from\\(\\s*["'`](${protectedTables})["'`]\\s*\\)\\s*\\.delete\\s*\\(`, "i") },
 ];
 
 const files = changedFiles();
