@@ -46,6 +46,25 @@ function ResetPassword() {
       try {
         const url = new URL(window.location.href);
         const code = url.searchParams.get("code");
+        const tokenHash = url.searchParams.get("token_hash");
+        const tokenType = url.searchParams.get("type");
+
+        // Supabase email templates can send either a PKCE code or a token_hash.
+        // Verify token_hash explicitly so recovery links work with both formats.
+        if (tokenHash && tokenType === "recovery") {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: "recovery",
+          });
+          if (error) throw error;
+          const { data } = await supabase.auth.getSession();
+          if (active && data.session) {
+            setRecoveryValid(true);
+            setLinkError("");
+          }
+          return;
+        }
+
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
