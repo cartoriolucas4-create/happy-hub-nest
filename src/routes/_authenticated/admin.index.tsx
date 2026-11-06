@@ -107,11 +107,11 @@ function Dashboard() {
       const db = supabase as any;
       // Consulta-base sem embeds: os nomes de serviços e profissionais são buscados separadamente abaixo.
       // Isso evita a ambiguidade do PostgREST quando há mais de uma FK entre appointments e services.
-      let aq = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method_id,barber_id,service_id", { head: false }).eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
-      if (reportStatus) aq = aq.eq("status", reportStatus); else aq = aq.in("status", ["confirmado","concluido"]);
+      let appointmentsQuery = db.from("appointments").select("id,data,hora_inicio,hora_fim,cliente_nome,valor,status,payment_received_at,payment_method_id,barber_id,service_id", { head: false }).eq("barbershop_id", shop.id).gte("data", reportDe).lte("data", reportAte).order("data").order("hora_inicio");
+      if (reportStatus) appointmentsQuery = appointmentsQuery.eq("status", reportStatus); else appointmentsQuery = appointmentsQuery.in("status", ["confirmado","concluido"]);
 
       const [a,s,cost,cust] = await Promise.all([
-        aq,
+        appointmentsQuery,
         db.from("external_sales").select("id,total,subtotal,discount,sold_at,payment_method,status,barber_id,client_id").eq("barbershop_id", shop.id).gte("sold_at", reportDe+"T00:00:00-03:00").lte("sold_at", reportAte+"T23:59:59.999-03:00").order("sold_at"),
         db.from("business_costs").select("amount,cost_date").eq("barbershop_id", shop.id).gte("cost_date", reportDe).lte("cost_date", reportAte).order("cost_date"),
         db.from("customers").select("id",{count:"exact",head:true}).eq("barbershop_id",shop.id),
