@@ -3,6 +3,7 @@ name: Access Control Check
 on:
   push:
     branches: [main]
+  pull_request: {}
   workflow_dispatch:
 
 jobs:
@@ -10,9 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - name: Validate customer data safety
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          node --check scripts/check-data-safety.mjs
+          node scripts/check-data-safety.mjs
       - run: bun install
       - run: bunx tsc --noEmit
       - run: bun run lint
