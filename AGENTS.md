@@ -11,3 +11,11 @@
 
 - GitHub Pages builds validate this project's public backend URL and public/anon key before bundling, preferring optional repository secrets over the tracked public environment file, to prevent misdirected deployments or privileged-key exposure.
 - Signup must revalidate the public slug at submission and restore pending state in finally; network and API errors retain their original diagnostic so infrastructure outages cannot be mistaken for successful availability checks.
+
+
+## Mandatory customer-data protection
+- Follow `DATA_PROTECTION_POLICY.md` for every task. Preserving every customer's production data is a hard requirement.
+- Never reset, replace, drop, truncate, bulk-delete, or point production at another Supabase project as part of ordinary work.
+- Never add destructive migrations or code paths that delete protected tenant/business data. The CI guard `scripts/check-data-safety.mjs` must remain enabled in both validation and deployment workflows.
+- Any truly exceptional destructive operation requires a precise impact/risk explanation, a tested restorable backup, and two separate, explicit, operation-specific owner confirmations. A generic yes is not enough. If any requirement is missing, do not perform the operation.
+- Do not disable, bypass, weaken, or remove the data safety guard to get a build or deploy passing.
