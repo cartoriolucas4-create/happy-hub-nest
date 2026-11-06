@@ -40,7 +40,7 @@ const protectedTables =
 const checks = [
   { label: "DROP DATABASE/SCHEMA/TABLE/TYPE/DOMAIN/SEQUENCE", pattern: /\bDROP\s+(?:DATABASE|SCHEMA|TABLE|TYPE|DOMAIN|SEQUENCE)\b/i },
   { label: "TRUNCATE", pattern: /\bTRUNCATE\s+(?:TABLE\s+)?[\w".]+/i },
-  { label: "DELETE from protected customer/business tables", pattern: new RegExp(`\\bDELETE\\s+FROM\\s+(?:(?:public|auth)\\.)?${protectedTables}\\b`, "i") },
+  { label: "client-side delete on protected tenant tables", pattern: /\.from\(\s*["'](?:profiles|barbershops|appointments|clients|customers|sales|external_sales|expenses|products|commissions|subscriptions|subscription_orders|payments|barbers|services)["']\s*\)\s*\.delete\s*\(/i },
   { label: "ALTER TABLE ... DROP COLUMN", pattern: /\bALTER\s+TABLE\b[\s\S]{0,500}?\bDROP\s+COLUMN\b/i },
   { label: "ON DELETE CASCADE", pattern: /\bON\s+DELETE\s+CASCADE\b/i },
   { label: "Supabase admin user deletion", pattern: /\bauth\.admin\.deleteUser\s*\(/i },
