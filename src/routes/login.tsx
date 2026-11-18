@@ -20,16 +20,32 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+type Plan = "mensal" | "semestral" | "anual";
+
+function isPlan(value: unknown): value is Plan {
+  return value === "mensal" || value === "semestral" || value === "anual";
+}
+
 function readableAuthError(error: unknown, action: "login" | "recovery") {
   const message = error instanceof Error ? error.message : String(error ?? "");
-  if (/failed to fetch|fetch failed|network|load failed|timeout|ERR_NAME_NOT_RESOLVED/i.test(message)) {
+
+  if (
+    /failed to fetch|fetch failed|network|load failed|timeout|ERR_NAME_NOT_RESOLVED/i.test(
+      message,
+    )
+  ) {
     return "Não foi possível conectar ao servidor de contas. Verifique a conexão e a configuração do serviço e tente novamente.";
   }
+
   if (/invalid login credentials/i.test(message)) return "E-mail ou senha incorretos.";
-  if (/email not confirmed/i.test(message)) return "Confirme seu e-mail antes de entrar. Verifique também a caixa de spam.";
+  if (/email not confirmed/i.test(message)) {
+    return "Confirme seu e-mail antes de entrar. Verifique também a caixa de spam.";
+  }
+
   if (/redirect|url.*not.*allowed|not.*allow.*url/i.test(message)) {
     return "O endereço de retorno não está autorizado no serviço de autenticação. É necessário liberar https://agendocorte.com/** nas URLs de redirecionamento.";
   }
+
   return action === "recovery"
     ? `Não foi possível enviar o link de recuperação: ${message}`
     : `Não foi possível entrar: ${message}`;
@@ -44,40 +60,58 @@ function LoginPage() {
 
   useEffect(() => {
     let active = true;
+
     void getAuthenticatedArea()
       .then(async (session): Promise<void> => {
         if (!active || !session) return;
+
         const pendingPurchase = session.user.user_metadata?.["compra_order_nsu"];
-        if (session.area === "barbershop" && typeof pendingPurchase === "string" && pendingPurchase.trim()) {
+        if (
+          session.area === "barbershop" &&
+          typeof pendingPurchase === "string" &&
+          pendingPurchase.trim()
+        ) {
           await navigate({ to: "/admin/configurar", replace: true });
-        } else {
-          const requestedPlan = session.user.user_metadata?.["plano_solicitado"];
-          if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
-            await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
-          } else {
-            await navigate({ to: homeForArea(session.area), replace: true });
-          }
+          return;
         }
+
+        const requestedPlan = session.user.user_metadata?.["plano_solicitado"];
+        if (session.area === "barbershop" && isPlan(requestedPlan)) {
+          await navigate({
+            to: "/admin/assinatura",
+            search: { plano: requestedPlan },
+            replace: true,
+          });
+          return;
+        }
+
+        await navigate({ to: homeForArea(session.area), replace: true });
       })
       .catch((error) => {
         console.error("[Login] Não foi possível verificar a sessão existente:", error);
       });
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     if (loading || recuperando) return;
+
     if (!isEmail(email)) {
       toast.error("Informe um e-mail válido.");
       return;
     }
+
     if (!senha) {
       toast.error("Informe sua senha.");
       return;
     }
 
     setLoading(true);
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -88,19 +122,32 @@ function LoginPage() {
       const session = await getAuthenticatedArea();
       if (!session) {
         await supabase.auth.signOut().catch(() => undefined);
-        throw new Error("A conta foi autenticada, mas não foi possível carregar suas permissões. Verifique se o banco de dados está conectado e atualizado.");
+        throw new Error(
+          "A conta foi autenticada, mas não foi possível carregar suas permissões. Verifique se o banco de dados está conectado e atualizado.",
+        );
       }
+
       const pendingPurchase = session.user.user_metadata?.["compra_order_nsu"];
-      if (session.area === "barbershop" && typeof pendingPurchase === "string" && pendingPurchase.trim()) {
+      if (
+        session.area === "barbershop" &&
+        typeof pendingPurchase === "string" &&
+        pendingPurchase.trim()
+      ) {
         await navigate({ to: "/admin/configurar", replace: true });
-      } else {
-        const requestedPlan = session.user.user_metadata?.["plano_solicitado"];
-        if (session.area === "barbershop" && ["mensal", "semestral", "anual"].includes(String(requestedPlan))) {
-          await navigate({ to: "/admin/assinatura" as any, search: { plano: String(requestedPlan) } as any, replace: true });
-        } else {
-          await navigate({ to: homeForArea(session.area), replace: true });
-        }
+        return;
       }
+
+      const requestedPlan = session.user.user_metadata?.["plano_solicitado"];
+      if (session.area === "barbershop" && isPlan(requestedPlan)) {
+        await navigate({
+          to: "/admin/assinatura",
+          search: { plano: requestedPlan },
+          replace: true,
+        });
+        return;
+      }
+
+      await navigate({ to: homeForArea(session.area), replace: true });
     } catch (error) {
       console.error("[Login] Falha ao entrar:", error);
       toast.error(readableAuthError(error, "login"));
@@ -111,18 +158,23 @@ function LoginPage() {
 
   async function esqueci() {
     if (loading || recuperando) return;
+
     if (!isEmail(email)) {
       toast.error("Digite seu e-mail no campo acima para receber o link de recuperação.");
       return;
     }
 
     setRecuperando(true);
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: canonicalSiteUrl("/reset-password"),
       });
       if (error) throw error;
-      toast.success("Se esse e-mail estiver cadastrado, enviaremos um link de recuperação. Confira também a caixa de spam.");
+
+      toast.success(
+        "Se esse e-mail estiver cadastrado, enviaremos um link de recuperação. Confira também a caixa de spam.",
+      );
     } catch (error) {
       console.error("[Login] Falha ao solicitar recuperação:", error);
       toast.error(readableAuthError(error, "recovery"));
@@ -152,6 +204,7 @@ function LoginPage() {
               required
             />
           </label>
+
           <label className="block">
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Senha</span>
             <input
@@ -163,6 +216,7 @@ function LoginPage() {
               required
             />
           </label>
+
           <button
             type="submit"
             disabled={loading || recuperando}
