@@ -53,8 +53,10 @@ function Cadastro() {
       if (!active) return;
       if (!error && claim?.ok) {
         window.location.assign("/admin");
-      } else if (!error && claim?.reason === "barbershop_not_created") {
+      } else if (!error && ["barbershop_not_created", "payment_not_confirmed"].includes(String(claim?.reason))) {
         window.location.assign("/admin/configurar");
+      } else if (error) {
+        console.error("[Cadastro] Não foi possível vincular o pagamento pré-cadastro:", error);
       }
     })();
     return () => { active = false; };
