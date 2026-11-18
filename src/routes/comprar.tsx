@@ -69,7 +69,9 @@ function ComprarPage() {
     // Open synchronously from the click so Chrome does not block the payment tab.
     const checkoutWindow = window.open("about:blank", "_blank");
     if (!checkoutWindow) {
-      setError("O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.");
+      setError(
+        "O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.",
+      );
       setLoading(false);
       return;
     }
@@ -227,7 +229,10 @@ function ComprarPage() {
           </div>
 
           {error && (
-            <p role="alert" className="mt-4 rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
+            <p
+              role="alert"
+              className="mt-4 rounded-lg border border-destructive/30 p-3 text-sm text-destructive"
+            >
               {error}
             </p>
           )}
