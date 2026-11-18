@@ -20,7 +20,10 @@ async function claimPaidPublicCheckout(user: User) {
         data: { compra_order_nsu: null },
       });
       if (metadataError) {
-        console.warn("[Checkout público] Pedido ativado, mas não foi possível limpar o metadado.", metadataError);
+        console.warn(
+          "[Checkout público] Pedido ativado, mas não foi possível limpar o metadado.",
+          metadataError,
+        );
       }
       return;
     }
@@ -34,7 +37,9 @@ async function claimPaidPublicCheckout(user: User) {
     }
   }
 
-  console.warn("[Checkout público] O pagamento ainda não foi confirmado pelo webhook. O pedido será tentado novamente.");
+  console.warn(
+    "[Checkout público] O pagamento ainda não foi confirmado pelo webhook. O pedido será tentado novamente.",
+  );
 }
 
 /**
@@ -84,7 +89,10 @@ export async function loadOrCreateShop() {
 
   // The database unique index is the final authority. If a concurrent signup
   // still claimed the same slug, retry once with the full user id suffix.
-  if (created.error && (created.error.code === "23505" || /duplicate key|unique/i.test(created.error.message))) {
+  if (
+    created.error &&
+    (created.error.code === "23505" || /duplicate key|unique/i.test(created.error.message))
+  ) {
     const fallbackSlug = `${baseSlug}-${user.id}`;
     created = await supabase
       .from("barbershops")
