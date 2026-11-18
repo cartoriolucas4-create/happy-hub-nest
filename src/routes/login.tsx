@@ -30,9 +30,7 @@ function readableAuthError(error: unknown, action: "login" | "recovery") {
   const message = error instanceof Error ? error.message : String(error ?? "");
 
   if (
-    /failed to fetch|fetch failed|network|load failed|timeout|ERR_NAME_NOT_RESOLVED/i.test(
-      message,
-    )
+    /failed to fetch|fetch failed|network|load failed|timeout|ERR_NAME_NOT_RESOLVED/i.test(message)
   ) {
     return "Não foi possível conectar ao servidor de contas. Verifique a conexão e a configuração do serviço e tente novamente.";
   }
