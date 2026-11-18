@@ -69,7 +69,8 @@ function Cadastro() {
     };
   }, []);
 
-  const planoAtual = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("plano") : null;
+  const planoAtual =
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("plano") : null;
   const slugFinal = slugify(slugEditado ? slug : nomeBarbearia);
   const slugReservado = isReservedPublicSlug(slugFinal);
 
@@ -259,26 +260,60 @@ function Cadastro() {
             </div>
             {disponivel === false && (
               <span className="mt-1 block text-xs text-destructive">
-                {slugReservado ? "Esse link é reservado pelo sistema." : "Esse link já está em uso."}
+                {slugReservado
+                  ? "Esse link é reservado pelo sistema."
+                  : "Esse link já está em uso."}
               </span>
             )}
-            {erroSlug && <span role="alert" className="mt-1 block text-xs text-destructive">{erroSlug}</span>}
+            {erroSlug && (
+              <span role="alert" className="mt-1 block text-xs text-destructive">
+                {erroSlug}
+              </span>
+            )}
           </Field>
 
           <Field label="Nome do responsável">
-            <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} className={inputCls} required />
+            <input
+              value={responsavel}
+              onChange={(e) => setResponsavel(e.target.value)}
+              className={inputCls}
+              required
+            />
           </Field>
           <Field label="E-mail">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} required />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={inputCls}
+              required
+            />
           </Field>
           <Field label="Telefone">
-            <input value={telefone} onChange={(e) => setTelefone(e.target.value)} className={inputCls} required />
+            <input
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              className={inputCls}
+              required
+            />
           </Field>
           <Field label="Senha">
-            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} className={inputCls} required />
+            <input
+              type="password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              className={inputCls}
+              required
+            />
           </Field>
           <Field label="Confirmar senha">
-            <input type="password" value={confirma} onChange={(e) => setConfirma(e.target.value)} className={inputCls} required />
+            <input
+              type="password"
+              value={confirma}
+              onChange={(e) => setConfirma(e.target.value)}
+              className={inputCls}
+              required
+            />
           </Field>
 
           <button
