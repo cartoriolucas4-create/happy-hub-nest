@@ -7,10 +7,15 @@ export type AuthArea = "super-admin" | "barbershop";
  * Resolves the authenticated user's only permitted application area. The
  * global role always wins so a super admin can never fall through to the
  * barbershop experience.
+ *
+ * Keep authentication/API failures distinct from an unauthenticated visitor:
+ * hiding getUser() errors as null makes the login flow report a misleading
+ * "permissions could not be loaded" message and can sign out a valid session.
  */
 export async function getAuthenticatedArea(): Promise<{ user: User; area: AuthArea } | null> {
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) return null;
+  if (error) throw error;
+  if (!data.user) return null;
 
   const { data: isSuperAdmin, error: roleError } = await supabase.rpc("has_role", {
     _user_id: data.user.id,
