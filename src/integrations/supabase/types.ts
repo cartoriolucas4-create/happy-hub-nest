@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -113,6 +113,39 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_services: {
+        Row: {
+          appointment_id: string
+          ordem: number
+          service_id: string
+        }
+        Insert: {
+          appointment_id: string
+          ordem?: number
+          service_id: string
+        }
+        Update: {
+          appointment_id?: string
+          ordem?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_services_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -414,6 +447,7 @@ export type Database = {
           endereco: string | null
           estado: string | null
           facebook: string | null
+          fuso_horario: string
           id: string
           instagram: string | null
           limite_agendamentos_mes: number
@@ -449,6 +483,7 @@ export type Database = {
           endereco?: string | null
           estado?: string | null
           facebook?: string | null
+          fuso_horario?: string
           id?: string
           instagram?: string | null
           limite_agendamentos_mes?: number
@@ -484,6 +519,7 @@ export type Database = {
           endereco?: string | null
           estado?: string | null
           facebook?: string | null
+          fuso_horario?: string
           id?: string
           instagram?: string | null
           limite_agendamentos_mes?: number
@@ -607,6 +643,7 @@ export type Database = {
           id: string
           intervalo_fim: string | null
           intervalo_inicio: string | null
+          possui_intervalo: boolean
         }
         Insert: {
           aberto?: boolean
@@ -617,6 +654,7 @@ export type Database = {
           id?: string
           intervalo_fim?: string | null
           intervalo_inicio?: string | null
+          possui_intervalo?: boolean
         }
         Update: {
           aberto?: boolean
@@ -627,6 +665,7 @@ export type Database = {
           id?: string
           intervalo_fim?: string | null
           intervalo_inicio?: string | null
+          possui_intervalo?: boolean
         }
         Relationships: [
           {
@@ -776,6 +815,7 @@ export type Database = {
         Row: {
           active: boolean
           barbershop_id: string
+          barcode: string | null
           cost_price: number
           created_at: string
           description: string | null
@@ -787,6 +827,7 @@ export type Database = {
         Insert: {
           active?: boolean
           barbershop_id: string
+          barcode?: string | null
           cost_price?: number
           created_at?: string
           description?: string | null
@@ -798,6 +839,7 @@ export type Database = {
         Update: {
           active?: boolean
           barbershop_id?: string
+          barcode?: string | null
           cost_price?: number
           created_at?: string
           description?: string | null
@@ -989,6 +1031,119 @@ export type Database = {
           },
         ]
       }
+      mercado_pago_connections: {
+        Row: {
+          access_token: string
+          barbershop_id: string
+          created_at: string
+          id: string
+          live_mode: boolean
+          mp_user_id: string
+          oauth_state: string | null
+          oauth_state_expires_at: string | null
+          public_key: string | null
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          barbershop_id: string
+          created_at?: string
+          id?: string
+          live_mode?: boolean
+          mp_user_id: string
+          oauth_state?: string | null
+          oauth_state_expires_at?: string | null
+          public_key?: string | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          barbershop_id?: string
+          created_at?: string
+          id?: string
+          live_mode?: boolean
+          mp_user_id?: string
+          oauth_state?: string | null
+          oauth_state_expires_at?: string | null
+          public_key?: string | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mercado_pago_connections_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: true
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      online_payments: {
+        Row: {
+          amount: number
+          appointment_id: string
+          barbershop_id: string
+          checkout_url: string | null
+          created_at: string
+          id: string
+          marketplace_fee: number
+          payment_id: string | null
+          preference_id: string | null
+          provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          appointment_id: string
+          barbershop_id: string
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          marketplace_fee?: number
+          payment_id?: string | null
+          preference_id?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: string
+          barbershop_id?: string
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          marketplace_fee?: number
+          payment_id?: string | null
+          preference_id?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_payments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_payments_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_methods: {
         Row: {
           active: boolean
@@ -1042,19 +1197,19 @@ export type Database = {
       platform_settings: {
         Row: {
           id: string
-          support_message_template: string
+          support_message_template: string | null
           support_whatsapp: string | null
           updated_at: string
         }
         Insert: {
           id: string
-          support_message_template?: string
+          support_message_template?: string | null
           support_whatsapp?: string | null
           updated_at?: string
         }
         Update: {
           id?: string
-          support_message_template?: string
+          support_message_template?: string | null
           support_whatsapp?: string | null
           updated_at?: string
         }
@@ -1087,23 +1242,17 @@ export type Database = {
       public_booking_auth_settings: {
         Row: {
           barbershop_id: string
-          created_at: string
           enabled: boolean
-          id: string
           updated_at: string
         }
         Insert: {
           barbershop_id: string
-          created_at?: string
           enabled?: boolean
-          id?: string
           updated_at?: string
         }
         Update: {
           barbershop_id?: string
-          created_at?: string
           enabled?: boolean
-          id?: string
           updated_at?: string
         }
         Relationships: [
@@ -1111,6 +1260,68 @@ export type Database = {
             foreignKeyName: "public_booking_auth_settings_barbershop_id_fkey"
             columns: ["barbershop_id"]
             isOneToOne: true
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_subscription_checkouts: {
+        Row: {
+          amount_cents: number
+          barbershop_id: string | null
+          checkout_url: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          invoice_slug: string | null
+          order_nsu: string
+          paid_at: string | null
+          plan: string
+          provider_payload: Json | null
+          receipt_url: string | null
+          status: string
+          transaction_nsu: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          barbershop_id?: string | null
+          checkout_url?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          invoice_slug?: string | null
+          order_nsu: string
+          paid_at?: string | null
+          plan: string
+          provider_payload?: Json | null
+          receipt_url?: string | null
+          status?: string
+          transaction_nsu?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          barbershop_id?: string | null
+          checkout_url?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          invoice_slug?: string | null
+          order_nsu?: string
+          paid_at?: string | null
+          plan?: string
+          provider_payload?: Json | null
+          receipt_url?: string | null
+          status?: string
+          transaction_nsu?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_subscription_checkouts_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
@@ -1150,6 +1361,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "services_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_orders: {
+        Row: {
+          amount_cents: number
+          barbershop_id: string
+          checkout_url: string | null
+          created_at: string
+          id: string
+          invoice_slug: string | null
+          order_nsu: string
+          paid_at: string | null
+          plan: string
+          provider_payload: Json | null
+          receipt_url: string | null
+          status: string
+          transaction_nsu: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          barbershop_id: string
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          invoice_slug?: string | null
+          order_nsu: string
+          paid_at?: string | null
+          plan: string
+          provider_payload?: Json | null
+          receipt_url?: string | null
+          status?: string
+          transaction_nsu?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          barbershop_id?: string
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          invoice_slug?: string | null
+          order_nsu?: string
+          paid_at?: string | null
+          plan?: string
+          provider_payload?: Json | null
+          receipt_url?: string | null
+          status?: string
+          transaction_nsu?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_orders_barbershop_id_fkey"
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
@@ -1208,6 +1481,10 @@ export type Database = {
         Args: { p_barbershop_id: string }
         Returns: boolean
       }
+      barbershop_setup_complete: {
+        Args: { p_barbershop_id: string }
+        Returns: boolean
+      }
       cancel_external_sale: { Args: { p_sale_id: string }; Returns: undefined }
       claim_paid_public_checkout: {
         Args: { p_order_nsu: string }
@@ -1219,6 +1496,16 @@ export type Database = {
           commission_type: string
           commission_value: number
         }[]
+      }
+      confirm_infinitepay_subscription: {
+        Args: {
+          p_invoice_slug: string
+          p_order_nsu: string
+          p_payload: Json
+          p_receipt_url: string
+          p_transaction_nsu: string
+        }
+        Returns: Json
       }
       create_external_sale: {
         Args: {
@@ -1318,6 +1605,19 @@ export type Database = {
           p_barber_id: string
           p_data: string
           p_service_ids: string[]
+          p_slug: string
+        }
+        Returns: {
+          barber_id: string
+          barber_nome: string
+          hora: string
+        }[]
+      }
+      horarios_disponiveis_publico: {
+        Args: {
+          p_barber_id: string
+          p_data: string
+          p_service_id: string
           p_slug: string
         }
         Returns: {
@@ -1539,7 +1839,7 @@ export type Database = {
       }
       salvar_configuracao_suporte: {
         Args: { _mensagem: string; _whatsapp: string }
-        Returns: boolean
+        Returns: undefined
       }
       slug_disponivel: { Args: { p_slug: string }; Returns: boolean }
     }
