@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, Cloud, Database, Download, History, RefreshCw, ShieldCheck } from "lucide-react";
 import { SuperShell } from "@/components/superadmin/SuperShell";
 
-export const Route = createFileRoute("/_authenticated/super-admin/backups")({
+export const Route = createFileRoute("/_authenticated/super-admin/backups" as any)({
   head: () => ({
     meta: [
       { title: "Backups e proteção de dados | Super Admin" },
