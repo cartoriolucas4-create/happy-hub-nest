@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/lib/shop";
 
 export const Route = createFileRoute("/_authenticated/admin/assinatura")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    plano: typeof search.plano === "string" ? search.plano : undefined,
+  validateSearch: (search: Record<string, unknown>): { plano?: string } => ({
+    ...(typeof search["plano"] === "string" ? { plano: search["plano"] } : {}),
   }),
   head: () => ({ meta: [{ title: "Assinatura | Minha Barbearia" }, { name: "robots", content: "noindex" }] }),
   component: AssinaturaPage,
