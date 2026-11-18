@@ -124,6 +124,7 @@ function Cadastro() {
     const params = new URLSearchParams(window.location.search);
     const planoSolicitado = params.get("plano");
     const planoValido = planoSolicitado === "mensal" || planoSolicitado === "semestral" || planoSolicitado === "anual" ? planoSolicitado : null;
+    const compraOrder = params.get("compra");
 
     setLoading(true);
     let step: "slug" | "auth" = "slug";
@@ -144,14 +145,14 @@ function Cadastro() {
       email: email.trim(),
       password: senha,
       options: {
-        emailRedirectTo: canonicalSiteUrl("/"),
+        emailRedirectTo: canonicalSiteUrl(compraOrder ? `/cadastro?compra=${encodeURIComponent(compraOrder)}` : "/"),
         data: {
           nome: responsavel.trim(),
           telefone: telefone.trim(),
           barbershop_nome: nomeBarbearia.trim(),
           barbershop_slug: slugFinal,
           plano_solicitado: planoValido,
-          compra_order_nsu: params.get("compra") || null,
+          compra_order_nsu: compraOrder,
         },
       },
     });
