@@ -2,3 +2,5 @@ project_id = "gozynjftplaquakpeprx"
 
 [functions.infinitepay-webhook]
 verify_jwt = false
+[functions.infinitepay-public-checkout]
+verify_jwt = false
