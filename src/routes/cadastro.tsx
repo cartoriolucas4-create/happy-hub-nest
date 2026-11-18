@@ -48,21 +48,31 @@ function Cadastro() {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!active || !sessionData.session?.user) return;
       await supabase.auth.updateUser({ data: { compra_order_nsu: compra } });
-      const { data: claimData, error } = await (supabase as any).rpc("claim_paid_public_checkout", { p_order_nsu: compra });
+      const { data: claimData, error } = await supabase.rpc("claim_paid_public_checkout", {
+        p_order_nsu: compra,
+      });
       const claim = claimData as { ok?: boolean; reason?: string } | null;
       if (!active) return;
       if (!error && claim?.ok) {
         window.location.assign("/admin");
-      } else if (!error && ["barbershop_not_created", "payment_not_confirmed"].includes(String(claim?.reason))) {
+      } else if (
+        !error &&
+        ["barbershop_not_created", "payment_not_confirmed"].includes(String(claim?.reason))
+      ) {
         window.location.assign("/admin/configurar");
       } else if (error) {
         console.error("[Cadastro] Não foi possível vincular o pagamento pré-cadastro:", error);
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const planoAtual = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("plano") : null;
+  const planoAtual =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("plano")
+      : null;
   const slugFinal = slugify(slugEditado ? slug : nomeBarbearia);
   const slugReservado = isReservedPublicSlug(slugFinal);
 
