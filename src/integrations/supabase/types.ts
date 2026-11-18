@@ -1209,6 +1209,10 @@ export type Database = {
         Returns: boolean
       }
       cancel_external_sale: { Args: { p_sale_id: string }; Returns: undefined }
+      claim_paid_public_checkout: {
+        Args: { p_order_nsu: string }
+        Returns: Json
+      }
       commission_rule_for: {
         Args: { p_barber_id: string; p_service_id: string }
         Returns: {
