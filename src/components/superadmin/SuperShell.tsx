@@ -11,6 +11,7 @@ import {
   X,
   ShieldAlert,
   MessageCircle,
+  DatabaseBackup,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsSuperAdmin } from "@/lib/license";
@@ -21,6 +22,7 @@ const MENU = [
   { to: "/super-admin/acessos", label: "Acessos expirando", icon: KeyRound },
   { to: "/super-admin/historico", label: "Histórico", icon: History },
   { to: "/super-admin/whatsapp", label: "WhatsApp da equipe", icon: MessageCircle },
+  { to: "/super-admin/backups", label: "Backups e proteção", icon: DatabaseBackup },
 ] as const;
 
 export function SuperShell({
