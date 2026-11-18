@@ -1,7 +1,41 @@
 import { useQuery } from "@tanstack/react-query";
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/barber";
 import { getAuthenticatedArea } from "@/lib/auth-area";
+
+async function claimPaidPublicCheckout(user: User) {
+  const order = user.user_metadata?.["compra_order_nsu"];
+  if (typeof order !== "string" || !order.trim()) return;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await supabase.rpc("claim_paid_public_checkout", {
+      p_order_nsu: order,
+    });
+    if (error) throw error;
+
+    const result = data as { ok?: boolean; reason?: string } | null;
+    if (result?.ok) {
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { compra_order_nsu: null },
+      });
+      if (metadataError) {
+        console.warn("[Checkout público] Pedido ativado, mas não foi possível limpar o metadado.", metadataError);
+      }
+      return;
+    }
+
+    if (result?.reason !== "payment_not_confirmed") {
+      throw new Error(result?.reason || "Não foi possível vincular o pagamento à barbearia.");
+    }
+
+    if (attempt < 2) {
+      await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    }
+  }
+
+  console.warn("[Checkout público] O pagamento ainda não foi confirmado pelo webhook. O pedido será tentado novamente.");
+}
 
 /**
  * Carrega a barbearia do usuário logado. Se ainda não existir, cria a partir
@@ -18,7 +52,10 @@ export async function loadOrCreateShop() {
     .eq("owner_id", user.id)
     .maybeSingle();
   if (existing.error) throw existing.error;
-  if (existing.data) return existing.data;
+  if (existing.data) {
+    await claimPaidPublicCheckout(user);
+    return existing.data;
+  }
 
   const meta = (user.user_metadata ?? {}) as Record<string, string>;
   const nome = meta["barbershop_nome"] || "Minha Barbearia";
@@ -64,6 +101,7 @@ export async function loadOrCreateShop() {
   }
 
   if (created.error) throw created.error;
+  await claimPaidPublicCheckout(user);
   return created.data;
 }
 
