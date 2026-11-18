@@ -52,13 +52,11 @@ Deno.serve(async (request: Request) => {
     const selected = plans[plan as keyof typeof plans];
     orderNsu = "MBP" + crypto.randomUUID().replaceAll("-", "").toUpperCase();
 
-    const { error: insertError } = await admin
-      .from("public_subscription_checkouts")
-      .insert({
-        order_nsu: orderNsu,
-        plan,
-        amount_cents: selected.amount,
-      });
+    const { error: insertError } = await admin.from("public_subscription_checkouts").insert({
+      order_nsu: orderNsu,
+      plan,
+      amount_cents: selected.amount,
+    });
 
     if (insertError) throw insertError;
 
@@ -71,10 +69,8 @@ Deno.serve(async (request: Request) => {
       body: JSON.stringify({
         handle: "minhabarbeariapro",
         order_nsu: orderNsu,
-        redirect_url:
-          "https://agendocorte.com/cadastro?compra=" + encodeURIComponent(orderNsu),
-        webhook_url:
-          "https://gozynjftplaquakpeprx.supabase.co/functions/v1/infinitepay-webhook",
+        redirect_url: "https://agendocorte.com/cadastro?compra=" + encodeURIComponent(orderNsu),
+        webhook_url: "https://gozynjftplaquakpeprx.supabase.co/functions/v1/infinitepay-webhook",
         items: [
           {
             quantity: 1,
@@ -91,15 +87,11 @@ Deno.serve(async (request: Request) => {
     try {
       providerData = JSON.parse(responseText);
     } catch {
-      throw new Error(
-        "InfinitePay returned a non-JSON response (HTTP " + response.status + ")",
-      );
+      throw new Error("InfinitePay returned a non-JSON response (HTTP " + response.status + ")");
     }
 
     if (!response.ok) {
-      throw new Error(
-        "InfinitePay HTTP " + response.status + ": " + JSON.stringify(providerData),
-      );
+      throw new Error("InfinitePay HTTP " + response.status + ": " + JSON.stringify(providerData));
     }
 
     const checkoutUrl =
