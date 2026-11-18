@@ -69,10 +69,7 @@ function Cadastro() {
     };
   }, []);
 
-  const planoAtual =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("plano")
-      : null;
+  const planoAtual = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("plano") : null;
   const slugFinal = slugify(slugEditado ? slug : nomeBarbearia);
   const slugReservado = isReservedPublicSlug(slugFinal);
 
@@ -98,7 +95,10 @@ function Cadastro() {
         if (active) setChecando(false);
       }
     }, 450);
-    return () => { active = false; clearTimeout(t); };
+    return () => {
+      active = false;
+      clearTimeout(t);
+    };
   }, [slugFinal, slugReservado]);
 
   async function cadastrar(e: React.FormEvent) {
@@ -109,7 +109,11 @@ function Cadastro() {
       return;
     }
     if (slugFinal.length < 3 || slugReservado || disponivel === false) {
-      toast.error(slugReservado ? "Esse link é reservado pelo sistema. Escolha outro." : "Escolha um link disponível para sua barbearia.");
+      toast.error(
+        slugReservado
+          ? "Esse link é reservado pelo sistema. Escolha outro."
+          : "Escolha um link disponível para sua barbearia.",
+      );
       return;
     }
     if (responsavel.trim().length < 3) {
@@ -135,7 +139,10 @@ function Cadastro() {
 
     const params = new URLSearchParams(window.location.search);
     const planoSolicitado = params.get("plano");
-    const planoValido = planoSolicitado === "mensal" || planoSolicitado === "semestral" || planoSolicitado === "anual" ? planoSolicitado : null;
+    const planoValido =
+      planoSolicitado === "mensal" || planoSolicitado === "semestral" || planoSolicitado === "anual"
+        ? planoSolicitado
+        : null;
     const compraOrder = params.get("compra");
 
     setLoading(true);
@@ -153,32 +160,34 @@ function Cadastro() {
         throw new Error("Resposta inválida ao verificar o link.");
       }
       step = "auth";
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password: senha,
-      options: {
-        emailRedirectTo: canonicalSiteUrl(compraOrder ? `/cadastro?compra=${encodeURIComponent(compraOrder)}` : "/"),
-        data: {
-          nome: responsavel.trim(),
-          telefone: telefone.trim(),
-          barbershop_nome: nomeBarbearia.trim(),
-          barbershop_slug: slugFinal,
-          plano_solicitado: planoValido,
-          compra_order_nsu: compraOrder,
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: senha,
+        options: {
+          emailRedirectTo: canonicalSiteUrl(
+            compraOrder ? `/cadastro?compra=${encodeURIComponent(compraOrder)}` : "/",
+          ),
+          data: {
+            nome: responsavel.trim(),
+            telefone: telefone.trim(),
+            barbershop_nome: nomeBarbearia.trim(),
+            barbershop_slug: slugFinal,
+            plano_solicitado: planoValido,
+            compra_order_nsu: compraOrder,
+          },
         },
-      },
-    });
-    if (error) throw error;
-    if (!data.session) {
-      setEnviado(true);
-      return;
-    }
-    toast.success("Conta criada! Vamos configurar sua barbearia.");
-    if (planoValido) {
-      await navigate({ to: "/admin/assinatura", search: { plano: planoValido }, replace: true });
-    } else {
-      await navigate({ to: "/admin/configurar", replace: true });
-    }
+      });
+      if (error) throw error;
+      if (!data.session) {
+        setEnviado(true);
+        return;
+      }
+      toast.success("Conta criada! Vamos configurar sua barbearia.");
+      if (planoValido) {
+        await navigate({ to: "/admin/assinatura", search: { plano: planoValido }, replace: true });
+      } else {
+        await navigate({ to: "/admin/configurar", replace: true });
+      }
     } catch (error) {
       toast.error(signupErrorMessage(error, step));
     } finally {
