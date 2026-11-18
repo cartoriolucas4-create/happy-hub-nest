@@ -35,7 +35,10 @@ function ComprarPage() {
     }
     checkoutWindow.opener = null;
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke("infinitepay-public-checkout", { body: { plan } });
+      const { data, error: invokeError } = await supabase.functions.invoke(
+        "infinitepay-public-checkout",
+        { body: { plan } },
+      );
       if (invokeError) throw invokeError;
       if (typeof data?.checkout_url !== "string" || !data.checkout_url.startsWith("https://")) {
         throw new Error(data?.details || data?.error || "Não foi possível gerar o pagamento.");
