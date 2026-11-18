@@ -9,10 +9,7 @@ export const Route = createFileRoute("/_authenticated/admin/assinatura")({
     ...(typeof search["plano"] === "string" ? { plano: search["plano"] } : {}),
   }),
   head: () => ({
-    meta: [
-      { title: "Assinatura | Minha Barbearia" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Assinatura | Minha Barbearia" }, { name: "robots", content: "noindex" }],
   }),
   component: AssinaturaPage,
 });
@@ -120,10 +117,7 @@ function AssinaturaPage() {
       if (error) throw error;
 
       const url = data?.checkout_url;
-      if (
-        typeof url !== "string" ||
-        !url.startsWith("https://checkout.infinitepay.")
-      ) {
+      if (typeof url !== "string" || !url.startsWith("https://checkout.infinitepay.")) {
         throw new Error(data?.error || "Não foi possível gerar o checkout.");
       }
 
@@ -145,10 +139,7 @@ function AssinaturaPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6">
       <div className="mx-auto max-w-3xl">
-        <Link
-          to="/admin"
-          className="text-sm text-muted-foreground underline underline-offset-4"
-        >
+        <Link to="/admin" className="text-sm text-muted-foreground underline underline-offset-4">
           Voltar ao painel
         </Link>
 
@@ -252,8 +243,9 @@ function AssinaturaPage() {
 
               <div className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                A liberação depende da confirmação do pagamento pelo servidor. O redirecionamento
-                de retorno não libera acesso por si só.
+                A liberação depende
+                da confirmação do pagamento pelo servidor. O redirecionamento de retorno não libera
+                acesso por si só.
               </div>
             </div>
           </>
